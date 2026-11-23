@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0a3a22">
+    <meta name="description" content="Effective Diet factory operations workspace">
+    <title>Kiwanda Factory Workspace | EDMS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #0b1f12;
+            --muted: #708174;
+            --line: #e3ebe3;
+            --canvas: #f2f6f2;
+            --green: #16a34a;
+            --green-dark: #0a3a22;
+            --green-deep: #041f11;
+            --amber: #f59e0b;
+            --blue: #3b82f6;
+            --shadow: 0 8px 26px rgba(4, 31, 17, .07);
+        }
+        * { box-sizing: border-box; }
+        [hidden] { display: none !important; }
+        html { scroll-behavior: smooth; scroll-padding-top: 68px; }
+        body {
+            min-height: 100vh;
+            margin: 0;
+            background: var(--canvas);
+            color: var(--ink);
+            font-family: "Plus Jakarta Sans", sans-serif;
+        }
+        .app-shell { min-height: 100vh; }
+        .sidebar {
+            position: fixed;
+            z-index: 20;
+            inset: 0 auto 0 0;
+            display: flex;
+            width: 196px;
+            flex-direction: column;
+            padding: 18px 12px;
+            background: linear-gradient(178deg, #0a3a22, #062b18 52%, #041f11);
+            color: #c9dfcf;
+        }
+        .brand { display: flex; align-items: center; gap: 8px; padding: 0 2px 18px; }
+        .brand-logo {
+            display: grid;
+            width: 46px;
+            height: 34px;
+            flex: 0 0 auto;
+            padding: 3px;
+            place-items: center;
+            overflow: hidden;
+            border-radius: 8px;
+            background: #fff;
+        }
+        .brand-logo img { width: 100%; height: 100%; object-fit: contain; }
+        .brand strong {
+            display: block;
+            background: linear-gradient(92deg, #bef264, #facc15 70%, #86efac);
+            background-clip: text;
+            color: transparent;
+            font-size: 13px;
+            font-weight: 800;
+        }
+        .brand small { color: #8eaa96; font-size: 7px; letter-spacing: .55px; }
+        .nav-group { margin-bottom: 12px; }
+        .nav-label {
+            margin: 15px 8px 6px;
+            color: #789482;
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+        }
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 2px;
+            padding: 8px 9px;
+            border-radius: 10px;
+            color: #b7cdbd;
+            font-size: 10px;
+            text-decoration: none;
+            transition: background .18s, color .18s;
+        }
+        .nav-link:hover { background: rgba(255,255,255,.07); color: #fff; }
+        .nav-link.active {
+            background: linear-gradient(95deg, #16a34a, #12693a);
+            box-shadow: 0 6px 18px rgba(22, 163, 74, .25);
+            color: #fff;
+            font-weight: 700;
+        }
+        .nav-link i { font-size: 14px; }
+        .sidebar-bottom { margin-top: auto; padding-top: 13px; border-top: 1px solid rgba(255,255,255,.1); }
+        .profile { display: flex; align-items: center; gap: 8px; padding: 5px 2px 9px; }
+        .profile-avatar, .account-avatar {
+            display: grid;
+            flex: 0 0 auto;
+            place-items: center;
+            border-radius: 9px;
+            background: linear-gradient(135deg, #22c55e, #15803d);
+            color: #fff;
+            font-weight: 800;
+        }
+        .profile-avatar { width: 30px; height: 30px; font-size: 12px; }
+        .profile-name { overflow: hidden; color: white; font-size: 9px; font-weight: 700; text-overflow: ellipsis; }
+        .profile-role { color: #8eaa96; font-size: 8px; }
+        .return-link { display: flex; gap: 8px; align-items: center; padding: 8px 9px; color: #b7cdbd; font-size: 10px; text-decoration: none; }
+        .return-link:hover { color: #fff; }
+        .main { min-height: 100vh; margin-left: 196px; }
+        .topbar {
+            position: sticky;
+            z-index: 10;
+            top: 0;
+            display: flex;
+            min-height: 49px;
+            align-items: center;
+            gap: 10px;
+            padding: 7px 18px;
+            border-bottom: 1px solid var(--line);
+            background: rgba(255,255,255,.92);
+            backdrop-filter: blur(14px);
+        }
+        .crumb { color: var(--muted); font-size: 10px; }
+        .crumb strong { color: var(--ink); }
+        .topbar-tools { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+        .icon-button {
+            display: grid;
+            width: 34px;
+            height: 34px;
+            place-items: center;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: #fff;
+            color: var(--muted);
+        }
+        .account {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 3px 9px 3px 4px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: #fff;
+        }
+        .account-avatar { width: 25px; height: 25px; border-radius: 50%; font-size: 10px; }
+        .account-name { color: var(--ink); font-size: 9px; font-weight: 700; }
+        .account-role { color: var(--muted); font-size: 7px; }
+        .topbar-date { color: var(--muted); font-size: 9px; white-space: nowrap; }
+        .content { max-width: 1500px; margin: auto; padding: 20px 18px 34px; }
+        .hero {
+            position: relative;
+            display: flex;
+            min-height: 130px;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            overflow: hidden;
+            margin-bottom: 18px;
+            padding: 22px 24px;
+            border-radius: 20px;
+            background: linear-gradient(120deg, #062b18, #0d4a2b 62%, #12693a);
+            box-shadow: 0 16px 40px rgba(4,31,17,.15);
+            color: #fff;
+        }
+        .hero::after {
+            position: absolute;
+            top: -90px;
+            right: -40px;
+            width: 250px;
+            height: 250px;
+            border: 1px solid rgba(255,255,255,.12);
+            border-radius: 50%;
+            box-shadow: 0 0 0 35px rgba(255,255,255,.035), 0 0 0 70px rgba(255,255,255,.025);
+            content: "";
+        }
+        .hero-copy, .hero-action { position: relative; z-index: 1; }
+        .eyebrow { color: #a7e4b7; font-size: 9px; font-weight: 700; letter-spacing: 1.3px; text-transform: uppercase; }
+        .hero h1 { margin: 7px 0; font-size: clamp(20px, 2.5vw, 27px); font-weight: 800; letter-spacing: -.8px; }
+        .hero p { max-width: 690px; margin: 0; color: #c3d9c9; font-size: 10px; line-height: 1.7; }
+        .hero-action {
+            display: inline-flex;
+            min-height: 38px;
+            align-items: center;
+            gap: 7px;
+            padding: 9px 13px;
+            border: 0;
+            border-radius: 10px;
+            background: linear-gradient(95deg, #22c55e, #16a34a);
+            box-shadow: 0 6px 18px rgba(22, 163, 74, .28);
+            color: white;
+            font: inherit;
+            font-size: 10px;
+            font-weight: 700;
+            opacity: .68;
+            cursor: not-allowed;
+        }
+        .notice {
+            display: flex;
+            align-items: flex-start;
+            gap: 9px;
+            margin-bottom: 16px;
+            padding: 10px 12px;
+            border: 1px solid #f4d28a;
+            border-radius: 11px;
+            background: #fffbeb;
+            color: #825314;
+            font-size: 9px;
+            line-height: 1.6;
+        }
+        .notice i { margin-top: 1px; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 18px; }
+        .kpi {
+            min-height: 104px;
+            padding: 13px;
+            border: 1px solid var(--line);
+            border-radius: 15px;
+            background: #fff;
+            box-shadow: var(--shadow);
+        }
+        .kpi-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 9px; }
+        .kpi-label { color: var(--muted); font-size: 9px; }
+        .kpi-value { margin-top: 6px; color: var(--ink); font-size: 21px; font-weight: 800; }
+        .kpi-note { margin-top: 2px; color: #9aab9e; font-size: 8px; }
+        .kpi-icon {
+            display: grid;
+            width: 34px;
+            height: 34px;
+            flex: 0 0 auto;
+            place-items: center;
+            border-radius: 10px;
+            background: #dcfce7;
+            color: #15803d;
+            font-size: 16px;
+        }
+        .kpi-icon.amber { background: #fef3c7; color: #b45309; }
+        .kpi-icon.blue { background: #dbeafe; color: #1d4ed8; }
+        .kpi-icon.purple { background: #ede9fe; color: #6d28d9; }
+        .card {
+            overflow: hidden;
+            margin-bottom: 16px;
+            border: 1px solid var(--line);
+            border-radius: 15px;
+            background: #fff;
+            box-shadow: var(--shadow);
+            scroll-margin-top: 68px;
+        }
+        .card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 14px 16px;
+            border-bottom: 1px solid #edf2ed;
+        }
+        .card-head h2 { margin: 0; font-size: 13px; font-weight: 800; }
+        .card-head p { margin: 3px 0 0; color: var(--muted); font-size: 8px; }
+        .status {
+            flex: 0 0 auto;
+            padding: 4px 8px;
+            border-radius: 99px;
+            background: #f1f5f9;
+            color: #475569;
+            font-size: 8px;
+            font-weight: 700;
+        }
+        .card-body { padding: 15px; }
+        .workflow-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
+        .workflow {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 58px;
+            padding: 10px;
+            border: 1px solid var(--line);
+            border-radius: 11px;
+        }
+        .workflow-icon {
+            display: grid;
+            width: 30px;
+            height: 30px;
+            flex: 0 0 auto;
+            place-items: center;
+            border-radius: 9px;
+            background: #dcfce7;
+            color: #15803d;
+            font-size: 14px;
+        }
+        .workflow-icon.blue { background: #dbeafe; color: #1d4ed8; }
+        .workflow-icon.amber { background: #fef3c7; color: #b45309; }
+        .workflow h3 { margin: 0 0 3px; font-size: 9px; font-weight: 800; }
+        .workflow p { margin: 0; color: var(--muted); font-size: 8px; line-height: 1.5; }
+        .empty {
+            display: grid;
+            min-height: 104px;
+            place-items: center;
+            padding: 16px;
+            border: 1px dashed #e2ebe3;
+            border-radius: 11px;
+            background: #fbfdfb;
+            color: var(--muted);
+            text-align: center;
+        }
+        .empty i { display: block; margin-bottom: 5px; color: #8dbb98; font-size: 20px; }
+        .empty strong { display: block; margin-bottom: 4px; color: #3f5445; font-size: 10px; }
+        .empty span { display: block; max-width: 480px; font-size: 8px; line-height: 1.6; }
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; min-width: 640px; border-collapse: collapse; white-space: nowrap; }
+        th { padding: 10px 12px; background: #f8fbf8; color: var(--muted); font-size: 8px; text-align: left; text-transform: uppercase; }
+        td { padding: 0 12px; border-top: 1px solid #edf2ed; }
+        .dispatch-empty { min-height: 130px; }
+        .footer { padding: 2px 0 10px; color: #9aab9e; font-size: 8px; text-align: center; }
+        .menu-toggle { display: none; }
+        @media (max-width: 1050px) {
+            .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .workflow-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 760px) {
+            .sidebar { transform: translateX(-100%); transition: transform .2s; }
+            body.nav-open .sidebar { transform: translateX(0); box-shadow: 0 0 0 100vmax rgba(4,31,17,.38); }
+            .main { margin-left: 0; }
+            .topbar { min-height: 58px; padding: 9px 15px; }
+            .menu-toggle {
+                display: grid;
+                width: 36px;
+                height: 36px;
+                place-items: center;
+                border: 1px solid var(--line);
+                border-radius: 9px;
+                background: #fff;
+                color: var(--ink);
+            }
+            .topbar-date { display: none; }
+            .content { padding: 18px 14px 28px; }
+            .hero { min-height: 150px; align-items: flex-start; flex-direction: column; padding: 20px; }
+        }
+        @media (max-width: 420px) {
+            .kpi-grid { gap: 9px; }
+            .kpi { min-height: 100px; padding: 11px; }
+            .kpi-value { font-size: 19px; }
+            .account-name { max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .card-head, .card-body { padding-right: 13px; padding-left: 13px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="sidebar" id="sidebar">
+            <a class="brand text-decoration-none" href="#overview">
+                <span class="brand-logo"><img src="media/logo.png" alt="Effective Diet"></span>
+                <span><strong>Effective Diet</strong><small>KIWANDA (FACTORY)</small></span>
+            </a>
+            <nav aria-label="Factory navigation">
+                <div class="nav-group">
+                    <div class="nav-label">Dashibodi</div>
+                    <a class="nav-link active" href="#overview" data-section="overview" aria-current="page"><i class="bi bi-speedometer2"></i> Overview</a>
+                </div>
+                <div class="nav-group">
+                    <div class="nav-label">Uzalishaji</div>
+                    <a class="nav-link" href="#materials" data-section="materials"><i class="bi bi-box-seam"></i> Malighafi &amp; Vifungashio</a>
+                    <a class="nav-link" href="#production" data-section="production"><i class="bi bi-gear-wide-connected"></i> Batches za Uzalishaji</a>
+                </div>
+                <div class="nav-group">
+                    <div class="nav-label">Ugawaji</div>
+                    <a class="nav-link" href="#dispatch" data-section="dispatch"><i class="bi bi-truck"></i> Tuma kwa Ofisi</a>
+                </div>
+            </nav>
+            <div class="sidebar-bottom">
+                <div class="profile">
+                    <span class="profile-avatar">K</span>
+                    <span><span class="profile-name d-block">Factory Manager</span><span class="profile-role">Factory</span></span>
+                </div>
+                <a class="return-link" href="/dashboard/factory/"><i class="bi bi-box-arrow-up-right"></i> Open full workspace</a>
+            </div>
+        </aside>
+
+        <main class="main">
+            <header class="topbar">
+                <button class="menu-toggle" id="menuToggle" type="button" aria-label="Open navigation"><i class="bi bi-list"></i></button>
+                <div class="crumb"><i class="bi bi-house-door me-2"></i>Kiwanda <span class="mx-1">›</span> <strong id="breadcrumb">Overview</strong></div>
+                <div class="topbar-tools">
+                    <button class="icon-button" type="button" aria-label="Notifications are not available yet" disabled><i class="bi bi-bell"></i></button>
+                    <span class="account">
+                        <span class="account-avatar">K</span>
+                        <span><span class="account-name d-block">Factory Manager</span><span class="account-role d-block">Factory Manager</span></span>
+                    </span>
+                    <span class="topbar-date" id="currentDate"></span>
+                </div>
+            </header>
+
+            <div class="content">
+                <section id="overview" data-section-panel="overview" aria-labelledby="pageTitle">
+                    <header class="hero">
+                        <div class="hero-copy">
+                            <div class="eyebrow"><i class="bi bi-building-gear me-1"></i> Factory workspace</div>
+                            <h1 id="pageTitle">Factory operations overview</h1>
+                            <p>Manage incoming materials, production batches, and branch dispatch from Kiwanda.</p>
+                        </div>
+                        <button class="hero-action" type="button" disabled title="Batch creation will be enabled when production and inventory records are implemented">
+                            <i class="bi bi-plus-lg"></i> Start new batch
+                        </button>
+                    </header>
+
+                    <div class="notice" role="status">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <span><strong>Operations are not yet connected to a live ledger.</strong> Purchase, batch, and dispatch records will appear here after their models and save workflows are implemented. No sample transactions are shown as real data.</span>
+                    </div>
+
+                    <div class="kpi-grid" aria-label="Factory summary">
+                        <article class="kpi">
+                            <div class="kpi-top"><span class="kpi-label">Materials awaiting receipt</span><span class="kpi-icon"><i class="bi bi-box-seam"></i></span></div>
+                            <div class="kpi-value">—</div><div class="kpi-note">No live procurement records</div>
+                        </article>
+                        <article class="kpi">
+                            <div class="kpi-top"><span class="kpi-label">Active production batches</span><span class="kpi-icon amber"><i class="bi bi-gear-wide-connected"></i></span></div>
+                            <div class="kpi-value">—</div><div class="kpi-note">No live batch records</div>
+                        </article>
+                        <article class="kpi">
+                            <div class="kpi-top"><span class="kpi-label">Ready for dispatch</span><span class="kpi-icon blue"><i class="bi bi-boxes"></i></span></div>
+                            <div class="kpi-value">—</div><div class="kpi-note">No live finished-goods balance</div>
+                        </article>
+                        <article class="kpi">
+                            <div class="kpi-top"><span class="kpi-label">Branch receipts pending</span><span class="kpi-icon purple"><i class="bi bi-truck"></i></span></div>
+                            <div class="kpi-value">—</div><div class="kpi-note">No live transfer records</div>
+                        </article>
+                    </div>
+                </section>
+
+                <section class="card" id="materials" data-section-panel="materials" aria-labelledby="materialsTitle" hidden>
+                    <header class="card-head">
+                        <div><h2 id="materialsTitle"><i class="bi bi-box-seam text-success me-2"></i>Raw materials &amp; procurement</h2><p>Receive and track ingredients, packaging, and stickers</p></div>
+                        <span class="status">Module setup pending</span>
+                    </header>
+                    <div class="card-body">
+                        <div class="workflow-grid">
+                            <article class="workflow"><span class="workflow-icon"><i class="bi bi-flower1"></i></span><div><h3>Ingredients</h3><p>Record supplier, quantity, unit, cost, and received date for raw materials.</p></div></article>
+                            <article class="workflow"><span class="workflow-icon blue"><i class="bi bi-box2"></i></span><div><h3>Packaging</h3><p>Track bottles, containers, and other packaging separately.</p></div></article>
+                            <article class="workflow"><span class="workflow-icon amber"><i class="bi bi-tags"></i></span><div><h3>Stickers &amp; labels</h3><p>Maintain label quantities and associate usage with finished batches.</p></div></article>
+                        </div>
+                        <div class="empty"><div><i class="bi bi-inbox"></i><strong>No purchase records yet</strong><span>Supplier and purchase entry will be enabled when procurement is connected to the inventory ledger.</span></div></div>
+                    </div>
+                </section>
+
+                <section class="card" id="production" data-section-panel="production" aria-labelledby="productionTitle" hidden>
+                    <header class="card-head">
+                        <div><h2 id="productionTitle"><i class="bi bi-gear-wide-connected text-success me-2"></i>Production batches</h2><p>Capture material consumption, output, and batch traceability</p></div>
+                        <span class="status">Module setup pending</span>
+                    </header>
+                    <div class="card-body">
+                        <div class="empty"><div><i class="bi bi-clipboard2-plus"></i><strong>No production batches yet</strong><span>Batch input requires product recipes, material units, and a stock-posting workflow.</span></div></div>
+                    </div>
+                </section>
+
+                <section class="card" id="dispatch" data-section-panel="dispatch" aria-labelledby="dispatchTitle" hidden>
+                    <header class="card-head">
+                        <div><h2 id="dispatchTitle"><i class="bi bi-truck text-success me-2"></i>Dispatch to branches</h2><p>Prepare transfers and monitor branch receipt confirmation</p></div>
+                        <span class="status">Module setup pending</span>
+                    </header>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Transfer reference</th><th>Destination</th><th>Products</th><th>Dispatched</th><th>Receipt</th><th>Status</th></tr></thead>
+                            <tbody><tr><td colspan="6"><div class="empty dispatch-empty"><div><i class="bi bi-truck"></i><strong>No dispatches recorded</strong><span>Open dispatches and receipt acknowledgements will appear here once transfer records are implemented.</span></div></div></td></tr></tbody>
+                        </table>
+                    </div>
+                </section>
+                <footer class="footer">Effective Diet Management System · Factory workspace</footer>
+            </div>
+        </main>
+    </div>
+    <script>
+        const navLinks = Array.from(document.querySelectorAll(".nav-link[data-section]"));
+        const panels = Array.from(document.querySelectorAll("[data-section-panel]"));
+        const breadcrumb = document.getElementById("breadcrumb");
+        const menuToggle = document.getElementById("menuToggle");
+
+        function setActiveSection(section) {
+            const activeLink = navLinks.find((link) => link.dataset.section === section);
+            if (!activeLink) return;
+            navLinks.forEach((link) => {
+                const isActive = link === activeLink;
+                link.classList.toggle("active", isActive);
+                if (isActive) link.setAttribute("aria-current", "page");
+                else link.removeAttribute("aria-current");
+            });
+            panels.forEach((panel) => {
+                panel.hidden = panel.dataset.sectionPanel !== section;
+            });
+            breadcrumb.textContent = activeLink.textContent.trim();
+            document.body.classList.remove("nav-open");
+        }
+
+        navLinks.forEach((link) => {
+            link.addEventListener("click", () => {
+                setActiveSection(link.dataset.section);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            });
+        });
+        window.addEventListener("hashchange", () => {
+            setActiveSection(window.location.hash.slice(1) || "overview");
+        });
+        window.addEventListener("popstate", () => {
+            setActiveSection(window.location.hash.slice(1) || "overview");
+        });
+        setActiveSection(window.location.hash.slice(1) || "overview");
+
+        menuToggle.addEventListener("click", () => {
+            document.body.classList.toggle("nav-open");
+        });
+
+        document.getElementById("currentDate").textContent = new Intl.DateTimeFormat("en-TZ", {
+            weekday: "short",
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            timeZone: "Africa/Dar_es_Salaam"
+        }).format(new Date());
+    </script>
+</body>
+</html>

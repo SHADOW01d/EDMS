@@ -1,0 +1,1 @@
+/* Chart initialization will be added with the dashboard and reports. */

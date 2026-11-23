@@ -1,0 +1,526 @@
+{% extends "dashboard/workspace_base.html" %}
+{% load humanize %}
+
+{% block title %}Factory Workspace | EDMS{% endblock %}
+{% block breadcrumb %}Kiwanda <span class="mx-1">›</span> <span id="factoryBreadcrumb">Overview</span>{% endblock %}
+{% block workspace_brand_subtitle %}KIWANDA (FACTORY){% endblock %}
+{% block role_label %}Factory Manager{% endblock %}
+
+{% block workspace_nav %}
+    <div class="factory-nav-group">
+        <div class="factory-nav-label">Dashibodi</div>
+        <a class="active" href="#factory-overview" data-factory-section="overview" data-label="Overview" aria-current="page"><i class="bi bi-speedometer2"></i> Overview</a>
+    </div>
+    <div class="factory-nav-group">
+        <div class="factory-nav-label">Uzalishaji</div>
+        <a href="#factory-procurement" data-factory-section="procurement" data-label="Malighafi &amp; Vifungashio"><i class="bi bi-box-seam"></i> Malighafi &amp; Vifungashio</a>
+        <a href="#factory-production" data-factory-section="production" data-label="Batches za Uzalishaji"><i class="bi bi-gear-wide-connected"></i> Batches za Uzalishaji</a>
+    </div>
+    <div class="factory-nav-group">
+        <div class="factory-nav-label">Ugawaji</div>
+        <a href="#factory-dispatch" data-factory-section="dispatch" data-label="Tuma kwa Ofisi"><i class="bi bi-truck"></i> Tuma kwa Ofisi</a>
+    </div>
+{% endblock %}
+
+{% block workspace_topbar_right %}
+    <div class="factory-topbar-tools">
+        <button class="factory-notification" type="button" aria-label="Factory notifications" onclick="activateFactorySection('dispatch', true)" title="Review dispatch notifications"><i class="bi bi-bell"></i></button>
+        <span class="factory-account" aria-label="Signed in as {{ user_name }}, Factory Manager">
+            <span class="factory-account-avatar">{{ user_initial }}</span>
+            <span><span class="factory-account-name d-block">{{ user_name }}</span><span class="factory-account-role d-block">Factory Manager</span></span>
+        </span>
+        <span class="factory-topbar-date">{% now "D, d M Y" %}</span>
+    </div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    [hidden] { display: none !important; }
+    .workspace-sidebar > .workspace-nav-label { display: none; }
+    .workspace-sidebar { width: 196px; padding: 18px 12px; }
+    .workspace-main { margin-left: 196px; }
+    .workspace-brand { gap: 8px; padding: 0 2px 18px; }
+    .workspace-logo { width: 46px; height: 34px; border-radius: 8px; }
+    .workspace-brand strong { font-size: 13px; }
+    .workspace-brand small { font-size: 7px; letter-spacing: .55px; }
+    .workspace-nav-label { margin: 15px 8px 6px; font-size: 8px; }
+    .workspace-topbar { min-height: 46px; padding: 7px 18px; }
+    .workspace-topbar .crumb { font-size: 10px; }
+    .factory-nav-group { margin-bottom: 12px; }
+    .factory-nav-label {
+        margin: 15px 10px 6px;
+        color: #789482;
+        font-size: 8px;
+        font-weight: 700;
+        letter-spacing: 1.4px;
+        text-transform: uppercase;
+    }
+    .workspace-nav .factory-nav-group a { gap: 8px; padding: 8px 9px; font-size: 10px; }
+    .workspace-nav .factory-nav-group a.active {
+        background: linear-gradient(95deg, #16a34a, #12693a);
+        color: #fff;
+        box-shadow: 0 6px 18px rgba(22, 163, 74, .25);
+    }
+    .workspace-main-content { padding: 20px 18px 30px; }
+    .factory-hero {
+        min-height: 130px;
+        margin-bottom: 18px;
+        padding: 22px 24px;
+    }
+    .factory-hero h1 { font-size: clamp(20px, 2.5vw, 27px); }
+    .factory-hero p { font-size: 10px; }
+    .factory-hero-content { max-width: 720px; }
+    .factory-hero-action {
+        display: inline-flex;
+        min-height: 38px;
+        align-items: center;
+        gap: 7px;
+        padding: 9px 13px;
+        border: 0;
+        border-radius: 10px;
+        background: linear-gradient(95deg, #22c55e, #16a34a);
+        box-shadow: 0 6px 18px rgba(22, 163, 74, .28);
+        color: white;
+        font: inherit;
+        font-size: 10px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+    .factory-topbar-tools { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+    .factory-notification {
+        display: grid;
+        width: 34px;
+        height: 34px;
+        place-items: center;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+        color: #708174;
+        font-size: 14px;
+    }
+    .factory-account {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 3px 9px 3px 4px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: #fff;
+    }
+    .factory-account-avatar {
+        display: grid;
+        width: 25px;
+        height: 25px;
+        place-items: center;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #22c55e, #15803d);
+        color: white;
+        font-size: 10px;
+        font-weight: 800;
+    }
+    .factory-account-name { color: #0b1f12; font-size: 9px; font-weight: 700; }
+    .factory-account-role { color: #708174; font-size: 7px; }
+    .factory-topbar-date { color: #708174; font-size: 9px; white-space: nowrap; }
+    .workspace-user { gap: 8px; padding: 13px 2px 7px; }
+    .workspace-avatar { width: 30px; height: 30px; border-radius: 9px; }
+    .workspace-user-name { font-size: 9px; }
+    .workspace-user-role { font-size: 8px; }
+    .workspace-logout button { gap: 8px; padding: 8px 9px; font-size: 10px; }
+    .factory-kpis { gap: 10px; margin-bottom: 18px; }
+    .factory-kpi { min-height: 104px; padding: 13px; }
+    .factory-kpi-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 9px; }
+    .factory-kpi .kpi-label { font-size: 9px; }
+    .factory-kpi .kpi-value { margin-top: 6px; font-size: 21px; }
+    .factory-kpi .kpi-note { font-size: 8px; }
+    .factory-kpi-icon {
+        display: grid;
+        width: 34px;
+        height: 34px;
+        flex: 0 0 auto;
+        place-items: center;
+        border-radius: 10px;
+        background: #dcfce7;
+        color: #15803d;
+        font-size: 16px;
+    }
+    .factory-kpi-icon.amber { background: #fef3c7; color: #b45309; }
+    .factory-kpi-icon.blue { background: #dbeafe; color: #1d4ed8; }
+    .factory-kpi-icon.purple { background: #ede9fe; color: #6d28d9; }
+    .factory-workflow-card { margin-bottom: 16px; }
+    .factory-workflow-card .workspace-card-head { padding: 14px 16px; }
+    .factory-workflow-card .workspace-card-body { padding: 15px; }
+    .factory-workflow-card .workspace-grid-3 { gap: 10px; }
+    .factory-workflow-card .workflow-card { padding: 11px; }
+    .factory-workflow-card .workflow-card h3 { font-size: 10px; }
+    .factory-workflow-card .workflow-card p { font-size: 8px; }
+    .factory-workflow-card .workspace-empty { min-height: 104px; padding: 16px; border: 1px dashed #e2ebe3; border-radius: 11px; background: #fbfdfb; }
+    .factory-workflow-card .workspace-empty i { font-size: 20px; }
+    .factory-workflow-card .workspace-empty strong { font-size: 10px; }
+    .factory-workflow-card .workspace-empty span { font-size: 8px; }
+    .factory-purchase-panel {
+        max-width: 980px;
+        margin: 0 auto 18px;
+        overflow: hidden;
+        border: 1px solid #dfe8df;
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 8px 24px rgba(4,31,17,.08);
+    }
+    .factory-purchase-head {
+        display: flex;
+        align-items: center;
+        min-height: 72px;
+        justify-content: space-between;
+        padding: 14px 18px;
+        background: linear-gradient(120deg,#062b18,#12693a);
+        color: #fff;
+    }
+    .factory-purchase-head h2 { margin: 0 0 3px; font-size: 13px; font-weight: 800; }
+    .factory-purchase-head p { margin: 0; color: #a7c5b0; font-size: 9px; }
+    .factory-purchase-head i { font-size: 18px; }
+    .factory-purchase-form { padding: 18px; }
+    .factory-purchase-grid {
+        display: grid;
+        grid-template-columns: repeat(2,minmax(0,1fr));
+        gap: 14px;
+    }
+    .factory-purchase-grid .wide { grid-column: 1 / -1; }
+    .factory-purchase-form label {
+        display: block;
+        margin-bottom: 6px;
+        color: #526357;
+        font-size: 10px;
+        font-weight: 800;
+    }
+    .factory-purchase-form input,
+    .factory-purchase-form select {
+        width: 100%;
+        min-height: 42px;
+        padding: 9px 11px;
+        border: 1px solid #dfe8df;
+        border-radius: 9px;
+        background: #fff;
+        color: #0b1f12;
+        font: inherit;
+        font-size: 10px;
+    }
+    .factory-purchase-form input:focus,
+    .factory-purchase-form select:focus {
+        border-color: #22c55e;
+        outline: 3px solid rgba(34,197,94,.12);
+    }
+    .factory-purchase-help { display: block; margin-top: 5px; color: #708174; font-size: 8.5px; }
+    .factory-payment-box {
+        padding: 14px;
+        border: 1px dashed #86efac;
+        border-radius: 10px;
+        background: #f0fdf4;
+    }
+    .factory-payment-wrap {
+        display: flex;
+        align-items: stretch;
+        overflow: hidden;
+        border: 1px solid #dfe8df;
+        border-radius: 9px;
+        background: #fff;
+    }
+    .factory-payment-wrap span {
+        display: grid;
+        min-width: 58px;
+        place-items: center;
+        border-right: 1px solid #dfe8df;
+        color: #526357;
+        font-size: 10px;
+        font-weight: 800;
+    }
+    .factory-payment-wrap input { border: 0; border-radius: 0; font-size: 16px; font-weight: 800; }
+    .factory-purchase-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        padding-top: 8px;
+    }
+    .factory-purchase-reset {
+        min-height: 38px;
+        padding: 8px 14px;
+        border: 1px solid #dfe8df;
+        border-radius: 9px;
+        background: #f6f8f6;
+        color: #526357;
+        font: inherit;
+        font-size: 10px;
+        font-weight: 700;
+    }
+    @media (max-width: 520px) {
+        .factory-purchase-grid { grid-template-columns: 1fr; }
+        .factory-purchase-grid .wide { grid-column: auto; }
+        .factory-purchase-actions { width: 100%; }
+        .factory-purchase-actions button { flex: 1; }
+    }
+    @media (max-width: 760px) {
+        .workspace-sidebar { width: 196px; }
+        .workspace-main { margin-left: 0; }
+        .workspace-topbar { min-height: 58px; padding: 9px 15px; }
+        .workspace-main-content { padding: 18px 14px 28px; }
+        .factory-topbar-date { display: none; }
+        .factory-hero { min-height: 150px; padding: 20px; }
+        .factory-hero-action { align-self: flex-start; }
+    }
+    @media (max-width: 420px) {
+        .factory-account-name { max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .factory-kpi { min-height: 100px; padding: 11px; }
+        .factory-kpi .kpi-value { font-size: 19px; }
+    }
+</style>
+{% endblock %}
+
+{% block workspace_content %}
+    {% if messages %}
+    <div class="workspace-main-content pb-0" role="status" aria-live="polite">
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}success{% endif %} py-2 mb-2">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    <section class="factory-view" id="factory-overview" data-factory-panel="overview" aria-label="Factory overview">
+        <header class="workspace-hero factory-hero">
+            <div class="factory-hero-content">
+                <div class="eyebrow"><i class="bi bi-building-gear me-1"></i> Factory workspace</div>
+                <h1>Welcome, {{ user_name }}</h1>
+                <p>Manage incoming materials, production batches, and branch dispatch from Kiwanda.</p>
+            </div>
+            <button class="factory-hero-action" type="button" onclick="activateFactorySection('production', true)">
+                <i class="bi bi-plus-lg"></i> Start new batch
+            </button>
+        </header>
+
+        <div class="workspace-notice" role="status">
+            <i class="bi bi-info-circle-fill mt-1"></i>
+            <span><strong>Live inventory ledger connected.</strong> Purchases, completed batches, and branch dispatches update real stock balances. Record actual operations only.</span>
+        </div>
+
+        <section class="workspace-kpis factory-kpis" aria-label="Factory summary">
+            <article class="workspace-kpi factory-kpi"><div class="factory-kpi-top"><span class="kpi-label">Materials &amp; stock units</span><span class="factory-kpi-icon"><i class="bi bi-box-seam"></i></span></div><div class="kpi-value">{{ stock_count|default:"—" }}</div><div class="kpi-note">{{ purchase_count|default:0 }} purchases recorded</div></article>
+            <article class="workspace-kpi factory-kpi"><div class="factory-kpi-top"><span class="kpi-label">Production batches</span><span class="factory-kpi-icon amber"><i class="bi bi-gear-wide-connected"></i></span></div><div class="kpi-value">{{ batch_count|default:0 }}</div><div class="kpi-note">Recorded batches</div></article>
+            <article class="workspace-kpi factory-kpi"><div class="factory-kpi-top"><span class="kpi-label">Ready for dispatch</span><span class="factory-kpi-icon blue"><i class="bi bi-boxes"></i></span></div><div class="kpi-value">{{ stock_count|default:"—" }}</div><div class="kpi-note">Factory ledger balance</div></article>
+            <article class="workspace-kpi factory-kpi"><div class="factory-kpi-top"><span class="kpi-label">Branch transfers</span><span class="factory-kpi-icon purple"><i class="bi bi-truck"></i></span></div><div class="kpi-value">{{ dispatch_count|default:0 }}</div><div class="kpi-note">Dispatch records</div></article>
+        </section>
+    </section>
+
+    <section class="workspace-card factory-workflow-card" id="factory-procurement" data-factory-panel="procurement" aria-labelledby="factoryProcurementTitle" hidden>
+        <header class="workspace-card-head">
+            <div><h2 id="factoryProcurementTitle"><i class="bi bi-box-seam text-success me-2"></i>Raw materials &amp; procurement</h2><p>Receive and track ingredients, packaging, and stickers</p></div>
+            <span class="workspace-status ready">Live ledger</span>
+        </header>
+        <div class="workspace-card-body">
+            <div class="factory-purchase-panel">
+            <header class="factory-purchase-head">
+                <div>
+                    <h2><i class="bi bi-box-seam me-2"></i>Pokea Malighafi au Kifungashio</h2>
+                    <p>Jaza bidhaa moja kwa kila rekodi. Bidhaa nyingine? Rekodi tena.</p>
+                </div>
+            </header>
+            <form method="post" action="{% url 'record_purchase' %}" class="factory-purchase-form" id="factoryPurchaseForm">
+                {% csrf_token %}
+                <div class="factory-purchase-grid">
+                    <div class="wide">
+                        <label for="purchaseSku">1. Chagua ulichonunua</label>
+                        <select id="purchaseSku" name="sku" required>
+                            <option value="" selected disabled>Chagua malighafi au kifungashio</option>
+                            <optgroup label="Malighafi">
+                                {% for product in raw_materials %}<option value="{{ product.sku }}" data-unit="{{ product.unit }}">{% for row in factory_product_rows %}{% if row.product.pk == product.pk %}{{ product.name }} — {{ row.balance|floatformat:"-3" }} {{ product.unit }}{% endif %}{% endfor %}</option>{% endfor %}
+                            </optgroup>
+                            <optgroup label="Vifungashio">
+                                {% for product in packaging_products %}<option value="{{ product.sku }}" data-unit="{{ product.unit }}">{% for row in factory_product_rows %}{% if row.product.pk == product.pk %}{{ product.name }} — {{ row.balance|floatformat:"-3" }} {{ product.unit }}{% endif %}{% endfor %}</option>{% endfor %}
+                            </optgroup>
+                        </select>
+                        <span class="factory-purchase-help" id="purchaseStockHelp">Chagua bidhaa ili kuona kipimo na kiasi kilichopo stoo.</span>
+                    </div>
+                    <div>
+                        <label for="purchaseQuantity">2. Kiasi kilichoingia (<span id="purchaseUnit">kipimo</span>)</label>
+                        <input id="purchaseQuantity" name="quantity" type="number" min="0.001" step="0.001" placeholder="Mfano: 10" required>
+                    </div>
+                    <div>
+                        <label for="purchaseCost">3. Bei ya <span id="purchaseUnitPrice">kipimo</span> (TZS)</label>
+                        <input id="purchaseCost" name="unit_cost" type="number" min="0" step="0.01" placeholder="Mfano: 5000" required>
+                    </div>
+                    <div class="wide">
+                        <label for="purchaseSupplier">4. Supplier</label>
+                        <input id="purchaseSupplier" name="supplier" placeholder="Supplier name" required>
+                    </div>
+                    <div class="wide factory-payment-box">
+                        <label for="purchaseActualPayment">Jumla ya malipo / Actual negotiated payment (TZS)</label>
+                        <div class="factory-payment-wrap">
+                            <span>TZS</span>
+                            <input id="purchaseActualPayment" name="actual_payment" type="number" min="0" step="0.01" placeholder="0" required>
+                        </div>
+                        <span class="factory-purchase-help" id="purchaseCalculatedHelp">Imehesabiwa: TZS 0. Wewe unaweza kubadili kwa bei ya mazungumzo.</span>
+                    </div>
+                    <div class="wide factory-purchase-actions">
+                        <button class="factory-purchase-reset" type="reset">Ghairi</button>
+                        <button class="workspace-button" type="submit"><i class="bi bi-check2"></i>Hifadhi bidhaa stoo</button>
+                    </div>
+                </div>
+            </form>
+            </div>
+            {% if purchases %}
+            <div class="workspace-table-wrap"><table class="workspace-table"><thead><tr><th>Reference</th><th>Supplier</th><th>Items</th><th>Date</th><th>Status / action</th><th>Total</th></tr></thead><tbody>
+                {% for purchase in purchases %}
+                <tr>
+                    <td>{{ purchase.reference }}</td>
+                    <td>{{ purchase.supplier.name }}</td>
+                    <td>{% for item in purchase.items.all %}{{ item.product.name }} — {{ item.quantity }} {{ item.product.unit }}{% if not forloop.last %}<br>{% endif %}{% empty %}—{% endfor %}</td>
+                    <td>{{ purchase.purchase_date }}</td>
+                    <td>{{ purchase.get_status_display }}{% if purchase.status == "DRAFT" %}<form method="post" action="{% url 'receive_saved_purchase' purchase.id %}" class="mt-1">{% csrf_token %}<button class="branch-action" type="submit"><i class="bi bi-box-arrow-in-down"></i> Receive to store</button></form>{% endif %}</td>
+                    <td>{{ purchase.total_amount|floatformat:"2"|intcomma:False }}</td>
+                </tr>
+                {% endfor %}
+            </tbody></table></div>
+            {% else %}<div class="workspace-empty"><div><i class="bi bi-inbox"></i><strong>No purchase records yet</strong><span>Received purchases and inventory increases will appear here.</span></div></div>{% endif %}
+        </div>
+    </section>
+
+    <section class="workspace-card factory-workflow-card" id="factory-production" data-factory-panel="production" aria-labelledby="factoryProductionTitle" hidden>
+        <header class="workspace-card-head">
+            <div><h2 id="factoryProductionTitle"><i class="bi bi-gear-wide-connected text-success me-2"></i>Production batches</h2><p>Capture material consumption, output, and batch traceability</p></div>
+            <span class="workspace-status ready">Live ledger</span>
+        </header>
+        <div class="workspace-card-body">
+            <form method="post" action="{% url 'record_production' %}" class="workspace-form-grid mb-3">
+                {% csrf_token %}
+                <div class="workspace-field"><label for="batchSku">Finished product</label><select id="batchSku" name="sku" required><option value="">Select finished good</option>{% for product in finished_products %}<option value="{{ product.sku }}">{{ product.name }} ({{ product.sku }})</option>{% endfor %}</select></div>
+                <div class="workspace-field"><label for="batchName">Batch identifier (optional)</label><input id="batchName" name="batch_name" placeholder="Automatically generated if blank"></div>
+                <div class="workspace-field"><label for="batchQuantity">Quantity produced</label><input id="batchQuantity" name="quantity" type="number" min="0.001" step="0.001" required></div>
+                <div class="workspace-field"><label for="batchMaterial">Raw material</label><select id="batchMaterial" name="material_sku" required>{% for row in factory_product_rows %}{% if row.product.category == "RAW_MATERIAL" %}<option value="{{ row.product.sku }}">{{ row.product.name }} — {{ row.balance|floatformat:"-3" }} {{ row.product.unit }} available</option>{% endif %}{% endfor %}</select></div>
+                <div class="workspace-field"><label for="batchMaterialQuantity">Material quantity</label><input id="batchMaterialQuantity" name="material_quantity" type="number" min="0.001" step="0.001" required></div>
+                <div class="workspace-field"><label for="batchPackaging">Packaging</label><select id="batchPackaging" name="material_sku"><option value="">Select packaging (optional)</option>{% for row in factory_product_rows %}{% if row.product.category == "PACKAGING" %}<option value="{{ row.product.sku }}">{{ row.product.name }} — {{ row.balance|floatformat:"-3" }} {{ row.product.unit }} available</option>{% endif %}{% endfor %}</select></div>
+                <div class="workspace-field"><label for="batchPackagingQuantity">Packaging quantity</label><input id="batchPackagingQuantity" name="material_quantity" type="number" min="0" step="0.001" value="0"></div>
+                <div class="wide"><button class="workspace-button" type="submit"><i class="bi bi-check2-circle"></i>Complete batch</button></div>
+            </form>
+            {% if batches %}
+            <div class="workspace-table-wrap"><table class="workspace-table"><thead><tr><th>Reference</th><th>Product</th><th>Quantity</th><th>Status</th><th>Date</th></tr></thead><tbody>{% for batch in batches %}<tr><td>{{ batch.reference }}</td><td>{{ batch.recipe.product.name }}</td><td>{{ batch.quantity }}</td><td>{{ batch.status }}</td><td>{{ batch.production_date }}</td></tr>{% endfor %}</tbody></table></div>
+            {% else %}<div class="workspace-empty"><div><i class="bi bi-clipboard2-plus"></i><strong>No production batches yet</strong><span>Completed batches and finished-goods movements will appear here.</span></div></div>{% endif %}
+        </div>
+    </section>
+
+    <section class="workspace-card factory-workflow-card" id="factory-dispatch" data-factory-panel="dispatch" aria-labelledby="factoryDispatchTitle" hidden>
+        <header class="workspace-card-head">
+            <div><h2 id="factoryDispatchTitle"><i class="bi bi-truck text-success me-2"></i>Dispatch to branches</h2><p>Prepare transfers and monitor branch receipt confirmation</p></div>
+            <span class="workspace-status ready">Live dispatch</span>
+        </header>
+        <div class="workspace-card-body">
+            <form method="post" action="{% url 'record_dispatch' %}" class="workspace-form-grid mb-3">
+                {% csrf_token %}
+                <div class="workspace-field"><label for="dispatchSku">Finished product</label><select id="dispatchSku" name="sku" required><option value="">Select finished good</option>{% for row in factory_product_rows %}{% if row.product.category == "FINISHED_GOOD" %}<option value="{{ row.product.sku }}">{{ row.product.name }} — {{ row.balance|floatformat:"-3" }} {{ row.product.unit }} available</option>{% endif %}{% endfor %}</select></div>
+                <div class="workspace-field"><label for="dispatchBatch">Production batch</label><select id="dispatchBatch" name="batch_id" required><option value="">Select batch</option>{% for batch in batches %}<option value="{{ batch.pk }}">{{ batch.reference }} — {{ batch.recipe.product.name }}</option>{% endfor %}</select></div>
+                <div class="workspace-field"><label for="dispatchQuantity">Quantity</label><input id="dispatchQuantity" name="quantity" type="number" min="0.001" step="0.001" required></div>
+                <div class="workspace-field"><label for="dispatchDestination">Destination</label><select id="dispatchDestination" name="destination"><option value="MWANZA">Mwanza</option><option value="DAR">Dar es Salaam</option></select></div>
+                <div class="wide"><button class="workspace-button" type="submit"><i class="bi bi-truck"></i>Dispatch stock</button></div>
+            </form>
+            <form method="post" action="{% url 'record_loss' %}" class="workspace-form-grid mb-3">
+                {% csrf_token %}
+                <div class="workspace-field"><label for="factoryLossSku">Lost / damaged item</label><select id="factoryLossSku" name="sku" required>{% for product in finished_products %}<option value="{{ product.sku }}">{{ product.name }}</option>{% endfor %}{% for product in raw_materials %}<option value="{{ product.sku }}">{{ product.name }}</option>{% endfor %}{% for product in packaging_products %}<option value="{{ product.sku }}">{{ product.name }}</option>{% endfor %}</select></div>
+                <div class="workspace-field"><label for="factoryLossQuantity">Quantity lost</label><input id="factoryLossQuantity" name="quantity" type="number" min="0.001" step="0.001" required></div>
+                <div class="workspace-field wide"><label for="factoryLossNotes">Reason / notes</label><input id="factoryLossNotes" name="notes"></div>
+                <div class="wide"><button class="branch-action" type="submit"><i class="bi bi-exclamation-triangle"></i>Record stock loss</button></div>
+            </form>
+            <div class="workspace-table-wrap">
+                <table class="workspace-table">
+                    <thead><tr><th>Transfer reference</th><th>Destination</th><th>Products</th><th>Dispatched</th><th>Receipt</th><th>Status</th></tr></thead>
+                    <tbody>
+                    {% if dispatches %}
+                    {% for transfer in dispatches %}<tr><td>{{ transfer.reference }}</td><td>{{ transfer.destination.name }}</td><td>{% for item in transfer.items.all %}{{ item.product.name }} ({{ item.quantity_sent }}){% if not forloop.last %}, {% endif %}{% endfor %}</td><td>{{ transfer.dispatched_at }}</td><td>{{ transfer.received_at|default:"Pending" }}</td><td>{{ transfer.status }}</td></tr>{% endfor %}
+                    {% else %}<tr><td colspan="6"><div class="workspace-empty"><div><i class="bi bi-truck"></i><strong>No dispatches recorded</strong><span>Dispatch records and branch receipt acknowledgements will appear here.</span></div></div></td></tr>{% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const factoryPurchaseForm = document.getElementById("factoryPurchaseForm");
+    const factoryPurchaseSku = document.getElementById("purchaseSku");
+    const factoryPurchaseQuantity = document.getElementById("purchaseQuantity");
+    const factoryPurchaseCost = document.getElementById("purchaseCost");
+    const factoryActualPayment = document.getElementById("purchaseActualPayment");
+    const factoryCalculatedHelp = document.getElementById("purchaseCalculatedHelp");
+    const factoryPurchaseUnit = document.getElementById("purchaseUnit");
+    const factoryPurchaseUnitPrice = document.getElementById("purchaseUnitPrice");
+    const factoryPurchaseStockHelp = document.getElementById("purchaseStockHelp");
+    let factoryActualPaymentEdited = false;
+
+    function updateFactoryPurchaseTotal() {
+        const quantity = parseFloat(factoryPurchaseQuantity.value) || 0;
+        const unitCost = parseFloat(factoryPurchaseCost.value) || 0;
+        const calculated = quantity * unitCost;
+        factoryCalculatedHelp.textContent =
+            "Imehesabiwa: TZS " + calculated.toLocaleString("en-US", { maximumFractionDigits: 2 }) +
+            ". Wewe unaweza kubadili kwa bei ya mazungumzo.";
+        if (!factoryActualPaymentEdited) {
+            factoryActualPayment.value = calculated ? calculated.toFixed(2) : "";
+        }
+    }
+
+    factoryPurchaseQuantity.addEventListener("input", updateFactoryPurchaseTotal);
+    factoryPurchaseCost.addEventListener("input", updateFactoryPurchaseTotal);
+    factoryActualPayment.addEventListener("input", () => {
+        factoryActualPaymentEdited = factoryActualPayment.value !== "";
+    });
+    factoryPurchaseSku.addEventListener("change", () => {
+        const selected = factoryPurchaseSku.options[factoryPurchaseSku.selectedIndex];
+        if (!selected || !selected.value) return;
+        const unit = selected.dataset.unit || "kipimo";
+        factoryPurchaseUnit.textContent = unit;
+        factoryPurchaseUnitPrice.textContent = unit;
+        factoryPurchaseStockHelp.textContent = selected.textContent + " stoo.";
+    });
+    factoryPurchaseForm.addEventListener("reset", () => {
+        factoryActualPaymentEdited = false;
+        window.setTimeout(() => {
+            factoryPurchaseUnit.textContent = "kipimo";
+            factoryPurchaseUnitPrice.textContent = "kipimo";
+            factoryPurchaseStockHelp.textContent =
+                "Chagua bidhaa ili kuona kipimo na kiasi kilichopo stoo.";
+            factoryCalculatedHelp.textContent =
+                "Imehesabiwa: TZS 0. Wewe unaweza kubadili kwa bei ya mazungumzo.";
+        }, 0);
+    });
+
+    const factoryNavLinks = Array.from(document.querySelectorAll(".factory-nav-group a"));
+    const factoryBreadcrumb = document.getElementById("factoryBreadcrumb");
+    const factoryPanels = Array.from(document.querySelectorAll("[data-factory-panel]"));
+
+    function activateFactorySection(section, scrollToTop = false) {
+        const activeLink = factoryNavLinks.find((link) => link.dataset.factorySection === section);
+        if (!activeLink) return;
+
+        factoryNavLinks.forEach((link) => {
+            const isActive = link === activeLink;
+            link.classList.toggle("active", isActive);
+            if (isActive) link.setAttribute("aria-current", "page");
+            else link.removeAttribute("aria-current");
+        });
+        factoryPanels.forEach((panel) => {
+            panel.hidden = panel.dataset.factoryPanel !== section;
+        });
+        factoryBreadcrumb.textContent = activeLink.dataset.label;
+        document.body.classList.remove("workspace-nav-open");
+        if (scrollToTop) window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    factoryNavLinks.forEach((link) => {
+        link.addEventListener("click", () => {
+            activateFactorySection(link.dataset.factorySection, true);
+        });
+    });
+    window.addEventListener("hashchange", () => {
+        activateFactorySection(window.location.hash.slice(1).replace("factory-", "") || "overview");
+    });
+    window.addEventListener("popstate", () => {
+        activateFactorySection(window.location.hash.slice(1).replace("factory-", "") || "overview");
+    });
+    activateFactorySection(window.location.hash.slice(1).replace("factory-", "") || "overview");
+</script>
+{% endblock %}

@@ -1,0 +1,1 @@
+/* Global application initialization will be added as screens are implemented. */

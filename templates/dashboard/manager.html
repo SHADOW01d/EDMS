@@ -1,0 +1,2409 @@
+{% load static humanize %}
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Effective Diet — Mfumo wa Usimamizi (EDMS)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<style>
+/* ============================================================
+   VARIABLES & RESET
+============================================================ */
+:root{
+  --ink:#0b1f12; --ink-soft:#3f5445; --muted:#708174; --faint:#9aab9e;
+  --line:#e3ebe3; --line-soft:#eef4ee;
+  --paper:#ffffff; --canvas:#f2f6f2;
+  --g-950:#041f11; --g-900:#062b18; --g-800:#0a3a22; --g-700:#0d4a2b;
+  --g-600:#12693a; --g-500:#16a34a; --g-400:#22c55e; --g-300:#4ade80;
+  --g-100:#dcfce7; --g-50:#f0fdf4;
+  --amber:#f59e0b; --amber-100:#fef3c7; --amber-800:#92400e;
+  --red:#ef4444; --red-100:#fee2e2; --red-700:#b91c1c;
+  --blue:#3b82f6; --blue-100:#dbeafe; --blue-700:#1d4ed8;
+  --purple:#8b5cf6; --purple-100:#ede9fe;
+  --radius:16px;
+  --shadow-sm:0 1px 2px rgba(4,31,17,.04),0 1px 3px rgba(4,31,17,.06);
+  --shadow-md:0 4px 14px rgba(4,31,17,.07),0 2px 4px rgba(4,31,17,.04);
+  --shadow-lg:0 16px 40px rgba(4,31,17,.12),0 6px 12px rgba(4,31,17,.05);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:var(--canvas); color:var(--ink); line-height:1.5; -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+::selection{background:var(--g-300);color:var(--g-950)}
+h1,h2,h3,h4,h5,h6{letter-spacing:-.3px}
+a{text-decoration:none}
+/* Scrollbar */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#c9d8cc;border-radius:99px;border:2px solid var(--canvas)}
+::-webkit-scrollbar-thumb:hover{background:#a8bfad}
+
+/* ============================================================
+   APP SHELL
+============================================================ */
+.app-shell{display:flex;min-height:100vh}
+
+/* ---------- SIDEBAR ---------- */
+.sidebar{
+  width:262px;flex-shrink:0;position:fixed;inset:0 auto 0 0;z-index:1040;
+  background:linear-gradient(178deg,#0a3a22 0%,#062b18 45%,#041f11 100%);
+  color:#c9dfcf;padding:22px 16px;display:flex;flex-direction:column;
+  transition:transform .28s cubic-bezier(.4,0,.2,1);overflow-y:auto;
+}
+.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-color:transparent}
+.brand{display:flex;align-items:center;gap:12px;padding:2px 6px 0}
+.brand-mark{
+  width:58px;height:42px;border-radius:10px;flex-shrink:0;padding:3px;
+  background:#fff;display:grid;place-items:center;overflow:hidden;
+  box-shadow:0 6px 18px rgba(34,197,94,.25);
+}
+.brand-mark img{width:100%;height:100%;object-fit:contain}
+.brand-text strong{
+  display:block;font-size:17px;font-weight:800;letter-spacing:-.4px;
+  background:linear-gradient(92deg,#bef264,#facc15 70%,#86efac);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.brand-text span{display:block;font-size:8.5px;letter-spacing:1.6px;text-transform:uppercase;opacity:.55;margin-top:2px}
+.nav-group{margin-top:26px;flex:1}
+.nav-label{font-size:9.5px;letter-spacing:1.6px;text-transform:uppercase;color:#5f7d68;padding:0 12px;margin-bottom:8px}
+.nav-item{
+  display:flex;align-items:center;gap:12px;padding:10px 13px;border-radius:11px;
+  font-size:13.5px;color:#a9c6ae;cursor:pointer;transition:all .18s;position:relative;margin-bottom:2px;
+  border:none;background:transparent;width:100%;text-align:left;
+}
+.nav-item i{font-size:17px;flex-shrink:0;transition:transform .18s}
+.nav-item:hover{background:rgba(255,255,255,.06);color:#e6f5e8}
+.nav-item:hover i{transform:scale(1.12)}
+.nav-item.active{
+  background:linear-gradient(95deg,var(--g-500),var(--g-600));
+  color:#fff;font-weight:700;box-shadow:0 6px 18px rgba(22,163,74,.35);
+}
+.nav-item.active::before{
+  content:'';position:absolute;left:-16px;top:50%;transform:translateY(-50%);
+  width:4px;height:22px;background:var(--g-300);border-radius:0 4px 4px 0;
+}
+.nav-badge{
+  margin-left:auto;background:rgba(255,255,255,.16);color:#fff;
+  font-size:10px;font-weight:700;padding:1px 7px;border-radius:99px;
+}
+.nav-item.logout{color:#fca5a5;margin-top:8px}
+.nav-item.logout:hover{background:rgba(239,68,68,.14)}
+.sidebar-foot{margin-top:auto;padding-top:18px;border-top:1px solid rgba(255,255,255,.08)}
+.sidebar-user{display:flex;align-items:center;gap:11px;padding:8px 6px;border-radius:10px;cursor:pointer;transition:background .15s}
+.sidebar-user:hover{background:rgba(255,255,255,.06)}
+.sidebar-avatar{
+  width:38px;height:38px;border-radius:11px;flex-shrink:0;
+  background:linear-gradient(135deg,#fbbf24,#d97706);color:#3b1d04;
+  display:grid;place-items:center;font-weight:800;font-size:15px;
+}
+.sidebar-user .u-name{font-size:12.5px;font-weight:700;color:#e8f5ea}
+.sidebar-user .u-role{font-size:10px;color:#7e9b88}
+
+/* ---------- MAIN ---------- */
+.main{flex:1;margin-left:262px;min-width:0;display:flex;flex-direction:column}
+.topbar{
+  height:66px;background:rgba(255,255,255,.85);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;
+  padding:0 26px;position:sticky;top:0;z-index:1030;
+}
+.topbar-toggle{
+  display:none;border:none;background:#fff;width:38px;height:38px;border-radius:10px;
+  font-size:19px;color:var(--ink-soft);box-shadow:var(--shadow-sm);
+}
+.page-crumb{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px}
+.page-crumb b{color:var(--ink);font-weight:700;font-size:14px}
+.topbar-spacer{flex:1}
+.search-global{
+  display:flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--line);
+  border-radius:11px;padding:9px 14px;width:280px;font-size:12.5px;color:var(--faint);
+  transition:all .18s;
+}
+.search-global:focus-within{border-color:var(--g-400);box-shadow:0 0 0 4px rgba(34,197,94,.13);width:320px}
+.search-global input{border:none;outline:none;background:transparent;width:100%;font-size:12.5px;color:var(--ink)}
+.icon-btn{
+  width:40px;height:40px;border-radius:11px;border:1px solid var(--line);background:#fff;
+  display:grid;place-items:center;color:var(--ink-soft);cursor:pointer;position:relative;
+  transition:all .15s;font-size:17px;
+}
+.icon-btn:hover{background:var(--g-50);border-color:var(--g-300);color:var(--g-600)}
+.icon-btn .dot-alert{
+  position:absolute;top:8px;right:9px;width:8px;height:8px;border-radius:50%;
+  background:var(--red);border:2px solid #fff;
+}
+.topbar-avatar{
+  display:flex;align-items:center;gap:10px;padding:4px 12px 4px 4px;border-radius:99px;
+  background:#fff;border:1px solid var(--line);cursor:pointer;transition:all .15s;
+}
+.topbar-avatar:hover{border-color:var(--g-300);box-shadow:var(--shadow-sm)}
+.topbar-avatar .av{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,var(--g-600),var(--g-800));color:#fff;
+  display:grid;place-items:center;font-weight:800;font-size:13px;
+}
+.topbar-avatar .nm{font-size:12.5px;font-weight:700;color:var(--ink)}
+.topbar-avatar .rl{font-size:10px;color:var(--muted)}
+
+/* ---------- CONTENT ---------- */
+.content{padding:28px 26px 40px;flex:1}
+.view{display:none;animation:fadeUp .38s cubic-bezier(.4,0,.2,1)}
+.view.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* ============================================================
+   SECTION HERO
+============================================================ */
+.section-hero{
+  position:relative;overflow:hidden;border-radius:22px;padding:28px 30px;margin-bottom:26px;
+  background:linear-gradient(120deg,#062b18 0%,#0d4a2b 55%,#12693a 100%);
+  color:#fff;box-shadow:var(--shadow-lg);
+}
+.section-hero::before{
+  content:'';position:absolute;width:340px;height:340px;border-radius:50%;
+  right:-100px;top:-140px;
+  background:radial-gradient(circle,rgba(132,204,22,.28),transparent 68%);
+}
+.section-hero::after{
+  content:'';position:absolute;width:260px;height:260px;border-radius:50%;
+  left:-90px;bottom:-150px;
+  background:radial-gradient(circle,rgba(34,197,94,.22),transparent 68%);
+}
+.hero-inner{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;gap:22px;flex-wrap:wrap}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:7px;font-size:10.5px;letter-spacing:1.5px;
+  text-transform:uppercase;color:#86efac;font-weight:700;margin-bottom:8px;
+  background:rgba(255,255,255,.08);padding:4px 11px;border-radius:99px;
+}
+.hero-title{font-size:26px;font-weight:800;letter-spacing:-.7px;line-height:1.15}
+.hero-title span{color:#bef264}
+.hero-sub{font-size:13px;color:#b6d4bf;margin-top:7px;max-width:520px}
+.hero-stats{display:flex;gap:14px;flex-wrap:wrap}
+.hero-stat{
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.13);
+  border-radius:14px;padding:12px 18px;backdrop-filter:blur(6px);min-width:110px;
+}
+.hero-stat .h-val{font-size:22px;font-weight:800;letter-spacing:-.5px;line-height:1}
+.hero-stat .h-lab{font-size:10.5px;color:#a9c6ae;margin-top:4px;text-transform:uppercase;letter-spacing:.6px}
+
+/* ============================================================
+   KPI CARDS
+============================================================ */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-bottom:26px}
+.kpi-card{
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;
+  transition:all .22s cubic-bezier(.4,0,.2,1);
+}
+.kpi-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);border-color:var(--g-300)}
+.kpi-card::after{
+  content:'';position:absolute;right:-30px;top:-30px;width:110px;height:110px;border-radius:50%;
+  background:radial-gradient(circle,rgba(34,197,94,.08),transparent 70%);
+}
+.kpi-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+.kpi-ic{
+  width:46px;height:46px;border-radius:13px;display:grid;place-items:center;
+  font-size:22px;color:#fff;flex-shrink:0;
+}
+.kpi-ic.green{background:linear-gradient(140deg,#22c55e,#0d4a2b)}
+.kpi-ic.amber{background:linear-gradient(140deg,#fbbf24,#d97706)}
+.kpi-ic.blue{background:linear-gradient(140deg,#60a5fa,#1d4ed8)}
+.kpi-ic.purple{background:linear-gradient(140deg,#a78bfa,#6d28d9)}
+.kpi-ic.red{background:linear-gradient(140deg,#f87171,#b91c1c)}
+.kpi-trend{
+  font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
+  display:inline-flex;align-items:center;gap:3px;
+}
+.kpi-trend.up{background:var(--g-100);color:var(--g-600)}
+.kpi-trend.down{background:var(--red-100);color:var(--red-700)}
+.kpi-trend.flat{background:#f1f5f9;color:#475569}
+.kpi-label{font-size:11.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.kpi-value{font-size:28px;font-weight:800;letter-spacing:-.8px;line-height:1.05;margin-top:5px}
+.kpi-sub{font-size:11.5px;color:var(--faint);margin-top:5px}
+
+/* ============================================================
+   ROLE BANNER
+============================================================ */
+.role-banner{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  background:linear-gradient(95deg,#f0fdf4,#ffffff);
+  border:1px solid var(--g-100);border-left:4px solid var(--g-500);
+  border-radius:14px;padding:14px 20px;margin-bottom:20px;
+}
+.role-banner > i{font-size:24px;color:var(--g-600)}
+.role-banner .rb-text{flex:1;min-width:180px}
+.role-banner strong{font-size:13px;display:block;margin-bottom:3px}
+.role-banner .rb-sub{font-size:11.5px;color:var(--muted)}
+.role-chips{display:flex;gap:8px;flex-wrap:wrap}
+.role-chip{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--g-600);color:#fff;font-size:11.5px;font-weight:700;
+  padding:6px 13px;border-radius:99px;box-shadow:0 4px 12px rgba(18,105,58,.25);
+}
+.role-chip.alt{background:linear-gradient(95deg,#f59e0b,#d97706);box-shadow:0 4px 12px rgba(217,119,6,.25)}
+.role-chip i{font-size:13px}
+
+/* ============================================================
+   PANEL
+============================================================ */
+.panel{
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);overflow:hidden;margin-bottom:22px;
+}
+.panel-head{
+  display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;
+  padding:18px 22px;border-bottom:1px solid var(--line-soft);
+}
+.panel-title{font-size:15px;font-weight:800;letter-spacing:-.3px;display:flex;align-items:center;gap:9px}
+.panel-title i{color:var(--g-500);font-size:18px}
+.panel-sub{font-size:11.5px;color:var(--muted);margin-top:2px}
+.panel-body{padding:22px}
+.panel-body.tight{padding:0}
+
+/* ============================================================
+   TABLES
+============================================================ */
+.table-wrap{overflow-x:auto}
+.data-table{width:100%;border-collapse:collapse;font-size:13px;min-width:680px}
+.data-table thead th{
+  text-align:left;padding:13px 18px;font-size:10.5px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.7px;background:#fafdfa;
+  border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0;
+}
+.data-table tbody td{
+  padding:14px 18px;border-bottom:1px solid var(--line-soft);color:var(--ink-soft);
+  white-space:nowrap;vertical-align:middle;
+}
+.data-table tbody tr{transition:background .12s}
+.data-table tbody tr:hover{background:var(--g-50)}
+.data-table tbody tr:last-child td{border-bottom:none}
+.data-table tfoot td{
+  padding:14px 18px;font-weight:800;background:#f7fbf7;border-top:2px solid var(--g-100);
+  color:var(--ink);white-space:nowrap;
+}
+.data-table .mono{font-variant-numeric:tabular-nums;font-weight:600}
+.data-table .cell-strong{font-weight:700;color:var(--ink)}
+
+/* Sales multi-header */
+.sales-table{min-width:1400px}
+.sales-table thead th{text-align:center;vertical-align:middle}
+.sales-table thead th.grp{border-bottom:1px solid var(--line);background:#f3f8f3}
+.sales-table thead th.grp-green{background:linear-gradient(180deg,#ecfdf3,#fafdfa);color:var(--g-600)}
+.sales-table thead th.grp-amber{background:linear-gradient(180deg,#fffbeb,#fafdfa);color:var(--amber-800)}
+.sales-table thead th.grp-blue{background:linear-gradient(180deg,#eff6ff,#fafdfa);color:var(--blue-700)}
+.sales-table thead th.grp-purple{background:linear-gradient(180deg,#f5f3ff,#fafdfa);color:#6d28d9}
+.sales-table tbody td{text-align:center;font-variant-numeric:tabular-nums}
+.sales-table tbody td:first-child,.sales-table tbody td:nth-child(2){text-align:left}
+
+/* ============================================================
+   BADGES & CHIPS
+============================================================ */
+.badge-soft{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 11px;border-radius:99px;font-size:10.5px;font-weight:700;letter-spacing:.2px;
+}
+.badge-soft i{font-size:11px}
+.badge-soft.green{background:var(--g-100);color:var(--g-600)}
+.badge-soft.amber{background:var(--amber-100);color:var(--amber-800)}
+.badge-soft.red{background:var(--red-100);color:var(--red-700)}
+.badge-soft.blue{background:var(--blue-100);color:var(--blue-700)}
+.badge-soft.purple{background:var(--purple-100);color:#6d28d9}
+.badge-soft.gray{background:#f1f5f9;color:#475569}
+
+/* ============================================================
+   BUTTONS
+============================================================ */
+.btn-brand{
+  background:linear-gradient(95deg,var(--g-500),var(--g-600));color:#fff;border:none;
+  padding:10px 18px;border-radius:11px;font-size:13px;font-weight:700;
+  display:inline-flex;align-items:center;gap:8px;cursor:pointer;
+  box-shadow:0 6px 16px rgba(22,163,74,.28);transition:all .18s;
+}
+.btn-brand:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(22,163,74,.36);color:#fff}
+.btn-brand i{font-size:16px}
+.btn-soft{
+  background:#fff;border:1px solid var(--line);color:var(--ink-soft);
+  padding:9px 15px;border-radius:11px;font-size:12.5px;font-weight:600;
+  display:inline-flex;align-items:center;gap:7px;cursor:pointer;transition:all .15s;
+}
+.btn-soft:hover{border-color:var(--g-300);background:var(--g-50);color:var(--g-600)}
+.btn-icon-sm{
+  width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:#fff;
+  display:inline-grid;place-items:center;color:var(--muted);cursor:pointer;transition:all .15s;
+}
+.btn-icon-sm:hover{border-color:var(--g-300);color:var(--g-600);background:var(--g-50)}
+
+/* ============================================================
+   CHARTS
+============================================================ */
+.chart-box{position:relative;height:260px}
+.chart-box.sm{height:210px}
+.chart-box.lg{height:300px}
+
+/* ============================================================
+   PRODUCT SPLIT CARDS
+============================================================ */
+.split-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin-bottom:24px}
+.split-card{
+  background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;
+  box-shadow:var(--shadow-sm);transition:all .22s;position:relative;overflow:hidden;
+}
+.split-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+.split-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:5px;
+  background:linear-gradient(90deg,var(--g-500),var(--g-300));
+}
+.split-card.amber::before{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+.split-card.dark::before{background:linear-gradient(90deg,#0d4a2b,#22c55e)}
+.split-head{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.split-ic{
+  width:44px;height:44px;border-radius:12px;display:grid;place-items:center;
+  font-size:21px;color:#fff;background:linear-gradient(140deg,var(--g-500),var(--g-700));
+}
+.split-card.amber .split-ic{background:linear-gradient(140deg,#fbbf24,#d97706)}
+.split-card.dark .split-ic{background:linear-gradient(140deg,#166534,#052e16)}
+.split-head h4{font-size:14.5px;font-weight:800;margin:0}
+.split-head .total{font-size:11.5px;color:var(--muted)}
+.split-rows{display:flex;flex-direction:column;gap:11px}
+.split-row{display:flex;align-items:center;gap:10px;font-size:12.5px}
+.split-row .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.split-row .dot.store{background:var(--g-600)}
+.split-row .dot.mwanza{background:var(--blue)}
+.split-row .dot.dar{background:var(--amber)}
+.split-row .lbl{flex:1;color:var(--ink-soft);font-weight:500}
+.split-row .num{font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink)}
+.split-bar{height:8px;border-radius:99px;background:#eef4ee;overflow:hidden;display:flex;margin-top:6px}
+.split-bar span{height:100%}
+
+/* ============================================================
+   OFFICE CONFIRMATION CARDS
+============================================================ */
+.office-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;margin-bottom:24px}
+.office-card{
+  background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;
+  box-shadow:var(--shadow-sm);transition:all .22s;
+}
+.office-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-3px)}
+.office-head{
+  padding:18px 20px;color:#fff;display:flex;align-items:center;gap:13px;
+  background:linear-gradient(120deg,#0d4a2b,#062b18);
+}
+.office-card.dar .office-head{background:linear-gradient(120deg,#b45309,#78350f)}
+.office-head .oh-ic{
+  width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.15);
+  display:grid;place-items:center;font-size:21px;
+}
+.office-head h4{font-size:15px;font-weight:800;margin:0}
+.office-head .oh-sub{font-size:11px;opacity:.75}
+.office-body{padding:18px 20px}
+.office-stat-row{display:flex;justify-content:space-between;gap:12px;margin-bottom:14px}
+.office-stat{flex:1;text-align:center;padding:10px 6px;border-radius:11px;background:#f7fbf7}
+.office-stat .os-val{font-size:18px;font-weight:800;color:var(--ink)}
+.office-stat .os-lab{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.office-stat.in{background:var(--g-50)}
+.office-stat.out{background:var(--amber-100)}
+.office-stat.bal{background:var(--blue-100)}
+
+/* ============================================================
+   MINI STATS ROW
+============================================================ */
+.mini-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px}
+.mini-stat{
+  background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;
+  display:flex;align-items:center;gap:12px;transition:all .18s;
+}
+.mini-stat:hover{border-color:var(--g-300);box-shadow:var(--shadow-md)}
+.mini-stat .ms-ic{
+  width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:18px;
+  background:var(--g-100);color:var(--g-600);flex-shrink:0;
+}
+.mini-stat.amber .ms-ic{background:var(--amber-100);color:var(--amber-800)}
+.mini-stat.blue .ms-ic{background:var(--blue-100);color:var(--blue-700)}
+.mini-stat.purple .ms-ic{background:var(--purple-100);color:#6d28d9}
+.mini-stat.red .ms-ic{background:var(--red-100);color:var(--red-700)}
+.mini-stat .ms-val{font-size:19px;font-weight:800;line-height:1;letter-spacing:-.4px}
+.mini-stat .ms-lab{font-size:10.5px;color:var(--muted);margin-top:3px}
+
+/* ============================================================
+   MODAL
+============================================================ */
+.modal-content{border:none;border-radius:18px;overflow:hidden;box-shadow:0 30px 80px rgba(4,31,17,.3)}
+.modal-header{
+  background:linear-gradient(120deg,#0d4a2b,#062b18);color:#fff;border:none;
+  padding:20px 24px;
+}
+.modal-header .modal-title{font-size:16px;font-weight:800;display:flex;align-items:center;gap:9px}
+.modal-header .btn-close{filter:invert(1);opacity:.8}
+.modal-body{padding:24px}
+.modal-footer{border-top:1px solid var(--line-soft);padding:16px 24px}
+.form-label-sm{font-size:12px;font-weight:700;color:var(--ink-soft);margin-bottom:6px;display:block}
+.form-control, .form-select{
+  border:1px solid var(--line);border-radius:10px;padding:10px 13px;font-size:13px;
+  transition:all .15s;
+}
+.form-control:focus, .form-select:focus{
+  border-color:var(--g-400);box-shadow:0 0 0 4px rgba(34,197,94,.13);
+}
+
+/* ============================================================
+   TOAST
+============================================================ */
+.toast-container{position:fixed;bottom:24px;right:24px;z-index:2000}
+.app-toast{
+  background:var(--g-800);color:#fff;border-radius:12px;padding:14px 20px;
+  display:flex;align-items:center;gap:11px;font-size:13px;font-weight:600;
+  box-shadow:0 16px 40px rgba(4,31,17,.35);margin-top:10px;
+  animation:slideIn .3s cubic-bezier(.4,0,.2,1);
+}
+@keyframes slideIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+.app-toast i{font-size:19px;color:var(--g-300)}
+
+/* ============================================================
+   FILTER BAR
+============================================================ */
+.filter-bar{
+  display:flex;gap:12px;flex-wrap:wrap;align-items:center;
+  background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 18px;
+  margin-bottom:20px;box-shadow:var(--shadow-sm);
+}
+.filter-bar .fb-group{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted)}
+.filter-bar .fb-group strong{color:var(--ink);font-weight:700}
+.filter-bar select, .filter-bar input{
+  border:1px solid var(--line);border-radius:9px;padding:8px 12px;font-size:12.5px;
+  color:var(--ink);background:#fff;outline:none;
+}
+.filter-bar select:focus, .filter-bar input:focus{border-color:var(--g-400)}
+
+/* ============================================================
+   MISC
+============================================================ */
+.divider{height:1px;background:var(--line-soft);margin:18px 0}
+.text-gradient{
+  background:linear-gradient(92deg,var(--g-600),var(--g-400));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.pulse-dot{
+  display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--g-400);
+  box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:pulse 1.8s infinite;
+}
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 rgba(34,197,94,.6)}
+  70%{box-shadow:0 0 0 10px rgba(34,197,94,0)}
+  100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}
+}
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+@media (max-width:1200px){
+  .hero-stats{width:100%}
+}
+@media (max-width:991px){
+  .sidebar{transform:translateX(-100%)}
+  body.sidebar-open .sidebar{transform:translateX(0);box-shadow:0 0 60px rgba(0,0,0,.4)}
+  .main{margin-left:0}
+  .topbar-toggle{display:grid;place-items:center}
+  .search-global{display:none}
+  .content{padding:20px 16px 32px}
+  .section-hero{padding:22px}
+  .hero-title{font-size:22px}
+  body.sidebar-open::after{
+    content:'';position:fixed;inset:0;background:rgba(4,31,17,.4);z-index:1035;backdrop-filter:blur(2px);
+  }
+}
+@media (max-width:576px){
+  .topbar{padding:0 14px;gap:9px}
+  .topbar-avatar .nm,.topbar-avatar .rl{display:none}
+  .topbar-avatar{padding:4px}
+  .kpi-value{font-size:23px}
+  .hero-title{font-size:19px}
+  .hero-stat{padding:10px 14px;min-width:90px}
+  .hero-stat .h-val{font-size:18px}
+}
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ============================================================
+       SIDEBAR
+  ============================================================ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark"><img src="{{ MEDIA_URL }}logo.png" alt="Effective Diet"></div>
+      <div class="brand-text">
+        <strong>Effective Diet</strong>
+        <span>Stay Healthy · Be Productive</span>
+      </div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Usimamizi</div>
+      <button class="nav-item active" data-view="dashboard">
+        <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+      </button>
+
+      <div class="nav-label" style="margin-top:18px">Uendeshaji</div>
+      <button class="nav-item" data-view="catalog">
+        <i class="bi bi-tags"></i><span>Bidhaa &amp; Bei</span>
+      </button>
+      <button class="nav-item" data-view="raw">
+        <i class="bi bi-box-seam"></i><span>Malighafi &amp; Vifungashio</span>
+      </button>
+      <button class="nav-item" data-view="production">
+        <i class="bi bi-gear-wide-connected"></i><span>Uzalishaji</span>
+      </button>
+      <button class="nav-item" data-view="distribution">
+        <i class="bi bi-truck"></i><span>Ugawaji &amp; Mgawanyo</span>
+      </button>
+      <button class="nav-item" data-view="office">
+        <i class="bi bi-patch-check"></i><span>Uthibitisho wa Ofisi</span>
+        <span class="nav-badge">2</span>
+      </button>
+
+      <div class="nav-label" style="margin-top:18px">Matawi</div>
+      <button class="nav-item" data-view="mwanza">
+        <i class="bi bi-shop"></i><span>Mwanza Branch</span>
+      </button>
+      <button class="nav-item" data-view="dar">
+        <i class="bi bi-shop-window"></i><span>Dar es Salaam Branch</span>
+      </button>
+
+      <div class="nav-label" style="margin-top:18px">Ripoti</div>
+      <button class="nav-item" data-view="sales">
+        <i class="bi bi-graph-up-arrow"></i><span>Ripoti ya Mauzo</span>
+      </button>
+      <button class="nav-item" data-view="calls">
+        <i class="bi bi-telephone-outbound"></i><span>Calls &amp; Follow-ups</span>
+      </button>
+    </div>
+
+    <div class="sidebar-foot">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar">{{ manager_initial }}</div>
+        <div>
+        <div class="u-name">{{ manager_name }}</div>
+          <div class="u-role">Manager / CEO</div>
+        </div>
+      </div>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button class="nav-item logout" type="submit">
+        <i class="bi bi-box-arrow-right"></i><span>Ondoka</span>
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- ============================================================
+       MAIN
+  ============================================================ -->
+  <div class="main">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <button class="topbar-toggle" id="sidebarToggle"><i class="bi bi-list"></i></button>
+      <div class="page-crumb">
+        <i class="bi bi-house-door"></i>
+        <span>EDMS</span>
+        <i class="bi bi-chevron-right" style="font-size:10px"></i>
+        <b id="crumbCurrent">Dashboard</b>
+      </div>
+      <div class="topbar-spacer"></div>
+      <div class="search-global">
+        <i class="bi bi-search"></i>
+        <input type="text" placeholder="Tafuta bidhaa, ofisi, n.k...">
+      </div>
+      <button class="icon-btn" title="Arifa">
+        <i class="bi bi-bell"></i><span class="dot-alert"></span>
+      </button>
+      <button class="icon-btn" title="Mipangilio"><i class="bi bi-sliders"></i></button>
+      <div class="topbar-avatar">
+        <div class="av">{{ manager_initial }}</div>
+        <div>
+        <div class="nm">{{ manager_name }}</div>
+          <div class="rl">CEO / Manager</div>
+        </div>
+        <i class="bi bi-chevron-down" style="font-size:11px;color:var(--muted)"></i>
+      </div>
+    </header>
+
+    <!-- CONTENT -->
+    <div class="content">
+      {% if messages %}
+      <div class="mb-3" role="status" aria-live="polite">
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}success{% endif %} py-2 mb-2">{{ message }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      <!-- ============================================================
+           VIEW: DASHBOARD
+      ============================================================ -->
+      <section class="view active" id="view-dashboard">
+        <div class="section-hero">
+          <div class="hero-inner">
+            <div>
+              <div class="hero-eyebrow"><span class="pulse-dot"></span> Mfumo Uko Hai</div>
+              <h1 class="hero-title">Karibu tena, <span>{{ manager_name }}</span> 👋</h1>
+              <p class="hero-sub">Hii ni muhtasari wa leo wa Effective Diet — uzalishaji, ugawaji, mauzo na huduma kwa wateja kwa ofisi zote mbili.</p>
+            </div>
+            <div class="hero-stats">
+              <div class="hero-stat">
+                <div class="h-val">{{ production_month|floatformat:"0" }}</div>
+                <div class="h-lab">Zilizozalishwa</div>
+              </div>
+              <div class="hero-stat">
+                <div class="h-val">{{ factory_stock|floatformat:"0" }}</div>
+                <div class="h-lab">Store</div>
+              </div>
+              <div class="hero-stat">
+                <div class="h-val">{{ mwanza_stock|floatformat:"0" }}</div>
+                <div class="h-lab">Mwanza</div>
+              </div>
+              <div class="hero-stat">
+                <div class="h-val">{{ dar_stock|floatformat:"0" }}</div>
+                <div class="h-lab">Dar</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-top">
+              <div class="kpi-ic green"><i class="bi bi-box-seam"></i></div>
+              <span class="kpi-trend up"><i class="bi bi-check-circle"></i> Live</span>
+            </div>
+            <div class="kpi-label">Jumla ya Uzalishaji</div>
+            <div class="kpi-value">{{ production_month|floatformat:"0" }}</div>
+            <div class="kpi-sub">Vipande · mwezi huu</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-top">
+              <div class="kpi-ic amber"><i class="bi bi-cart-check"></i></div>
+              <span class="kpi-trend up"><i class="bi bi-check-circle"></i> Live</span>
+            </div>
+            <div class="kpi-label">Mauzo ya Jumla</div>
+            <div class="kpi-value">TZS {{ sales_month|floatformat:"0"|intcomma:False }}</div>
+            <div class="kpi-sub">Leo: TZS {{ sales_today|floatformat:"0"|intcomma:False }}</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-top">
+              <div class="kpi-ic blue"><i class="bi bi-people"></i></div>
+              <span class="kpi-trend flat"><i class="bi bi-person"></i> Active</span>
+            </div>
+            <div class="kpi-label">Wateja Hai</div>
+            <div class="kpi-value">{{ customer_count }}</div>
+            <div class="kpi-sub">Rekodi za sasa za mfumo</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-top">
+              <div class="kpi-ic red"><i class="bi bi-exclamation-triangle"></i></div>
+              <span class="kpi-trend down"><i class="bi bi-exclamation-circle"></i> Live</span>
+            </div>
+            <div class="kpi-label">Hasara (Loss)</div>
+            <div class="kpi-value">{{ loss_month|floatformat:"0" }}</div>
+            <div class="kpi-sub">Vipande vilivyopotea</div>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-lg-7">
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <div class="panel-title"><i class="bi bi-graph-up"></i> Mwenendo wa Mauzo</div>
+                  <div class="panel-sub">Wiki 8 zilizopita · Mwanza vs Dar</div>
+                </div>
+                <div class="d-flex gap-3 small">
+                  <span class="d-flex align-items-center gap-1"><span style="width:9px;height:9px;border-radius:50%;background:var(--g-500);display:inline-block"></span>Mwanza</span>
+                  <span class="d-flex align-items-center gap-1"><span style="width:9px;height:9px;border-radius:50%;background:var(--amber);display:inline-block"></span>Dar</span>
+                </div>
+              </div>
+              <div class="panel-body">
+                <div class="chart-box"><canvas id="chartSalesTrend"></canvas></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-5">
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <div class="panel-title"><i class="bi bi-pie-chart"></i> Mgawanyo wa Bidhaa</div>
+                  <div class="panel-sub">Store · Mwanza · Dar</div>
+                </div>
+              </div>
+              <div class="panel-body">
+                <div class="chart-box"><canvas id="chartStockSplit"></canvas></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           VIEW: PRODUCT CATALOG
+      ============================================================ -->
+      <section class="view" id="view-catalog">
+        <div class="section-hero">
+          <div class="hero-inner">
+            <div>
+              <div class="hero-eyebrow"><i class="bi bi-tags"></i> Catalog ya Bidhaa</div>
+              <h1 class="hero-title">Bidhaa, Malighafi &amp; <span>Bei</span></h1>
+              <p class="hero-sub">Manager anaweza kubadilisha majina, SKU, vipimo na bei. Mabadiliko hutumika moja kwa moja kwenye mauzo na orodha za mfumo.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-lg-12">
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <div class="panel-title"><i class="bi bi-box-seam"></i> Bidhaa Zilizomalizika</div>
+                  <div class="panel-sub">Bei hizi hutumika moja kwa moja wakati mauzo yanarekodiwa</div>
+                </div>
+              </div>
+              <div class="panel-body tight">
+                <div class="table-wrap">
+                  <table class="data-table">
+                    <thead><tr><th>Bidhaa</th><th>SKU</th><th>Kipimo</th><th class="text-end">Bei (TZS)</th><th class="text-end">Hifadhi</th></tr></thead>
+                    <tbody>
+                      {% for product in products %}
+                      <tr>
+                        <td>
+                          <form id="catalog-product-{{ product.id }}" method="post" action="{% url 'update_catalog_product' product.id %}">
+                            {% csrf_token %}
+                            <input class="form-control form-control-sm" name="name" value="{{ product.name }}" required>
+                          </form>
+                        </td>
+                        <td><input class="form-control form-control-sm" form="catalog-product-{{ product.id }}" name="sku" value="{{ product.sku }}" required></td>
+                        <td><input class="form-control form-control-sm" form="catalog-product-{{ product.id }}" name="unit" value="{{ product.unit }}" required></td>
+                        <td><input class="form-control form-control-sm text-end" form="catalog-product-{{ product.id }}" type="number" name="unit_price" value="{{ product.unit_price|floatformat:'0' }}" min="0" step="0.01" required></td>
+                        <td class="text-end"><button class="btn-soft" form="catalog-product-{{ product.id }}" type="submit"><i class="bi bi-save"></i> Hifadhi</button></td>
+                      </tr>
+                      {% empty %}
+                      <tr><td colspan="5" class="text-center text-muted">Hakuna bidhaa iliyorekodiwa.</td></tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-6">
+            <div class="panel">
+              <div class="panel-head"><div><div class="panel-title">Malighafi</div></div></div>
+              <div class="panel-body tight">
+                <div class="table-wrap"><table class="data-table">
+                  <thead><tr><th>Jina</th><th>SKU</th><th>Kipimo</th><th></th></tr></thead>
+                  <tbody>
+                    {% for product in raw_materials %}
+                    <tr>
+                      <td><form id="catalog-product-{{ product.id }}" method="post" action="{% url 'update_catalog_product' product.id %}">{% csrf_token %}<input class="form-control form-control-sm" name="name" value="{{ product.name }}" required><input type="hidden" name="unit_price" value="{{ product.unit_price|floatformat:'0' }}"></form></td>
+                      <td><input class="form-control form-control-sm" form="catalog-product-{{ product.id }}" name="sku" value="{{ product.sku }}" required></td>
+                      <td><input class="form-control form-control-sm" form="catalog-product-{{ product.id }}" name="unit" value="{{ product.unit }}" required></td>
+                      <td><button class="btn-soft" form="catalog-product-{{ product.id }}" type="submit"><i class="bi bi-save"></i></button></td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-6">
+            <div class="panel">
+              <div class="panel-head"><div><div class="panel-title">Vifungashio</div></div></div>
+              <div class="panel-body tight">
+                <div class="table-wrap"><table class="data-table">
+                  <thead><tr><th>Jina</th><th>SKU</th><th>Kipimo</th><th></th></tr></thead>
+                  <tbody>
+                    {% for product in packaging_products %}
+                    <tr>
+                      <td><form id="catalog-product-{{ product.id }}" method="post" action="{% url 'update_catalog_product' product.id %}">{% csrf_token %}<input class="form-control form-control-sm" name="name" value="{{ product.name }}" required><input type="hidden" name="unit_price" value="{{ product.unit_price|floatformat:'0' }}"></form></td>
+                      <td><input class="form-control form-control-sm" form="catalog-product-{{ product.id }}" name="sku" value="{{ product.sku }}" required></td>
+                      <td><input class="form-control form-control-sm" form="catalog-product-{{ product.id }}" name="unit" value="{{ product.unit }}" required></td>
+                      <td><button class="btn-soft" form="catalog-product-{{ product.id }}" type="submit"><i class="bi bi-save"></i></button></td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           VIEW: RAW MATERIALS
+      ============================================================ -->
+      <section class="view" id="view-raw">
+        <div class="section-hero">
+          <div class="hero-inner">
+            <div>
+              <div class="hero-eyebrow"><i class="bi bi-box-seam"></i> Module A — Procurement</div>
+              <h1 class="hero-title">Malighafi &amp; <span>Vifungashio</span></h1>
+              <p class="hero-sub">Pokea ununuzi mmoja kwa wakati: chagua bidhaa, weka kiasi kilichoingia, bei ya kipimo na muuzaji. Stoo itaongezeka baada ya kuhifadhi.</p>
+            </div>
+            <button class="btn-brand" data-bs-toggle="modal" data-bs-target="#modalRawMaterial">
+              <i class="bi bi-box-arrow-in-down"></i> Pokea bidhaa stoo
+            </button>
+          </div>
+        </div>
+
+        <div class="role-banner">
+          <i class="bi bi-shield-check"></i>
+          <div class="rb-text">
+            <strong>Nani anaweza kurekodi malighafi &amp; vifungashio?</strong>
+            <div class="rb-sub">Rekodi zote zinahitaji uthibitisho wa mtu mwingine. Bei na kiasi hurekodiwa kwa uangalifu.</div>
+          </div>
+          <div class="role-chips">
+            <span class="role-chip"><i class="bi bi-person-badge"></i> Procurement Officer</span>
+            <span class="role-chip alt"><i class="bi bi-person-check"></i> Manager / CEO</span>
+          </div>
+        </div>
+
+        <div class="mini-stats">
+          <div class="mini-stat">
+            <div class="ms-ic"><i class="bi bi-boxes"></i></div>
+            <div><div class="ms-val">{{ raw_materials|length }}</div><div class="ms-lab">Aina za Malighafi</div></div>
+          </div>
+          <div class="mini-stat blue">
+            <div class="ms-ic"><i class="bi bi-cash-stack"></i></div>
+            <div><div class="ms-val">TZS {{ purchase_month|floatformat:"0"|intcomma:False }}</div><div class="ms-lab">Manunuzi ya Mwezi Huu</div></div>
+          </div>
+          <div class="mini-stat amber">
+            <div class="ms-ic"><i class="bi bi-exclamation-circle"></i></div>
+            <div><div class="ms-val">{{ transfer_count }}</div><div class="ms-lab">Usafirishaji Unaendelea</div></div>
+          </div>
+          <div class="mini-stat purple">
+            <div class="ms-ic"><i class="bi bi-clock-history"></i></div>
+            <div><div class="ms-val">{{ purchase_count }}</div><div class="ms-lab">Rekodi Zote za Manunuzi</div></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title"><i class="bi bi-table"></i> Rekodi za Malighafi &amp; Vifungashio</div>
+              <div class="panel-sub">Kila rekodi inaonyesha aliyerekodi na tarehe</div>
+            </div>
+            <div class="d-flex gap-2">
+              <button class="btn-soft"><i class="bi bi-funnel"></i> Chuja</button>
+              <a class="btn-soft" href="{% url 'export_manager_report' %}?type=purchases"><i class="bi bi-download"></i> Pakua</a>
+            </div>
+          </div>
+          <div class="panel-body tight">
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Muuzaji</th><th>Bidhaa</th><th>Aina</th><th>Kipimo</th>
+                    <th class="text-end">Idadi</th><th class="text-end">Bei (TZS)</th>
+                    <th class="text-end">Jumla (TZS)</th><th>Aliyerekodi</th><th>Tarehe</th><th>Hali / Hatua</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for purchase in recent_purchases %}
+                  <tr>
+                    <td class="cell-strong">{{ purchase.supplier.name }}</td>
+                    <td>{% for item in purchase.items.all %}{{ item.product.name }}{% if not forloop.last %}<br>{% endif %}{% empty %}—{% endfor %}</td>
+                    <td><span class="badge-soft green">Manunuzi</span></td>
+                    <td>{% for item in purchase.items.all %}{{ item.product.unit }}{% if not forloop.last %}<br>{% endif %}{% empty %}—{% endfor %}</td>
+                    <td class="text-end mono">{% for item in purchase.items.all %}{{ item.quantity }}{% if not forloop.last %}<br>{% endif %}{% empty %}—{% endfor %}</td>
+                    <td class="text-end mono">{% for item in purchase.items.all %}{{ item.unit_cost|floatformat:"0"|intcomma:False }}{% if not forloop.last %}<br>{% endif %}{% empty %}—{% endfor %}</td>
+                    <td class="text-end mono cell-strong">{{ purchase.total_amount|floatformat:"0"|intcomma:False }}</td>
+                    <td>{{ purchase.created_by.get_full_name|default:purchase.created_by.username }}</td>
+                    <td>{{ purchase.purchase_date|date:"d/m/Y" }}</td>
+                    <td>
+                      {{ purchase.get_status_display }}
+                      {% if purchase.status == "DRAFT" %}
+                      <form method="post" action="{% url 'receive_saved_purchase' purchase.id %}" class="mt-1">
+                        {% csrf_token %}
+                        <button class="btn-soft" type="submit"><i class="bi bi-box-arrow-in-down"></i> Weka stoo</button>
+                      </form>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% empty %}
+                  <tr><td colspan="10" class="text-center text-muted">Hakuna rekodi za manunuzi.</td></tr>
+                  {% endfor %}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td colspan="6" class="text-end">Jumla ya Thamani:</td>
+                    <td class="text-end mono text-gradient" style="font-size:15px">TZS {{ purchase_total|floatformat:"0"|intcomma:False }}</td>
+                    <td colspan="3"></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           VIEW: PRODUCTION
+      ============================================================ -->
+      <section class="view" id="view-production">
+        <div class="section-hero">
+          <div class="hero-inner">
+            <div>
+              <div class="hero-eyebrow"><i class="bi bi-gear-wide-connected"></i> Module B — Production</div>
+              <h1 class="hero-title">Uzalishaji &amp; <span>Matumizi ya Malighafi</span></h1>
+              <p class="hero-sub">Rekodi malighafi zilizotumika, zilizobaki, na jumla ya bidhaa zilizozalishwa. Supervisor anarekodi, Manager/CEO anaweza pia kurekodi na kuthibitisha.</p>
+            </div>
+            <button class="btn-brand" data-bs-toggle="modal" data-bs-target="#modalProduction">
+              <i class="bi bi-plus-lg"></i> Rekodi Uzalishaji
+            </button>
+          </div>
+        </div>
+
+        <div class="role-banner">
+          <i class="bi bi-shield-check"></i>
+          <div class="rb-text">
+            <strong>Nani anaweza kurekodi uzalishaji?</strong>
+            <div class="rb-sub">Matumizi ya malighafi na bidhaa zilizozalishwa hurekodiwa na Supervisor, lakini Manager/CEO anaweza pia.</div>
+          </div>
+          <div class="role-chips">
+            <span class="role-chip"><i class="bi bi-person-gear"></i> Production Supervisor</span>
+            <span class="role-chip alt"><i class="bi bi-person-check"></i> Manager / CEO</span>
+          </div>
+        </div>
+
+        <!-- TOTAL PRODUCED -->
+        <div class="kpi-grid">
+          {% for row in production_by_product %}
+          <div class="kpi-card">
+            <div class="kpi-top">
+              <div class="kpi-ic green"><i class="bi bi-cup-hot"></i></div>
+              <span class="kpi-trend flat"><i class="bi bi-check-circle"></i> Live</span>
+            </div>
+            <div class="kpi-label">{{ row.product.name }}</div>
+            <div class="kpi-value">{{ row.total|floatformat:"0" }}</div>
+            <div class="kpi-sub">Vipande · mwezi huu</div>
+          </div>
+          {% endfor %}
+          <div class="kpi-card">
+            <div class="kpi-top">
+              <div class="kpi-ic blue"><i class="bi bi-boxes"></i></div>
+              <span class="kpi-trend flat"><i class="bi bi-check-circle"></i> Live</span>
+            </div>
+            <div class="kpi-label">Jumla ya Zote</div>
+            <div class="kpi-value">{{ production_month|floatformat:"0" }}</div>
+            <div class="kpi-sub">Vipande · mwezi huu</div>
+          </div>
+        </div>
+
+        <!-- SPLIT CARDS -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0 fw-bold"><i class="bi bi-diagram-3 text-success me-2"></i>Mgawanyo wa Bidhaa Zilizozalishwa</h5>
+          <span class="badge-soft gray"><i class="bi bi-info-circle"></i> Store · Mwanza · Dar</span>
+        </div>
+        <div class="split-grid">
+          {% for row in production_by_product %}
+          <div class="split-card">
+            <div class="split-head">
+              <div class="split-ic"><i class="bi bi-cup-hot"></i></div>
+              <div><h4>{{ row.product.name }}</h4><div class="total">Jumla: {{ row.total|floatformat:"0" }} pcs</div></div>
+            </div>
+            <div class="split-rows">
+              <div class="split-row"><span class="dot store"></span><span class="lbl">Store (Main)</span><span class="num">{{ row.factory_balance|floatformat:"0" }}</span></div>
+              <div class="split-row"><span class="dot mwanza"></span><span class="lbl">Mwanza Office</span><span class="num">{{ row.mwanza_balance|floatformat:"0" }}</span></div>
+              <div class="split-row"><span class="dot dar"></span><span class="lbl">Dar es Salaam</span><span class="num">{{ row.dar_balance|floatformat:"0" }}</span></div>
+            </div>
+          </div>
+          {% empty %}
+          <div class="text-muted">Hakuna bidhaa za uzalishaji zilizosajiliwa.</div>
+          {% endfor %}
+        </div>
+
+        <!-- MATERIALS USED -->
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title"><i class="bi bi-clipboard-data"></i> Malighafi Zilizotumika &amp; Zilizobaki</div>
+              <div class="panel-sub">Kwa kila batch ya uzalishaji</div>
+            </div>
+            <button class="btn-soft"><i class="bi bi-download"></i> Pakua</button>
+          </div>
+          <div class="panel-body tight">
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Batch</th><th>Bidhaa</th><th>Malighafi</th>
+                    <th class="text-end">Iliyotumika</th><th class="text-end">Iliyobaki</th>
+                    <th>Aliyerekodi</th><th>Tarehe</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for batch in recent_batches %}
+                  <tr>
+                    <td class="cell-strong">{{ batch.reference }}</td>
+                    <td>{{ batch.recipe.product.name }}</td>
+                    <td>{{ batch.recipe.items.all|length }} recipe item(s)</td>
+                    <td class="text-end mono">{{ batch.quantity|floatformat:"0" }} {{ batch.recipe.product.unit }}</td>
+                    <td class="text-end mono">—</td>
+                    <td>{{ batch.created_by.get_full_name|default:batch.created_by.username }}</td>
+                    <td>{{ batch.production_date|date:"d/m/Y" }}</td>
+                  </tr>
+                  {% empty %}
+                  <tr><td colspan="7" class="text-center text-muted">Hakuna batches za uzalishaji.</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-lg-7">
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title"><i class="bi bi-bar-chart-line"></i> Uzalishaji kwa Bidhaa</div>
+              </div>
+              <div class="panel-body">
+                <div class="chart-box"><canvas id="chartProduction"></canvas></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-5">
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title"><i class="bi bi-speedometer"></i> Ufanisi wa Uzalishaji</div>
+              </div>
+              <div class="panel-body">
+                <div class="chart-box"><canvas id="chartEfficiency"></canvas></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           VIEW: DISTRIBUTION
+      ============================================================ -->
+      <section class="view" id="view-distribution">
+        <div class="section-hero">
+          <div class="hero-inner">
+            <div>
+              <div class="hero-eyebrow"><i class="bi bi-truck"></i> Module C — Distribution</div>
+              <h1 class="hero-title">Ugawaji &amp; <span>Mgawanyo wa Ofisi</span></h1>
+              <p class="hero-sub">Bidhaa zilizozalishwa zinagawanywa kati ya Store, Mwanza na Dar es Salaam. Kila ofisi inathibitisha bidhaa zilizoingia na kutoka.</p>
+            </div>
+            <button class="btn-brand" type="button" data-bs-toggle="modal" data-bs-target="#managerTransferModal"><i class="bi bi-plus-lg"></i> Transfer Mpya</button>
+          </div>
+        </div>
+
+        <div class="mini-stats">
+          <div class="mini-stat">
+            <div class="ms-ic"><i class="bi bi-boxes"></i></div>
+            <div><div class="ms-val">{{ production_month|floatformat:"0" }}</div><div class="ms-lab">Zilizozalishwa Mwezi Huu</div></div>
+          </div>
+          <div class="mini-stat blue">
+            <div class="ms-ic"><i class="bi bi-shop"></i></div>
+            <div><div class="ms-val">{{ mwanza_stock|floatformat:"0" }}</div><div class="ms-lab">Mwanza Stock</div></div>
+          </div>
+          <div class="mini-stat amber">
+            <div class="ms-ic"><i class="bi bi-shop-window"></i></div>
+            <div><div class="ms-val">{{ dar_stock|floatformat:"0" }}</div><div class="ms-lab">Dar Stock</div></div>
+          </div>
+          <div class="mini-stat">
+            <div class="ms-ic"><i class="bi bi-archive"></i></div>
+            <div><div class="ms-val">{{ factory_stock|floatformat:"0" }}</div><div class="ms-lab">Zilizobaki Store</div></div>
+          </div>
+        </div>
+
+        <div class="row g-4 mb-2">
+          <div class="col-lg-5">
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title"><i class="bi bi-pie-chart"></i> Mgawanyo wa Jumla</div>
+              </div>
+              <div class="panel-body">
+                <div class="chart-box"><canvas id="chartDistribution"></canvas></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-7">
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title"><i class="bi bi-bar-chart-steps"></i> Mgawanyo kwa Bidhaa</div>
+              </div>
+              <div class="panel-body">
+                <div class="chart-box"><canvas id="chartSplitByProduct"></canvas></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title"><i class="bi bi-arrow-left-right"></i> Historia ya Uhamishaji (Transfers)</div>
+              <div class="panel-sub">Kutoka Store kwenda ofisi na kati ya ofisi</div>
+            </div>
+            <button class="btn-soft"><i class="bi bi-funnel"></i> Chuja</button>
+          </div>
+          <div class="panel-body tight">
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>#</th><th>Kutoka</th><th>Kwenda</th><th>Bidhaa</th>
+                    <th class="text-end">Idadi</th><th>Tarehe</th><th>Hali</th><th>Vitendo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for transfer in recent_transfers %}
+                  <tr>
+                    <td>{{ transfer.reference }}</td>
+                    <td>Store</td>
+                    <td>{{ transfer.destination.name }}</td>
+                    <td>{% for item in transfer.items.all %}{% if not forloop.first %}, {% endif %}{{ item.product.name }}{% empty %}—{% endfor %}</td>
+                    <td class="text-end mono">{% for item in transfer.items.all %}{% if not forloop.first %}+{% endif %}{{ item.quantity_sent|floatformat:"0" }}{% endfor %}</td>
+                    <td>{{ transfer.dispatched_at|date:"d/m/Y" }}</td>
+                    <td>{{ transfer.get_status_display }}</td>
+                    <td><button class="btn-icon-sm" type="button" title="Transfer {{ transfer.reference }}"><i class="bi bi-eye"></i></button></td>
+                  </tr>
+                  {% empty %}
+                  <tr><td colspan="8" class="text-center text-muted">Hakuna uhamishaji zilizorekodiwa.</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           VIEW: OFFICE CONFIRMATION
+      ============================================================ -->
+      <section class="view" id="view-office">
+        <div class="section-hero">
+          <div class="hero-inner">
+            <div>
+              <div class="hero-eyebrow"><i class="bi bi-patch-check"></i> Uthibitisho wa Ofisi</div>
+              <h1 class="hero-title">Ofisi Zinathibitisha <span>Bidhaa Zinazoingia &amp; Kutoka</span></h1>
+              <p class="hero-sub">Kila ofisi (Mwanza na Dar) inarekodi bidhaa zilizoingia kwa uhamishaji, zilizotoka kwa mauzo, na zilizobaki. Hii inahakikisha uwazi kamili.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="office-grid">
+          <div class="office-card">
+            <div class="office-head">
+              <div class="oh-ic"><i class="bi bi-shop"></i></div>
+              <div>
+                <h4>Mwanza Office</h4>
+                <div class="oh-sub">Ofisi ya Mauzo · Mkoa wa Mwanza</div>
+              </div>
+              <span class="badge-soft green ms-auto"><i class="bi bi-check-circle"></i> Imethibitishwa</span>
+            </div>
+            <div class="office-body">
+              <div class="office-stat-row">
+                <div class="office-stat in"><div class="os-val">{{ mwanza_stock|floatformat:"0" }}</div><div class="os-lab">Stock ya Mwanza</div></div>
+                <div class="office-stat out"><div class="os-val">{{ mwanza_data.sales_today|floatformat:"0" }}</div><div class="os-lab">Mauzo ya Leo</div></div>
+                <div class="office-stat bal"><div class="os-val">{{ mwanza_data.incoming_count }}</div><div class="os-lab">Transfers</div></div>
+              </div>
+              <div class="small text-muted mb-2"><i class="bi bi-clock-history me-1"></i> Tarehe ya mfumo: {{ today|date:"d/m/Y" }}</div>
+              <button class="btn-soft w-100 justify-content-center"><i class="bi bi-eye"></i> Tazama Maelezo Kamili</button>
+            </div>
+          </div>
+
+          <div class="office-card dar">
+            <div class="office-head">
+              <div class="oh-ic"><i class="bi bi-shop-window"></i></div>
+              <div>
+                <h4>Dar es Salaam Office</h4>
+                <div class="oh-sub">Ofisi ya Mauzo · Dar es Salaam</div>
+              </div>
+              <span class="badge-soft amber ms-auto"><i class="bi bi-clock"></i> Inasubiri</span>
+            </div>
+            <div class="office-body">
+              <div class="office-stat-row">
+                <div class="office-stat in"><div class="os-val">{{ dar_stock|floatformat:"0" }}</div><div class="os-lab">Stock ya Dar</div></div>
+                <div class="office-stat out"><div class="os-val">{{ dar_data.sales_today|floatformat:"0" }}</div><div class="os-lab">Mauzo ya Leo</div></div>
+                <div class="office-stat bal"><div class="os-val">{{ dar_data.incoming_count }}</div><div class="os-lab">Transfers</div></div>
+              </div>
+              <div class="small text-muted mb-2"><i class="bi bi-clock-history me-1"></i> Inasubiri uthibitisho wa meneja</div>
+              <button class="btn-brand w-100 justify-content-center"><i class="bi bi-check2-circle"></i> Thibitisha Sasa</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title"><i class="bi bi-clipboard-check"></i> Rekodi za Uthibitisho wa Ofisi</div>
+              <div class="panel-sub">Bidhaa zilizoingia, zilizotoka na zilizobaki kwa kila ofisi</div>
+            </div>
+            <button class="btn-soft"><i class="bi bi-download"></i> Pakua</button>
+          </div>
+          <div class="panel-body tight">
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Ofisi</th><th>Bidhaa</th>
+                    <th class="text-end">Zilizoingia</th><th class="text-end">Zilizotoka</th>
+                    <th class="text-end">Zilizobaki</th><th>Aliyethibitisha</th>
+                    <th>Tarehe</th><th>Hali</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in mwanza_data.product_rows %}
+                  <tr>
+                    <td class="cell-strong"><i class="bi bi-shop me-1 text-success"></i> Mwanza</td>
+                    <td>{{ row.product.name }}</td>
+                    <td class="text-end mono">{{ row.sold_today|floatformat:"0" }}</td>
+                    <td class="text-end mono">{{ row.sold_today|floatformat:"0" }}</td>
+                    <td class="text-end mono cell-strong">{{ row.balance|floatformat:"0" }}</td>
+                    <td>{{ manager_name }}</td>
+                    <td>{{ today|date:"d/m/Y" }}</td>
+                    <td><span class="badge-soft green">Live</span></td>
+                  </tr>
+                  {% endfor %}
+                  {% for row in dar_data.product_rows %}
+                  <tr>
+                    <td class="cell-strong"><i class="bi bi-shop-window me-1 text-warning"></i> Dar</td>
+                    <td>{{ row.product.name }}</td>
+                    <td class="text-end mono">{{ row.sold_today|floatformat:"0" }}</td>
+                    <td class="text-end mono">{{ row.sold_today|floatformat:"0" }}</td>
+                    <td class="text-end mono cell-strong">{{ row.balance|floatformat:"0" }}</td>
+                    <td>{{ manager_name }}</td>
+                    <td>{{ today|date:"d/m/Y" }}</td>
+                    <td><span class="badge-soft green">Live</span></td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td colspan="2" class="text-end">JUMLA:</td>
+                    <td class="text-end">{{ mwanza_stock|add:dar_stock|floatformat:"0" }}</td>
+                    <td class="text-end">{{ mwanza_data.sales_today|add:dar_data.sales_today|floatformat:"0" }}</td>
+                    <td class="text-end">{{ mwanza_stock|add:dar_stock|floatformat:"0" }}</td>
+                    <td colspan="3"></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           VIEW: MWANZA BRANCH
+      ============================================================ -->
+      <section class="view" id="view-mwanza">
+        <div class="section-hero">
+          <div class="hero-inner">
+            <div>
+              <div class="hero-eyebrow"><i class="bi bi-shop"></i> Branch Operations</div>
+              <h1 class="hero-title">Mwanza <span>Branch</span></h1>
+              <p class="hero-sub">Branch stock, daily sales, customer activity, delivery confirmations, and service calls in one view.</p>
+            </div>
+            <span class="badge-soft blue"><i class="bi bi-eye"></i> Manager read-only view</span>
+          </div>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-top"><div class="kpi-ic blue"><i class="bi bi-box-arrow-in-down"></i></div><span class="badge-soft gray">Live stock</span></div><div class="kpi-label">Stock ya Mwanza</div><div class="kpi-value">{{ mwanza_stock|floatformat:"0" }}</div><div class="kpi-sub">Vipande vilivyopo</div></div>
+          <div class="kpi-card"><div class="kpi-top"><div class="kpi-ic green"><i class="bi bi-cart-check"></i></div><span class="badge-soft green">Leo</span></div><div class="kpi-label">Mauzo ya Leo</div><div class="kpi-value">TZS {{ mwanza_data.sales_today|floatformat:"0"|intcomma:False }}</div><div class="kpi-sub">{{ today|date:"d/m/Y" }}</div></div>
+          <div class="kpi-card"><div class="kpi-top"><div class="kpi-ic amber"><i class="bi bi-boxes"></i></div><span class="badge-soft amber">Live stock</span></div><div class="kpi-label">Usafirishaji Unaendelea</div><div class="kpi-value">{{ mwanza_data.incoming_count }}</div><div class="kpi-sub">Transfers kwa tawi hili</div></div>
+          <div class="kpi-card"><div class="kpi-top"><div class="kpi-ic red"><i class="bi bi-exclamation-triangle"></i></div><span class="badge-soft red">Live loss</span></div><div class="kpi-label">Hasara ya Leo</div><div class="kpi-value">{{ mwanza_data.loss_today|floatformat:"0" }}</div><div class="kpi-sub">{{ today|date:"d/m/Y" }}</div></div>
+        </div>
+
+        <div class="row g-4 mb-4">
+          <div class="col-xl-7">
+            <div class="panel h-100">
+              <div class="panel-head"><div><div class="panel-title"><i class="bi bi-box-seam"></i> Mwanza stock by product</div><div class="panel-sub">Reported allocation, sales, and closing balance</div></div></div>
+              <div class="panel-body tight">
+                <div class="table-wrap">
+                  <table class="data-table">
+                    <thead><tr><th>Product</th><th class="text-end">Sold today</th><th class="text-end">Closing balance</th><th class="text-end">Loss</th></tr></thead>
+                    <tbody>
+                      {% for row in mwanza_data.product_rows %}
+                      <tr><td class="cell-strong">{{ row.product.name }}</td><td class="text-end mono">{{ row.sold_today|floatformat:"0" }}</td><td class="text-end mono cell-strong">{{ row.balance|floatformat:"0" }}</td><td class="text-end"><span class="badge-soft red">{{ row.loss|floatformat:"0" }}</span></td></tr>
+                      {% empty %}
+                      <tr><td colspan="4" class="text-center text-muted">Hakuna bidhaa zilizosajiliwa.</td></tr>
+                      {% endfor %}
+                    </tbody>
+                    <tfoot><tr><th>Total</th><th class="text-end">{{ mwanza_data.sales_today|floatformat:"0" }}</th><th class="text-end">{{ mwanza_stock|floatformat:"0" }}</th><th class="text-end">{{ mwanza_data.loss_today|floatformat:"0" }}</th></tr></tfoot>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-xl-5">
+            <div class="panel h-100">
+              <div class="panel-head"><div><div class="panel-title"><i class="bi bi-people"></i> Customer activity</div><div class="panel-sub">Latest live system records · {{ today|date:"d/m/Y" }}</div></div></div>
+              <div class="panel-body">
+                <div class="mini-stats">
+                  <div class="mini-stat"><div class="ms-ic"><i class="bi bi-people"></i></div><div><div class="ms-val">{{ mwanza_data.customer_count }}</div><div class="ms-lab">Customers</div></div></div>
+                  <div class="mini-stat blue"><div class="ms-ic"><i class="bi bi-person-plus"></i></div><div><div class="ms-val">{{ mwanza_data.customer_call_count }}</div><div class="ms-lab">Recorded calls</div></div></div>
+                  <div class="mini-stat amber"><div class="ms-ic"><i class="bi bi-person-check"></i></div><div><div class="ms-val">{{ mwanza_data.open_followup_count }}</div><div class="ms-lab">Follow-ups</div></div></div>
+                </div>
+                <div class="mt-3 p-3 rounded-3" style="background:var(--g-50)">
+                  <div class="small fw-bold text-success mb-1"><i class="bi bi-geo-alt me-1"></i>Customer areas</div>
+                  <div class="small text-muted">{% for area in mwanza_data.customer_areas %}{{ area }}{% if not forloop.last %}, {% endif %}{% empty %}No customer areas recorded{% endfor %}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel mb-4">
+          <div class="panel-head"><div><div class="panel-title"><i class="bi bi-truck"></i> Transfers requiring attention</div><div class="panel-sub">Manager view of dispatch and branch receipt status</div></div><button class="btn-soft" type="button" onclick="showToast('Transfer records are read-only in this dashboard preview.')"><i class="bi bi-arrow-up-right"></i> Open distribution</button></div>
+          <div class="panel-body tight">
+            <div class="table-wrap"><table class="data-table">
+              <thead><tr><th>Transfer</th><th>Product</th><th class="text-end">Sent</th><th>Dispatched</th><th>Receipt</th><th>Status</th></tr></thead>
+              <tbody>
+                {% for transfer in mwanza_data.incoming_transfers %}
+                <tr>
+                  <td class="cell-strong">{{ transfer.reference }}</td>
+                  <td>{% for item in transfer.items.all %}{% if not forloop.first %}, {% endif %}{{ item.product.name }}{% endfor %}</td>
+                  <td class="text-end mono">{% for item in transfer.items.all %}{% if not forloop.first %}+{% endif %}{{ item.quantity_sent|floatformat:"0" }}{% endfor %}</td>
+                  <td>{{ transfer.dispatched_at|date:"d/m/Y" }}</td>
+                  <td>{% if transfer.received_at %}{{ transfer.received_at|date:"d/m/Y" }}{% else %}—{% endif %}</td>
+                  <td>{{ transfer.get_status_display }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center text-muted">Hakuna usafirishaji unaosubiri.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><div><div class="panel-title"><i class="bi bi-clipboard2-check"></i> Daily report detail</div><div class="panel-sub">Sales, losses, customers, office activity, and service calls</div></div><span class="badge-soft blue"><i class="bi bi-lock"></i> Read only</span></div>
+          <div class="panel-body tight">
+            <div class="table-wrap"><table class="data-table">
+              <thead><tr><th>Report date</th><th>Visitors</th><th>Deliveries</th><th>Parcels</th><th>Instruction calls</th><th>Compliance calls</th><th>Follow-ups</th><th>Submitted by</th><th>Status</th></tr></thead>
+              <tbody><tr><td class="cell-strong">{{ today|date:"d/m/Y" }}</td><td class="mono">—</td><td class="mono">{{ mwanza_data.incoming_count }}</td><td class="mono">—</td><td class="mono">{{ recent_call_counts.instruction }}</td><td class="mono">{{ recent_call_counts.compliance }}</td><td class="mono">{{ recent_call_counts.followup }}</td><td>System</td><td><span class="badge-soft green">Live</span></td></tr></tbody>
+            </table></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           VIEW: DAR BRANCH
+      ============================================================ -->
+      <section class="view" id="view-dar">
+        <div class="section-hero">
+          <div class="hero-inner">
+            <div>
+              <div class="hero-eyebrow"><i class="bi bi-shop-window"></i> Branch Operations</div>
+              <h1 class="hero-title">Dar es Salaam <span>Branch</span></h1>
+              <p class="hero-sub">Review Dar branch stock, sales, customer activity, goods receipt, losses, and customer-care follow-ups.</p>
+            </div>
+            <span class="badge-soft blue"><i class="bi bi-eye"></i> Manager read-only view</span>
+          </div>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-top"><div class="kpi-ic blue"><i class="bi bi-box-arrow-in-down"></i></div><span class="badge-soft gray">Live stock</span></div><div class="kpi-label">Stock ya Dar</div><div class="kpi-value">{{ dar_stock|floatformat:"0" }}</div><div class="kpi-sub">Vipande vilivyopo</div></div>
+          <div class="kpi-card"><div class="kpi-top"><div class="kpi-ic green"><i class="bi bi-cart-check"></i></div><span class="badge-soft green">Leo</span></div><div class="kpi-label">Mauzo ya Leo</div><div class="kpi-value">TZS {{ dar_data.sales_today|floatformat:"0"|intcomma:False }}</div><div class="kpi-sub">{{ today|date:"d/m/Y" }}</div></div>
+          <div class="kpi-card"><div class="kpi-top"><div class="kpi-ic amber"><i class="bi bi-boxes"></i></div><span class="badge-soft amber">Live stock</span></div><div class="kpi-label">Usafirishaji Unaendelea</div><div class="kpi-value">{{ dar_data.incoming_count }}</div><div class="kpi-sub">Transfers kwa tawi hili</div></div>
+          <div class="kpi-card"><div class="kpi-top"><div class="kpi-ic red"><i class="bi bi-exclamation-triangle"></i></div><span class="badge-soft red">Live loss</span></div><div class="kpi-label">Hasara ya Leo</div><div class="kpi-value">{{ dar_data.loss_today|floatformat:"0" }}</div><div class="kpi-sub">{{ today|date:"d/m/Y" }}</div></div>
+        </div>
+
+        <div class="row g-4 mb-4">
+          <div class="col-xl-7">
+            <div class="panel h-100">
+              <div class="panel-head"><div><div class="panel-title"><i class="bi bi-box-seam"></i> Dar stock by product</div><div class="panel-sub">Reported allocation, sales, and closing balance</div></div></div>
+              <div class="panel-body tight">
+                <div class="table-wrap"><table class="data-table">
+                  <thead><tr><th>Product</th><th class="text-end">Sold today</th><th class="text-end">Closing balance</th><th class="text-end">Loss</th></tr></thead>
+                  <tbody>
+                  {% for row in dar_data.product_rows %}
+                  <tr><td class="cell-strong">{{ row.product.name }}</td><td class="text-end mono">{{ row.sold_today|floatformat:"0" }}</td><td class="text-end mono cell-strong">{{ row.balance|floatformat:"0" }}</td><td class="text-end"><span class="badge-soft red">{{ row.loss|floatformat:"0" }}</span></td></tr>
+                  {% empty %}
+                  <tr><td colspan="4" class="text-center text-muted">Hakuna bidhaa zilizosajiliwa.</td></tr>
+                  {% endfor %}
+                  </tbody>
+                  <tfoot><tr><th>Total</th><th class="text-end">{{ dar_data.sales_today|floatformat:"0" }}</th><th class="text-end">{{ dar_stock|floatformat:"0" }}</th><th class="text-end">{{ dar_data.loss_today|floatformat:"0" }}</th></tr></tfoot>
+                </table></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-xl-5">
+            <div class="panel h-100">
+              <div class="panel-head"><div><div class="panel-title"><i class="bi bi-people"></i> Customer activity</div><div class="panel-sub">Latest live system records · {{ today|date:"d/m/Y" }}</div></div></div>
+              <div class="panel-body">
+                <div class="mini-stats">
+                  <div class="mini-stat"><div class="ms-ic"><i class="bi bi-people"></i></div><div><div class="ms-val">{{ dar_data.customer_count }}</div><div class="ms-lab">Customers</div></div></div>
+                  <div class="mini-stat blue"><div class="ms-ic"><i class="bi bi-person-plus"></i></div><div><div class="ms-val">{{ dar_data.customer_call_count }}</div><div class="ms-lab">Recorded calls</div></div></div>
+                  <div class="mini-stat amber"><div class="ms-ic"><i class="bi bi-person-check"></i></div><div><div class="ms-val">{{ dar_data.open_followup_count }}</div><div class="ms-lab">Follow-ups</div></div></div>
+                </div>
+                <div class="mt-3 p-3 rounded-3" style="background:var(--g-50)">
+                  <div class="small fw-bold text-success mb-1"><i class="bi bi-geo-alt me-1"></i>Customer areas</div>
+                  <div class="small text-muted">{% for area in dar_data.customer_areas %}{{ area }}{% if not forloop.last %}, {% endif %}{% empty %}No customer areas recorded{% endfor %}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel mb-4">
+          <div class="panel-head"><div><div class="panel-title"><i class="bi bi-truck"></i> Transfers requiring attention</div><div class="panel-sub">Manager view of dispatch and branch receipt status</div></div><button class="btn-soft" type="button" onclick="showToast('Transfer records are read-only in this dashboard preview.')"><i class="bi bi-arrow-up-right"></i> Open distribution</button></div>
+          <div class="panel-body tight"><div class="table-wrap"><table class="data-table">
+            <thead><tr><th>Transfer</th><th>Product</th><th class="text-end">Sent</th><th>Dispatched</th><th>Receipt</th><th>Status</th></tr></thead>
+            <tbody>
+              {% for transfer in dar_data.incoming_transfers %}
+              <tr>
+                <td class="cell-strong">{{ transfer.reference }}</td>
+                <td>{% for item in transfer.items.all %}{% if not forloop.first %}, {% endif %}{{ item.product.name }}{% endfor %}</td>
+                <td class="text-end mono">{% for item in transfer.items.all %}{% if not forloop.first %}+{% endif %}{{ item.quantity_sent|floatformat:"0" }}{% endfor %}</td>
+                <td>{{ transfer.dispatched_at|date:"d/m/Y" }}</td>
+                <td>{% if transfer.received_at %}{{ transfer.received_at|date:"d/m/Y" }}{% else %}—{% endif %}</td>
+                <td>{{ transfer.get_status_display }}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="6" class="text-center text-muted">Hakuna usafirishaji unaosubiri.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table></div></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><div><div class="panel-title"><i class="bi bi-clipboard2-check"></i> Daily report detail</div><div class="panel-sub">Sales, losses, customers, office activity, and service calls</div></div><span class="badge-soft blue"><i class="bi bi-lock"></i> Read only</span></div>
+          <div class="panel-body tight"><div class="table-wrap"><table class="data-table">
+            <thead><tr><th>Report date</th><th>Visitors</th><th>Deliveries</th><th>Parcels</th><th>Instruction calls</th><th>Compliance calls</th><th>Follow-ups</th><th>Submitted by</th><th>Status</th></tr></thead>
+            <tbody><tr><td class="cell-strong">{{ today|date:"d/m/Y" }}</td><td class="mono">—</td><td class="mono">{{ dar_data.incoming_count }}</td><td class="mono">—</td><td class="mono">{{ recent_call_counts.instruction }}</td><td class="mono">{{ recent_call_counts.compliance }}</td><td class="mono">{{ recent_call_counts.followup }}</td><td>System</td><td><span class="badge-soft green">Live</span></td></tr></tbody>
+          </table></div></div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           VIEW: SALES REPORT
+      ============================================================ -->
+      <section class="view" id="view-sales">
+        <div class="section-hero">
+          <div class="hero-inner">
+            <div>
+              <div class="hero-eyebrow"><i class="bi bi-graph-up-arrow"></i> Module D — Ripoti</div>
+              <h1 class="hero-title">Ripoti ya Mauzo — <span>Ofisi Zote</span></h1>
+              <p class="hero-sub">Muhtasari kamili wa mauzo, hasara, wateja, shughuli na simu kwa Mwanza na Dar es Salaam kwa siku.</p>
+            </div>
+            <a class="btn-soft" href="{% url 'export_manager_report' %}?type=sales" style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2);color:#fff">
+              <i class="bi bi-download"></i> Pakua Ripoti (PDF/Excel)
+            </a>
+          </div>
+        </div>
+
+        <!-- FILTER BAR -->
+        <div class="filter-bar">
+          <div class="fb-group"><i class="bi bi-calendar3"></i> <strong>Tarehe:</strong></div>
+          <input type="date" value="{{ today|date:'Y-m-d' }}">
+          <div class="fb-group"><i class="bi bi-shop"></i> <strong>Ofisi:</strong></div>
+          <select>
+            <option>Zote (Mwanza + Dar)</option>
+            <option>Mwanza</option>
+            <option>Dar es Salaam</option>
+          </select>
+          <div class="fb-group"><i class="bi bi-cup-hot"></i> <strong>Bidhaa:</strong></div>
+          <select>
+            <option>Zote</option>
+            {% for product in products %}<option>{{ product.name }}</option>{% endfor %}
+          </select>
+          <button class="btn-brand ms-auto"><i class="bi bi-funnel"></i> Chuja</button>
+        </div>
+
+        <!-- SUMMARY MINI STATS -->
+        <div class="mini-stats">
+          <div class="mini-stat">
+            <div class="ms-ic"><i class="bi bi-cart-check"></i></div>
+            <div><div class="ms-val">TZS {{ sales_today|floatformat:"0"|intcomma:False }}</div><div class="ms-lab">Jumla ya Mauzo (Leo)</div></div>
+          </div>
+          <div class="mini-stat blue">
+            <div class="ms-ic"><i class="bi bi-people"></i></div>
+            <div><div class="ms-val">{{ customer_count }}</div><div class="ms-lab">Wateja (Jumla)</div></div>
+          </div>
+          <div class="mini-stat amber">
+            <div class="ms-ic"><i class="bi bi-exclamation-triangle"></i></div>
+            <div><div class="ms-val">{{ loss_month|floatformat:"0" }}</div><div class="ms-lab">Hasara (Mwezi)</div></div>
+          </div>
+          <div class="mini-stat purple">
+            <div class="ms-ic"><i class="bi bi-telephone"></i></div>
+            <div><div class="ms-val">{{ recent_calls|length }}</div><div class="ms-lab">Simu Zilizorekodiwa</div></div>
+          </div>
+        </div>
+
+        <!-- MASTER REPORT TABLE -->
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title"><i class="bi bi-table"></i> Ripoti Kamili ya Mauzo</div>
+              <div class="panel-sub">Safu 1 = Ofisi 1 kwa siku 1 · Safu wima zote muhimu zimejumuishwa</div>
+            </div>
+            <span class="badge-soft green"><i class="bi bi-check-circle"></i> Data Imethibitishwa</span>
+          </div>
+          <div class="panel-body tight">
+            <div class="table-wrap">
+              <table class="data-table sales-table">
+                <thead>
+                  <tr>
+                    <th rowspan="2">Tarehe</th>
+                    <th rowspan="2">Ofisi</th>
+                    <th colspan="6" class="grp grp-green">Mauzo &amp; Balance kwa Bidhaa</th>
+                    <th rowspan="2" class="grp grp-amber">Loss</th>
+                    <th colspan="3" class="grp grp-blue">Wateja</th>
+                    <th colspan="3" class="grp grp-purple">Shughuli za Ofisi</th>
+                    <th rowspan="2">Anuani ya Wateja</th>
+                    <th colspan="3" class="grp grp-green">Simu za Huduma</th>
+                  </tr>
+                  <tr>
+                    <th>ED Mauzo</th><th>ED Balance</th>
+                    <th>PM Mauzo</th><th>PM Balance</th>
+                    <th>WH Mauzo</th><th>WH Balance</th>
+                    <th>Jumla</th><th>Wapya</th><th>Wamarudio</th>
+                    <th>Visitors</th><th>Deliveries</th><th>Parcels</th>
+                    <th>Instruction</th><th>Compliance</th><th>Follow-up</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for sale in recent_sales %}
+                  <tr>
+                    <td class="cell-strong">{{ sale.sold_at|date:"d/m/Y" }}</td>
+                    <td><span class="badge-soft green">{{ sale.location.name }}</span></td>
+                    <td colspan="6" class="mono">—</td>
+                    <td><span class="badge-soft red">—</span></td>
+                    <td class="mono">{% if sale.customer %}1{% else %}—{% endif %}</td>
+                    <td class="mono">—</td><td class="mono">—</td>
+                    <td class="mono">—</td><td class="mono">—</td><td class="mono">—</td>
+                    <td class="text-start">{% if sale.customer %}{{ sale.customer.address|default:"—" }}{% else %}—{% endif %}</td>
+                    <td class="mono">—</td><td class="mono">—</td><td class="mono">—</td>
+                  </tr>
+                  {% empty %}
+                  <tr><td colspan="19" class="text-center text-muted">Hakuna mauzo yaliyorekodiwa.</td></tr>
+                  {% endfor %}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td colspan="2" class="text-end">JUMLA:</td>
+                    <td>{{ sales_report_footer.0.sold|floatformat:"0" }}</td><td>{{ sales_report_footer.0.balance|floatformat:"0" }}</td>
+                    <td>{{ sales_report_footer.1.sold|floatformat:"0" }}</td><td>{{ sales_report_footer.1.balance|floatformat:"0" }}</td>
+                    <td>{{ sales_report_footer.2.sold|floatformat:"0" }}</td><td>{{ sales_report_footer.2.balance|floatformat:"0" }}</td>
+                    <td>{{ loss_month|floatformat:"0" }}</td>
+                    <td>{{ customer_count }}</td><td>{{ recent_calls|length }}</td><td>{{ open_followups|length }}</td>
+                    <td>{{ transfer_count }}</td><td>{{ purchase_count }}</td><td>{{ batch_count }}</td>
+                    <td>—</td>
+                    <td>{{ recent_call_counts.instruction }}</td><td>{{ recent_call_counts.compliance }}</td><td>{{ recent_call_counts.followup }}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel mb-4">
+          <div class="panel-head"><div><div class="panel-title"><i class="bi bi-clipboard2-check"></i> Daily branch reports</div><div class="panel-sub">Submitted reports requiring manager approval</div></div></div>
+          <div class="panel-body tight"><div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Branch</th><th>Submitted by</th><th>Sales</th><th>Loss</th><th>Status</th><th>Action</th></tr></thead><tbody>
+            {% for report in branch_reports %}
+            <tr><td>{{ report.report_date|date:"d/m/Y" }}</td><td>{{ report.location }}</td><td>{{ report.submitted_by.get_full_name|default:report.submitted_by.username }}</td><td class="mono">{{ report.units_sold|floatformat:"0" }}</td><td class="mono">{{ report.loss_quantity|floatformat:"0" }}</td><td>{{ report.status }}</td><td>{% if report.status != "APPROVED" %}<form method="post" action="{% url 'approve_daily_report' report.pk %}">{% csrf_token %}<button class="btn-brand" type="submit">Approve</button></form>{% else %}{{ report.approved_by|default:"Approved" }}{% endif %}</td></tr>
+            {% empty %}<tr><td colspan="7" class="text-center text-muted">No branch reports submitted.</td></tr>{% endfor %}
+          </tbody></table></div></div>
+        </div>
+
+        <!-- SECONDARY CHARTS -->
+        <div class="row g-4">
+          <div class="col-lg-6">
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title"><i class="bi bi-bar-chart"></i> Mauzo kwa Bidhaa (Ofisi Zote)</div>
+              </div>
+              <div class="panel-body">
+                <div class="chart-box"><canvas id="chartSalesProducts"></canvas></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title"><i class="bi bi-telephone-outbound"></i> Simu za Huduma kwa Wateja</div>
+              </div>
+              <div class="panel-body">
+                <div class="chart-box"><canvas id="chartCalls"></canvas></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           VIEW: CUSTOMER CALLS
+      ============================================================ -->
+      <section class="view" id="view-calls">
+        <div class="section-hero">
+          <div class="hero-inner">
+            <div>
+              <div class="hero-eyebrow"><i class="bi bi-telephone-outbound"></i> Customer Care</div>
+              <h1 class="hero-title">Calls &amp; <span>Follow-ups</span></h1>
+              <p class="hero-sub">Track customer instructions, compliance check-ins, and follow-up commitments across Mwanza and Dar.</p>
+            </div>
+            <a class="btn-soft" href="{% url 'export_manager_report' %}?type=calls" style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2);color:#fff">
+              <i class="bi bi-download"></i> Export call summary
+            </a>
+          </div>
+        </div>
+
+        <div class="mini-stats mb-4">
+          <div class="mini-stat"><div class="ms-ic"><i class="bi bi-journal-check"></i></div><div><div class="ms-val">{{ recent_call_counts.instruction }}</div><div class="ms-lab">Instruction calls</div></div></div>
+          <div class="mini-stat blue"><div class="ms-ic"><i class="bi bi-shield-check"></i></div><div><div class="ms-val">{{ recent_call_counts.compliance }}</div><div class="ms-lab">Compliance calls</div></div></div>
+          <div class="mini-stat amber"><div class="ms-ic"><i class="bi bi-arrow-repeat"></i></div><div><div class="ms-val">{{ recent_call_counts.followup }}</div><div class="ms-lab">Follow-up calls</div></div></div>
+          <div class="mini-stat purple"><div class="ms-ic"><i class="bi bi-alarm"></i></div><div><div class="ms-val">{{ recent_call_counts.due_today }}</div><div class="ms-lab">Follow-ups due today</div></div></div>
+        </div>
+
+        <div class="row g-4 mb-4">
+          <div class="col-xl-7">
+            <div class="panel h-100">
+              <div class="panel-head">
+                <div><div class="panel-title"><i class="bi bi-bar-chart-line"></i> Call activity by category</div><div class="panel-sub">Instructions, compliance checks, and follow-ups · live totals</div></div>
+                <div class="d-flex gap-3 small">
+                  <span><i class="bi bi-circle-fill text-success me-1" style="font-size:8px"></i>Mwanza</span>
+                  <span><i class="bi bi-circle-fill text-warning me-1" style="font-size:8px"></i>Dar</span>
+                </div>
+              </div>
+              <div class="panel-body"><div class="chart-box"><canvas id="chartCallOutcomes"></canvas></div></div>
+            </div>
+          </div>
+          <div class="col-xl-5">
+            <div class="panel h-100">
+              <div class="panel-head"><div><div class="panel-title"><i class="bi bi-clipboard2-pulse"></i> How the call workflow works</div><div class="panel-sub">A call is tracked through a clear customer-care cycle</div></div></div>
+              <div class="panel-body">
+                <div class="d-flex gap-3 mb-3"><span class="kpi-ic green flex-shrink-0"><i class="bi bi-journal-text"></i></span><div><strong class="small">Instruction</strong><div class="small text-muted">Explain product use or the agreed diet plan; record the guidance shared.</div></div></div>
+                <div class="d-flex gap-3 mb-3"><span class="kpi-ic blue flex-shrink-0"><i class="bi bi-shield-check"></i></span><div><strong class="small">Compliance</strong><div class="small text-muted">Check adherence, progress, and possible side effects; flag issues for review.</div></div></div>
+                <div class="d-flex gap-3"><span class="kpi-ic amber flex-shrink-0"><i class="bi bi-arrow-repeat"></i></span><div><strong class="small">Follow-up</strong><div class="small text-muted">Set a due date, owner, and next action until the case is resolved.</div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-bar mb-4">
+          <div class="fb-group"><i class="bi bi-calendar3"></i><strong>From:</strong></div>
+          <input type="date" aria-label="Call records from date">
+          <div class="fb-group"><i class="bi bi-calendar3"></i><strong>To:</strong></div>
+          <input type="date" aria-label="Call records to date">
+          <div class="fb-group"><i class="bi bi-shop"></i><strong>Branch:</strong></div>
+          <select aria-label="Filter calls by branch"><option>All branches</option><option>Mwanza</option><option>Dar es Salaam</option></select>
+          <div class="fb-group"><i class="bi bi-telephone"></i><strong>Call type:</strong></div>
+          <select aria-label="Filter calls by type"><option>All call types</option><option>Instruction</option><option>Compliance</option><option>Follow-up</option></select>
+          <button class="btn-brand ms-auto" type="button" onclick="showToast('Filters are ready to connect to call records.')"><i class="bi bi-funnel"></i> Filter</button>
+        </div>
+
+        <div class="panel mb-4">
+          <div class="panel-head">
+            <div><div class="panel-title"><i class="bi bi-list-check"></i> Follow-up queue</div><div class="panel-sub">Prioritize missed calls, overdue commitments, and pending customer responses</div></div>
+            <span class="badge-soft amber"><i class="bi bi-alarm"></i> 2 due today</span>
+          </div>
+          <div class="panel-body tight">
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead><tr><th>Next due</th><th>Branch</th><th>Customer ref.</th><th>Call type</th><th>Last outcome</th><th>Next action</th><th>Assigned to</th><th>Priority</th><th>Status</th></tr></thead>
+                <tbody>
+                  {% for call in open_followups %}
+                  <tr>
+                    <td class="cell-strong">{{ call.follow_up_date|date:"d/m/Y" }}</td>
+                    <td><span class="badge-soft green">System customer</span></td>
+                    <td>{{ call.customer.name }}</td>
+                    <td>{{ call.outcome }}</td>
+                    <td>{{ call.notes|default:"—"|truncatechars:60 }}</td>
+                    <td>Call and record response</td>
+                    <td>{{ call.called_by.get_full_name|default:call.called_by.username }}</td>
+                    <td><span class="badge-soft blue">Normal</span></td>
+                    <td><span class="badge-soft amber">{% if call.follow_up_date == today %}Due today{% else %}Scheduled{% endif %}</span></td>
+                  </tr>
+                  {% empty %}
+                  <tr><td colspan="9" class="text-center text-muted">Hakuna follow-ups zilizo na tarehe inayofuata.</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div><div class="panel-title"><i class="bi bi-telephone-inbound"></i> Recent call log</div><div class="panel-sub">Summary of customer-care contacts by branch and outcome</div></div>
+            <button class="btn-soft" type="button" onclick="showToast('Call log is read-only in this dashboard preview.')"><i class="bi bi-download"></i> Export</button>
+          </div>
+          <div class="panel-body tight">
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead><tr><th>Date / time</th><th>Branch</th><th>Customer ref.</th><th>Call category</th><th>Reason</th><th>Outcome</th><th>Follow-up date</th><th>Recorded by</th></tr></thead>
+                <tbody>
+                  {% for call in recent_calls %}
+                  <tr>
+                    <td class="cell-strong">{{ call.called_at|date:"d/m/Y · H:i" }}</td>
+                    <td><span class="badge-soft green">System</span></td>
+                    <td>{{ call.customer.name }}</td>
+                    <td>{{ call.outcome }}</td>
+                    <td>{{ call.notes|default:"—"|truncatechars:50 }}</td>
+                    <td><span class="badge-soft blue">{{ call.outcome }}</span></td>
+                    <td>{% if call.follow_up_date %}{{ call.follow_up_date|date:"d/m/Y" }}{% else %}—{% endif %}</td>
+                    <td>{{ call.called_by.get_full_name|default:call.called_by.username }}</td>
+                  </tr>
+                  {% empty %}
+                  <tr><td colspan="8" class="text-center text-muted">Hakuna simu zilizorekodiwa.</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app-shell -->
+
+<!-- ============================================================
+     MODAL: RECEIVE ONE STOCK ITEM
+============================================================ -->
+<div class="modal fade" id="modalRawMaterial" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title"><i class="bi bi-box-seam"></i> Pokea Malighafi au Kifungashio</h5>
+          <div class="small text-white-50 mt-1">Jaza bidhaa moja kwa kila rekodi. Bidhaa nyingine? Rekodi tena.</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form method="post" action="{% url 'record_purchase' %}" id="managerRawForm">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label-sm" for="rawProduct">1. Chagua ulichonunua</label>
+              <select class="form-select" name="sku" id="rawProduct" required>
+                <option value="" selected disabled>Chagua malighafi au kifungashio</option>
+                <optgroup label="Malighafi">
+                  {% for row in purchase_product_rows %}{% if row.product.category == "RAW_MATERIAL" %}
+                  <option value="{{ row.product.sku }}" data-unit="{{ row.product.unit }}" data-stock="{{ row.balance }}">{{ row.product.name }}</option>
+                  {% endif %}{% endfor %}
+                </optgroup>
+                <optgroup label="Vifungashio">
+                  {% for row in purchase_product_rows %}{% if row.product.category == "PACKAGING" %}
+                  <option value="{{ row.product.sku }}" data-unit="{{ row.product.unit }}" data-stock="{{ row.balance }}">{{ row.product.name }}</option>
+                  {% endif %}{% endfor %}
+                </optgroup>
+              </select>
+              <div class="form-text" id="rawStockHelp">Chagua bidhaa ili kuona kipimo na kiasi kilichopo stoo.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label-sm" for="rawQty">2. Kiasi kilichoingia (<span id="rawUnit">kipimo</span>)</label>
+              <input type="number" class="form-control" name="quantity" min="0.001" step="0.001" placeholder="Mfano: 10" id="rawQty" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label-sm" for="rawPrice">3. Bei ya <span id="rawUnitPrice">kipimo</span> (TZS)</label>
+              <input type="number" class="form-control" name="unit_cost" min="0" step="0.01" placeholder="Mfano: 5000" id="rawPrice" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label-sm" for="rawSupplier">4. Supplier</label>
+              <input type="text" class="form-control" name="supplier" id="rawSupplier" placeholder="Supplier name" required>
+            </div>
+            <div class="col-12">
+              <div class="p-3 rounded-3" style="background:var(--g-50);border:1px dashed var(--g-300)">
+                <label class="form-label-sm fw-bold" for="rawTotal" style="color:var(--g-700)">Jumla ya malipo / Actual negotiated payment (TZS)</label>
+                <div class="input-group">
+                  <span class="input-group-text">TZS</span>
+                  <input type="number" class="form-control fs-5 fw-bold text-gradient" name="actual_payment" id="rawTotal" min="0" step="0.01" placeholder="0" aria-live="polite">
+                </div>
+                <div class="form-text mt-1">Imehesabiwa: <span id="rawCalculatedTotal">TZS 0</span>. Wewe unaweza kubadili kwa bei ya mazungumzo.</div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-soft" data-bs-dismiss="modal">Ghairi</button>
+        <button class="btn-brand" type="submit" form="managerRawForm">
+          <i class="bi bi-check2"></i> Hifadhi bidhaa stoo
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL: RECORD PRODUCTION
+============================================================ -->
+<div class="modal fade" id="modalProduction" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-gear-wide-connected"></i> Rekodi Uzalishaji Mpya</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form method="post" action="{% url 'record_production' %}" id="managerProductionForm">
+          {% csrf_token %}
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label-sm">Bidhaa</label>
+            <select class="form-select" name="sku" required>
+              {% for product in products %}<option value="{{ product.sku }}">{{ product.name }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label-sm">Vipande Vilivyozalishwa</label>
+            <input type="number" class="form-control" name="quantity" min="0.001" step="0.001" placeholder="0" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label-sm">Batch identifier (optional)</label>
+            <input type="text" class="form-control" name="batch_name" placeholder="Automatically generated if blank">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label-sm">Malighafi</label>
+            <select class="form-select" name="material_sku" required>{% for row in purchase_product_rows %}{% if row.product.category == "RAW_MATERIAL" %}<option value="{{ row.product.sku }}">{{ row.product.name }} — {{ row.balance|floatformat:"-3" }} {{ row.product.unit }} stoo</option>{% endif %}{% endfor %}</select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label-sm">Kiasi cha Malighafi</label>
+            <input type="number" class="form-control" name="material_quantity" min="0.001" step="0.001" placeholder="0" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label-sm">Kifungashio (hiari)</label>
+            <select class="form-select" name="material_sku">
+              <option value="">Hakuna</option>
+              {% for row in purchase_product_rows %}{% if row.product.category == "PACKAGING" %}<option value="{{ row.product.sku }}">{{ row.product.name }} — {{ row.balance|floatformat:"-3" }} {{ row.product.unit }} stoo</option>{% endif %}{% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label-sm">Kiasi cha kifungashio</label>
+            <input type="number" class="form-control" name="material_quantity" min="0" step="0.001" value="0">
+          </div>
+        </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-soft" data-bs-dismiss="modal">Ghairi</button>
+        <button class="btn-brand" type="submit" form="managerProductionForm">
+          <i class="bi bi-check2"></i> Hifadhi Uzalishaji
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="managerTransferModal" tabindex="-1" aria-labelledby="managerTransferModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form method="post" action="{% url 'record_dispatch' %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h2 class="modal-title fs-5" id="managerTransferModalTitle">Dispatch stock to a branch</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label" for="managerTransferSku">Finished product</label>
+            <select class="form-select" id="managerTransferSku" name="sku" required>
+              <option value="">Select product</option>
+              {% for row in factory_product_rows %}
+              <option value="{{ row.product.sku }}">{{ row.product.name }} — {{ row.balance|floatformat:"0" }} available</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="managerTransferBatch">Production batch</label>
+            <select class="form-select" id="managerTransferBatch" name="batch_id" required>
+              <option value="">Select batch</option>
+              {% for batch in batches %}
+              <option value="{{ batch.pk }}">{{ batch.reference }} — {{ batch.recipe.product.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="managerTransferQuantity">Quantity</label>
+            <input class="form-control" id="managerTransferQuantity" name="quantity" type="number" min="0.001" step="0.001" required>
+          </div>
+          <div>
+            <label class="form-label" for="managerTransferDestination">Destination</label>
+            <select class="form-select" id="managerTransferDestination" name="destination" required>
+              <option value="MWANZA">Mwanza</option>
+              <option value="DAR">Dar es Salaam</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-success"><i class="bi bi-truck me-1"></i>Dispatch stock</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ============================================================
+     SCRIPTS
+============================================================ -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{{ sales_trend_labels|json_script:"sales-trend-labels-data" }}
+{{ sales_trend_mwanza|json_script:"sales-trend-mwanza-data" }}
+{{ sales_trend_dar|json_script:"sales-trend-dar-data" }}
+{{ stock_split|json_script:"stock-split-data" }}
+{{ production_product_labels|json_script:"production-product-labels-data" }}
+{{ production_product_totals|json_script:"production-product-totals-data" }}
+{{ sales_product_labels|json_script:"sales-product-labels-data" }}
+{{ sales_product_totals|json_script:"sales-product-totals-data" }}
+{{ distribution_product_labels|json_script:"distribution-product-labels-data" }}
+{{ distribution_factory_stock|json_script:"distribution-factory-stock-data" }}
+{{ distribution_mwanza_stock|json_script:"distribution-mwanza-stock-data" }}
+{{ distribution_dar_stock|json_script:"distribution-dar-stock-data" }}
+<script>
+/* ============================================================
+   NAVIGATION
+============================================================ */
+const navItems = document.querySelectorAll('.nav-item[data-view]');
+const views = document.querySelectorAll('.view');
+const crumb = document.getElementById('crumbCurrent');
+
+const crumbMap = {
+  dashboard: 'Dashboard',
+  raw: 'Malighafi & Vifungashio',
+  production: 'Uzalishaji',
+  distribution: 'Ugawaji & Mgawanyo',
+  office: 'Uthibitisho wa Ofisi',
+  mwanza: 'Mwanza Branch',
+  dar: 'Dar es Salaam Branch',
+  sales: 'Ripoti ya Mauzo',
+  calls: 'Calls & Follow-ups'
+};
+
+navItems.forEach(item => {
+  item.addEventListener('click', () => {
+    navItems.forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+    const v = item.dataset.view;
+    views.forEach(view => view.classList.remove('active'));
+    const targetView = document.getElementById('view-' + v);
+    if (!targetView) return;
+    targetView.classList.add('active');
+    crumb.textContent = crumbMap[v] || v;
+    // close mobile sidebar
+    document.body.classList.remove('sidebar-open');
+    // re-render charts so they size correctly
+    Object.values(charts).forEach(c => { try { c.resize(); } catch(e){} });
+  });
+});
+
+/* Mobile sidebar toggle */
+document.getElementById('sidebarToggle').addEventListener('click', () => {
+  document.body.classList.toggle('sidebar-open');
+});
+document.addEventListener('click', (e) => {
+  if (document.body.classList.contains('sidebar-open') &&
+      !e.target.closest('.sidebar') &&
+      !e.target.closest('#sidebarToggle')) {
+    document.body.classList.remove('sidebar-open');
+  }
+});
+
+/* ============================================================
+   TOAST
+============================================================ */
+function showToast(msg) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'app-toast';
+  toast.innerHTML = '<i class="bi bi-check-circle-fill"></i> ' + msg;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.transition = 'opacity .3s, transform .3s';
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(40px)';
+    setTimeout(() => toast.remove(), 320);
+  }, 2800);
+}
+
+/* Live total for raw material modal */
+const rawQty = document.getElementById('rawQty');
+const rawPrice = document.getElementById('rawPrice');
+const rawTotal = document.getElementById('rawTotal');
+const rawProduct = document.getElementById('rawProduct');
+const rawUnit = document.getElementById('rawUnit');
+const rawUnitPrice = document.getElementById('rawUnitPrice');
+const rawStockHelp = document.getElementById('rawStockHelp');
+const rawCalculatedTotal = document.getElementById('rawCalculatedTotal');
+let rawTotalEdited = false;
+const quantityFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 });
+const stockUnitLabels = { kg: 'kg', lita: 'lita', pcs: 'vipande', unit: 'kipande' };
+function updateRawTotal() {
+  const total = (parseFloat(rawQty.value) || 0) * (parseFloat(rawPrice.value) || 0);
+  const formatted = total.toLocaleString('en-US', { maximumFractionDigits: 2 });
+  rawCalculatedTotal.textContent = 'TZS ' + formatted;
+  if (!rawTotalEdited) {
+    rawTotal.value = total ? total.toFixed(2) : '';
+  }
+  const selected = rawProduct.options[rawProduct.selectedIndex];
+  if (!selected || !selected.value) {
+    rawStockHelp.textContent = 'Chagua bidhaa ili kuona kipimo na kiasi kilichopo stoo.';
+    return;
+  }
+  const unit = stockUnitLabels[selected.dataset.unit] || selected.dataset.unit;
+  const currentStock = parseFloat(selected.dataset.stock) || 0;
+  const received = parseFloat(rawQty.value) || 0;
+  rawStockHelp.textContent = `Stoo ya sasa: ${quantityFormatter.format(currentStock)} ${unit}. Baada ya kupokea: ${quantityFormatter.format(currentStock + received)} ${unit}.`;
+}
+rawQty.addEventListener('input', updateRawTotal);
+rawPrice.addEventListener('input', updateRawTotal);
+rawTotal.addEventListener('input', () => {
+  rawTotalEdited = rawTotal.value !== '';
+});
+rawProduct.addEventListener('change', () => {
+  const selected = rawProduct.options[rawProduct.selectedIndex];
+  const unit = stockUnitLabels[selected.dataset.unit] || selected.dataset.unit;
+  rawUnit.textContent = unit;
+  rawUnitPrice.textContent = unit;
+  updateRawTotal();
+});
+
+/* ============================================================
+   CHARTS
+============================================================ */
+Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+Chart.defaults.font.size = 11.5;
+Chart.defaults.color = '#708174';
+
+const charts = {};
+const chartData = (id) => JSON.parse(document.getElementById(id).textContent);
+
+/* Shared gradient helper */
+function makeGradient(ctx, area, c1, c2) {
+  const g = ctx.createLinearGradient(0, area.top, 0, area.bottom);
+  g.addColorStop(0, c1);
+  g.addColorStop(1, c2);
+  return g;
+}
+
+/* ---------- DASHBOARD: Sales trend ---------- */
+{
+  const el = document.getElementById('chartSalesTrend');
+  if (el) {
+    const ctx = el.getContext('2d');
+    charts.salesTrend = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: chartData('sales-trend-labels-data'),
+        datasets: [
+          {
+            label: 'Mwanza',
+            data: chartData('sales-trend-mwanza-data'),
+            borderColor: '#16a34a',
+            backgroundColor: (c) => {
+              const {ctx, chartArea} = c.chart;
+              if (!chartArea) return 'rgba(22,163,74,.1)';
+              return makeGradient(ctx, chartArea, 'rgba(22,163,74,.28)', 'rgba(22,163,74,0)');
+            },
+            fill: true,
+            tension: 0.42,
+            borderWidth: 3,
+            pointRadius: 4,
+            pointHoverRadius: 7,
+            pointBackgroundColor: '#fff',
+            pointBorderColor: '#16a34a',
+            pointBorderWidth: 2.5
+          },
+          {
+            label: 'Dar es Salaam',
+            data: chartData('sales-trend-dar-data'),
+            borderColor: '#f59e0b',
+            backgroundColor: (c) => {
+              const {ctx, chartArea} = c.chart;
+              if (!chartArea) return 'rgba(245,158,11,.1)';
+              return makeGradient(ctx, chartArea, 'rgba(245,158,11,.25)', 'rgba(245,158,11,0)');
+            },
+            fill: true,
+            tension: 0.42,
+            borderWidth: 3,
+            pointRadius: 4,
+            pointHoverRadius: 7,
+            pointBackgroundColor: '#fff',
+            pointBorderColor: '#f59e0b',
+            pointBorderWidth: 2.5
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        interaction: { mode: 'index', intersect: false },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: '#eef4ee', drawBorder: false },
+            ticks: { callback: v => new Intl.NumberFormat('en-US').format(v) }
+          },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+}
+
+/* ---------- DASHBOARD: Stock split donut ---------- */
+{
+  const el = document.getElementById('chartStockSplit');
+  if (el) {
+    charts.stockSplit = new Chart(el, {
+      type: 'doughnut',
+      data: {
+        labels: ['Store', 'Mwanza', 'Dar'],
+        datasets: [{
+          data: chartData('stock-split-data'),
+          backgroundColor: ['#0d4a2b', '#3b82f6', '#f59e0b'],
+          borderColor: '#fff',
+          borderWidth: 3,
+          hoverOffset: 10
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '68%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { usePointStyle: true, pointStyle: 'circle', padding: 18, boxWidth: 9, boxHeight: 9 }
+          }
+        }
+      }
+    });
+  }
+}
+
+/* ---------- PRODUCTION: Bar chart ---------- */
+{
+  const el = document.getElementById('chartProduction');
+  if (el) {
+    charts.production = new Chart(el, {
+      type: 'bar',
+      data: {
+        labels: chartData('production-product-labels-data'),
+        datasets: [
+          {
+            label: 'Zilizozalishwa',
+            data: chartData('production-product-totals-data'),
+            backgroundColor: (c) => {
+              const {ctx, chartArea} = c.chart;
+              if (!chartArea) return '#16a34a';
+              return makeGradient(ctx, chartArea, '#22c55e', '#0d4a2b');
+            },
+            borderRadius: 8,
+            maxBarThickness: 56
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle', padding: 16, boxWidth: 9, boxHeight: 9 } }
+        },
+        scales: {
+          y: { beginAtZero: true, grid: { color: '#eef4ee', drawBorder: false } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+}
+
+/* ---------- PRODUCTION: Efficiency doughnut ---------- */
+{
+  const el = document.getElementById('chartEfficiency');
+  if (el) {
+    charts.efficiency = new Chart(el, {
+      type: 'doughnut',
+      data: {
+        labels: ['Good Output', 'Loss'],
+        datasets: [{
+          data: [{{ production_month|default:"0"|floatformat:"0" }}, {{ loss_month|default:"0"|floatformat:"0" }}],
+          backgroundColor: ['#16a34a', '#ef4444'],
+          borderColor: '#fff',
+          borderWidth: 3,
+          hoverOffset: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '66%',
+        plugins: {
+          legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle', padding: 14, boxWidth: 9, boxHeight: 9 } }
+        }
+      }
+    });
+  }
+}
+
+/* ---------- DISTRIBUTION: Donut ---------- */
+{
+  const el = document.getElementById('chartDistribution');
+  if (el) {
+    charts.distribution = new Chart(el, {
+      type: 'doughnut',
+      data: {
+        labels: ['Store', 'Mwanza', 'Dar'],
+        datasets: [{
+          data: chartData('stock-split-data'),
+          backgroundColor: ['#0d4a2b', '#3b82f6', '#f59e0b'],
+          borderColor: '#fff',
+          borderWidth: 3,
+          hoverOffset: 10
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '70%',
+        plugins: {
+          legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle', padding: 16, boxWidth: 9, boxHeight: 9 } }
+        }
+      }
+    });
+  }
+}
+
+/* ---------- DISTRIBUTION: Stacked bar ---------- */
+{
+  const el = document.getElementById('chartSplitByProduct');
+  if (el) {
+    charts.splitByProduct = new Chart(el, {
+      type: 'bar',
+      data: {
+        labels: chartData('distribution-product-labels-data'),
+        datasets: [
+          { label: 'Store', data: chartData('distribution-factory-stock-data'), backgroundColor: '#0d4a2b', borderRadius: 8, maxBarThickness: 52 },
+          { label: 'Mwanza', data: chartData('distribution-mwanza-stock-data'), backgroundColor: '#3b82f6', maxBarThickness: 52 },
+          { label: 'Dar', data: chartData('distribution-dar-stock-data'), backgroundColor: '#f59e0b', borderRadius: 8, maxBarThickness: 52 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle', padding: 16, boxWidth: 9, boxHeight: 9 } }
+        },
+        scales: {
+          x: { stacked: true, grid: { display: false } },
+          y: { stacked: true, beginAtZero: true, grid: { color: '#eef4ee', drawBorder: false } }
+        }
+      }
+    });
+  }
+}
+
+/* ---------- SALES: Products bar ---------- */
+{
+  const el = document.getElementById('chartSalesProducts');
+  if (el) {
+    charts.salesProducts = new Chart(el, {
+      type: 'bar',
+      data: {
+        labels: chartData('sales-product-labels-data'),
+        datasets: [
+          { label: 'Units sold', data: chartData('sales-product-totals-data'), backgroundColor: '#16a34a', borderRadius: 6, maxBarThickness: 26 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle', padding: 14, boxWidth: 9, boxHeight: 9 } } },
+        scales: {
+          y: { beginAtZero: true, grid: { color: '#eef4ee', drawBorder: false } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+}
+
+/* ---------- SALES: Calls bar ---------- */
+{
+  const el = document.getElementById('chartCalls');
+  if (el) {
+    charts.calls = new Chart(el, {
+      type: 'bar',
+      data: {
+        labels: ['Instruction', 'Compliance', 'Follow-up'],
+        datasets: [
+          { label: 'Total calls', data: [{{ recent_call_counts.instruction }}, {{ recent_call_counts.compliance }}, {{ recent_call_counts.followup }}], backgroundColor: '#16a34a', borderRadius: 6, maxBarThickness: 30 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle', padding: 16, boxWidth: 9, boxHeight: 9 } } },
+        scales: {
+          y: { beginAtZero: true, grid: { color: '#eef4ee', drawBorder: false } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+}
+
+/* ---------- CUSTOMER CARE: Call categories by branch ---------- */
+{
+  const el = document.getElementById('chartCallOutcomes');
+  if (el) {
+    charts.callOutcomes = new Chart(el, {
+      type: 'bar',
+      data: {
+        labels: ['Instruction', 'Compliance', 'Follow-up'],
+        datasets: [
+          { label: 'Recorded calls', data: [{{ recent_call_counts.instruction }}, {{ recent_call_counts.compliance }}, {{ recent_call_counts.followup }}], backgroundColor: '#16a34a', borderRadius: 7, maxBarThickness: 38 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { usePointStyle: true, pointStyle: 'circle', padding: 18, boxWidth: 9, boxHeight: 9 }
+          },
+          tooltip: {
+            callbacks: { footer: items => 'Calls: ' + items.reduce((sum, item) => sum + item.parsed.y, 0) }
+          }
+        },
+        scales: {
+          x: { grid: { display: false } },
+          y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#eef4ee', drawBorder: false } }
+        }
+      }
+    });
+  }
+}
+
+/* ============================================================
+   RESIZE HANDLER (safety for hidden views)
+============================================================ */
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    Object.values(charts).forEach(c => { try { c.resize(); } catch(e){} });
+  }, 200);
+});
+</script>
+</body>
+</html>

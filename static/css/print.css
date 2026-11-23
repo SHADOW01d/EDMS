@@ -1,0 +1,13 @@
+@media screen {
+    body {
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 1rem;
+    }
+}
+
+@media print {
+    @page {
+        margin: 16mm;
+    }
+}

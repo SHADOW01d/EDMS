@@ -1,0 +1,19 @@
+:root {
+    --edms-green: #16a34a;
+    --edms-font: "Plus Jakarta Sans", sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    background: #f8fafc;
+    font-family: var(--edms-font);
+}
+
+.btn-success {
+    --bs-btn-bg: var(--edms-green);
+    --bs-btn-border-color: var(--edms-green);
+}
+
+.min-vh-75 {
+    min-height: 75vh;
+}

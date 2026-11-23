@@ -1,0 +1,458 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#02140b">
+    <meta name="description" content="Secure sign in to the Effective Diet Management System">
+    <link rel="manifest" href="/manifest.json">
+    <title>EDMS — Secure Login</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --brand-green-light: #22c55e;
+            --brand-green-glow: rgba(34, 197, 94, 0.4);
+            --glass-bg: rgba(10, 20, 15, 0.68);
+            --glass-border: rgba(255, 255, 255, 0.13);
+            --text-main: #fff;
+            --text-muted: #a7cbb0;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            min-height: 100dvh;
+            margin: 0;
+            display: grid;
+            place-items: center;
+            overflow-x: hidden;
+            background: #02140b;
+            color: var(--text-main);
+            font-family: "Plus Jakarta Sans", sans-serif;
+        }
+
+        .login-background {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            width: 100%;
+            height: 100%;
+            background-position: center;
+            background-size: cover;
+            filter: brightness(.62) saturate(.95) contrast(1.04);
+            background-image: url("{% static 'img/login-background.png' %}");
+        }
+
+        .bg-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            background:
+                radial-gradient(ellipse at center, rgba(2, 20, 11, .38), rgba(2, 20, 11, .88)),
+                linear-gradient(135deg, rgba(2, 20, 11, .46), rgba(2, 20, 11, .2));
+            pointer-events: none;
+        }
+
+        .login-container {
+            position: relative;
+            z-index: 2;
+            width: min(100%, 480px);
+            padding: 24px;
+        }
+
+        .glass-card {
+            padding: 42px 40px 38px;
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            background: var(--glass-bg);
+            box-shadow: 0 40px 90px rgba(0, 0, 0, .62), inset 0 1px 0 rgba(255, 255, 255, .09);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            transition: transform .3s ease, box-shadow .3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 48px 100px rgba(0, 0, 0, .72), inset 0 1px 0 rgba(255, 255, 255, .12);
+        }
+
+        .brand-wrapper {
+            margin-bottom: 34px;
+            text-align: center;
+        }
+
+        .brand-logo-surface {
+            display: grid;
+            width: 176px;
+            height: 112px;
+            margin: 0 auto 18px;
+            padding: 8px;
+            place-items: center;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, .72);
+            border-radius: 20px;
+            background: #fff;
+            box-shadow: 0 10px 32px var(--brand-green-glow);
+        }
+
+        .brand-logo {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .brand-wrapper h1 {
+            margin: 0;
+            color: #fff;
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -.5px;
+        }
+
+        .brand-wrapper p {
+            margin: 7px 0 0;
+            color: var(--text-muted);
+            font-size: 10px;
+            letter-spacing: 2.4px;
+            text-transform: uppercase;
+        }
+
+        .welcome-title {
+            margin: 0 0 6px;
+            color: #fff;
+            font-size: 23px;
+            font-weight: 700;
+            letter-spacing: -.5px;
+            text-align: center;
+        }
+
+        .welcome-subtitle {
+            margin: 0 0 28px;
+            color: #aab8ae;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .form-label {
+            margin: 0 0 8px 4px;
+            color: #d1d5db;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .4px;
+        }
+
+        .input-group-custom {
+            position: relative;
+            margin-bottom: 21px;
+        }
+
+        .input-group-custom > .field-icon {
+            position: absolute;
+            z-index: 2;
+            top: 50%;
+            left: 18px;
+            color: #84918a;
+            font-size: 17px;
+            pointer-events: none;
+            transform: translateY(-50%);
+            transition: color .2s ease;
+        }
+
+        .form-control-custom {
+            display: block;
+            width: 100%;
+            min-height: 54px;
+            padding: 15px 48px 15px 50px;
+            border: 1px solid rgba(255, 255, 255, .13);
+            border-radius: 15px;
+            outline: 0;
+            background: rgba(0, 0, 0, .3);
+            color: #fff;
+            font: inherit;
+            font-size: 13px;
+            transition: border-color .2s ease, background-color .2s ease, box-shadow .2s ease;
+        }
+
+        .form-control-custom::placeholder {
+            color: #78827c;
+        }
+
+        .form-control-custom:focus {
+            border-color: var(--brand-green-light);
+            background: rgba(0, 0, 0, .48);
+            box-shadow: 0 0 0 4px rgba(34, 197, 94, .13);
+        }
+
+        .input-group-custom:focus-within > .field-icon {
+            color: var(--brand-green-light);
+        }
+
+        .form-control-custom:-webkit-autofill,
+        .form-control-custom:-webkit-autofill:hover,
+        .form-control-custom:-webkit-autofill:focus {
+            -webkit-text-fill-color: #fff;
+            -webkit-box-shadow: 0 0 0 40px #0b1f12 inset;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
+        .toggle-password {
+            position: absolute;
+            z-index: 3;
+            top: 50%;
+            right: 16px;
+            padding: 6px;
+            border: 0;
+            background: transparent;
+            color: #84918a;
+            cursor: pointer;
+            transform: translateY(-50%);
+        }
+
+        .toggle-password:hover,
+        .toggle-password:focus-visible {
+            color: #fff;
+        }
+
+        .form-check-input {
+            border-color: rgba(255, 255, 255, .25);
+            background-color: rgba(0, 0, 0, .28);
+        }
+
+        .form-check-input:checked {
+            border-color: var(--brand-green-light);
+            background-color: var(--brand-green-light);
+        }
+
+        .form-check-label {
+            color: #aab4ad;
+            font-size: 12px;
+        }
+
+        .btn-login {
+            position: relative;
+            display: flex;
+            width: 100%;
+            min-height: 54px;
+            margin-top: 8px;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            overflow: hidden;
+            border: 0;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #22c55e, #166534);
+            box-shadow: 0 10px 30px rgba(34, 197, 94, .28);
+            color: #fff;
+            font: inherit;
+            font-size: 14px;
+            font-weight: 700;
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 38px rgba(34, 197, 94, .42);
+        }
+
+        .btn-login:focus-visible,
+        .toggle-password:focus-visible {
+            outline: 2px solid #86efac;
+            outline-offset: 3px;
+        }
+
+        .login-errors {
+            margin-bottom: 20px;
+            border: 1px solid rgba(248, 113, 113, .38);
+            border-radius: 12px;
+            background: rgba(127, 29, 29, .35);
+            color: #fecaca;
+            font-size: 12px;
+        }
+
+        .login-errors ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        .login-footer {
+            margin-top: 24px;
+            color: rgba(226, 232, 228, .7);
+            font-size: 10px;
+            letter-spacing: .3px;
+            line-height: 1.7;
+            text-align: center;
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 16px;
+            }
+
+            .glass-card {
+                padding: 32px 24px 28px;
+                border-radius: 24px;
+            }
+
+            .brand-wrapper {
+                margin-bottom: 28px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-background" aria-hidden="true"></div>
+    <div class="bg-overlay" aria-hidden="true"></div>
+
+    <main class="login-container">
+        <section class="glass-card" aria-labelledby="login-title">
+            <header class="brand-wrapper">
+                <div class="brand-logo-surface">
+                    <img class="brand-logo" src="{{ MEDIA_URL }}logo.png" alt="Effective Diet logo">
+                </div>
+                <h1>Effective Diet</h1>
+                <p>Stay Healthy · Be Productive</p>
+            </header>
+
+            <h2 class="welcome-title" id="login-title">Welcome back</h2>
+            <p class="welcome-subtitle">Sign in to continue to your secure workspace.</p>
+
+            {% if form.non_field_errors %}
+                <div class="alert login-errors" role="alert">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <form id="loginForm" method="post" action="{% url 'login' %}" autocomplete="off" novalidate>
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ next }}">
+
+                <div>
+                    <label class="form-label" for="{{ form.username.id_for_label }}">Username</label>
+                    <div class="input-group-custom">
+                        <i class="bi bi-person field-icon" aria-hidden="true"></i>
+                        <input
+                            type="text"
+                            name="{{ form.username.name }}"
+                            id="{{ form.username.id_for_label }}"
+                            class="form-control-custom"
+                            placeholder="Enter your username"
+                            autocomplete="new-username"
+                            autocapitalize="none"
+                            required
+                            autofocus
+                        >
+                    </div>
+                    {% if form.username.errors %}
+                        <div class="login-errors px-3 py-2" role="alert">{{ form.username.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label class="form-label" for="{{ form.password.id_for_label }}">Password</label>
+                    <div class="input-group-custom">
+                        <i class="bi bi-lock field-icon" aria-hidden="true"></i>
+                        <input
+                            type="password"
+                            name="{{ form.password.name }}"
+                            id="{{ form.password.id_for_label }}"
+                            class="form-control-custom"
+                            placeholder="Enter your password"
+                            autocomplete="new-password"
+                            required
+                        >
+                        <button
+                            type="button"
+                            class="toggle-password"
+                            aria-label="Show password"
+                            aria-controls="{{ form.password.id_for_label }}"
+                            aria-pressed="false"
+                            onclick="togglePassword(this)"
+                        >
+                            <i class="bi bi-eye" id="eyeIcon" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    {% if form.password.errors %}
+                        <div class="login-errors px-3 py-2" role="alert">{{ form.password.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex align-items-center mb-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="rememberMe" name="remember_me">
+                        <label class="form-check-label" for="rememberMe">Remember me on this device</label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-login">
+                    Sign in <i class="bi bi-arrow-right-short fs-5" aria-hidden="true"></i>
+                </button>
+            </form>
+        </section>
+
+        <footer class="login-footer">
+            &copy; {% now "Y" %} Effective Diet Management System.<br>
+            Protected by company security regulations.
+        </footer>
+    </main>
+
+    <script>
+        function togglePassword(button) {
+            const passwordInput = document.getElementById(button.getAttribute("aria-controls"));
+            const eyeIcon = button.querySelector("i");
+            const showPassword = passwordInput.type === "password";
+
+            passwordInput.type = showPassword ? "text" : "password";
+            eyeIcon.classList.toggle("bi-eye", !showPassword);
+            eyeIcon.classList.toggle("bi-eye-slash", showPassword);
+            button.setAttribute("aria-label", showPassword ? "Hide password" : "Show password");
+            button.setAttribute("aria-pressed", String(showPassword));
+        }
+
+        function clearLoginFields() {
+            const form = document.getElementById("loginForm");
+            form.querySelectorAll("input:not([type='hidden'])").forEach((input) => {
+                if (input.type === "checkbox" || input.type === "radio") {
+                    input.checked = false;
+                } else {
+                    input.value = "";
+                }
+            });
+        }
+
+        window.addEventListener("pageshow", () => {
+            clearLoginFields();
+            window.setTimeout(clearLoginFields, 100);
+            window.setTimeout(clearLoginFields, 500);
+        });
+
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", () => {
+                navigator.serviceWorker.register("/sw.js")
+                    .catch((error) => console.error("Service Worker registration failed:", error));
+            });
+        }
+    </script>
+</body>
+</html>

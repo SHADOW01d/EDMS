@@ -1,0 +1,9 @@
+{% extends "base/base.html" %}
+
+{% block body %}
+<main class="container min-vh-100 d-flex align-items-center justify-content-center py-4">
+    <section class="w-100" style="max-width: 28rem">
+        {% block auth_content %}{% endblock %}
+    </section>
+</main>
+{% endblock %}
