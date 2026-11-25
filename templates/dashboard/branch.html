@@ -92,6 +92,7 @@
     .branch-topbar-tools { display: flex; align-items: center; gap: 10px; margin-left: auto; }
     .branch-notification {
         display: grid;
+        position: relative;
         width: 34px;
         height: 34px;
         place-items: center;
@@ -100,6 +101,24 @@
         background: #fff;
         color: #708174;
         font-size: 14px;
+        text-decoration: none;
+    }
+    .branch-notification-count {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        display: grid;
+        min-width: 17px;
+        height: 17px;
+        padding: 0 4px;
+        place-items: center;
+        border: 2px solid #fff;
+        border-radius: 999px;
+        background: #dc2626;
+        color: #fff;
+        font-size: 9px;
+        font-weight: 800;
+        line-height: 1;
     }
     .branch-account {
         display: flex;
@@ -439,7 +458,7 @@
                 {% endfor %}
             </select>
         </form>
-        <button class="branch-notification" type="button" aria-label="Branch notifications" onclick="document.querySelector('[data-branch-view=transfers]').click()" title="Review incoming transfers"><i class="bi bi-bell"></i></button>
+        <a class="branch-notification" href="{{ dashboard_url }}?view=transfers" aria-label="Branch notifications{% if incoming_transfer_notification_count %}: {{ incoming_transfer_notification_count }} incoming transfers{% endif %}" title="Review incoming transfers"><i class="bi bi-bell"></i>{% if incoming_transfer_notification_count %}<span class="branch-notification-count">{{ incoming_transfer_notification_count }}</span>{% endif %}</a>
         {% include "components/account_menu.html" with account_menu_variant="workspace-topbar-account" account_menu_role="Branch Manager" user_initial=user_initial user_name=user_name %}
         <span class="branch-topbar-date">{% now "D, d M Y" %}</span>
     </div>
@@ -522,26 +541,28 @@
     <section class="branch-view" id="branch-view-transfers" aria-labelledby="branch-heading-transfers" hidden>
         <header class="workspace-hero branch-hero">
             <div><div class="eyebrow"><i class="bi bi-box-arrow-in-down me-1"></i>Inventory movement</div><h1 id="branch-heading-transfers">Incoming transfers</h1><p>Review goods dispatched from the factory and confirm the quantities received at {{ branch_name }}.</p></div>
-            <span class="branch-pill"><i class="bi bi-hourglass-split"></i> No pending receipts</span>
+            <span class="branch-pill"><i class="bi bi-hourglass-split"></i>{% if incoming_transfers %}{{ incoming_transfers|length }} pending transfer{{ incoming_transfers|length|pluralize }}{% else %}No pending receipts{% endif %}</span>
         </header>
         <section class="workspace-card">
             <header class="workspace-card-head"><div><h2><i class="bi bi-truck text-success me-2"></i>Transfers awaiting receipt</h2><p>Confirmations update branch stock immediately.</p></div><span class="workspace-status ready">Live transfers</span></header>
             <div class="workspace-card-body p-0">
                 <div class="workspace-table-wrap">
                     <table class="workspace-table branch-table">
-                        <thead><tr><th>Reference</th><th>Product</th><th>Quantity sent</th><th>Quantity received</th><th>Dispatch date</th><th>Status</th><th>Action</th></tr></thead>
+                        <thead><tr><th>Transfer reference</th><th>Production batch</th><th>Product</th><th>Quantity sent</th><th>Quantity received</th><th>Dispatch date</th><th>Status</th><th>Action</th></tr></thead>
                         <tbody>
                         {% for transfer in incoming_transfers %}
                             {% for item in transfer.items.all %}
-                            <tr><td>{{ transfer.reference }}</td><td>{{ item.product.name }}</td><td>{{ item.quantity_sent }}</td><td>
+                            {% if not selected_batch or item.batch_id == selected_batch.pk %}
+                            <tr><td>{{ transfer.reference }}</td><td>{{ item.batch.reference|default:"—" }}</td><td>{{ item.product.name }}</td><td>{{ item.quantity_sent }}</td><td>
                                 <form method="post" action="{% url 'receive_transfer' transfer.pk %}" data-confirm-message="Unathibitisha kupokea mzigo huu? Stock ya tawi itaongezwa kwa kiasi kilichopokelewa na status ya transfer itabadilika kuwa Received au Partially received. Takwimu za tawi zitabadilika baada ya uthibitisho huu.">
                                     {% csrf_token %}<input name="received_{{ item.pk }}" type="number" min="0" max="{{ item.quantity_sent }}" step="0.001" value="{{ item.quantity_sent }}">
                                     <button class="branch-action" type="submit">Confirm receipt</button>
                                 </form>
                             </td><td>{{ transfer.dispatched_at }}</td><td>{{ transfer.status }}</td><td>Branch receipt</td></tr>
+                            {% endif %}
                             {% endfor %}
                         {% empty %}
-                            <tr><td class="branch-empty-row" colspan="7"><div class="branch-empty"><div><i class="bi bi-inbox"></i><strong>No incoming transfers to confirm</strong><span>Factory dispatches to {{ branch_name }} will appear here.</span></div></div></td></tr>
+                            <tr><td class="branch-empty-row" colspan="8"><div class="branch-empty"><div><i class="bi bi-inbox"></i><strong>No incoming transfers to confirm</strong><span>Factory dispatches to {{ branch_name }} will appear here.</span></div></div></td></tr>
                         {% endfor %}
                         </tbody>
                     </table>
@@ -728,15 +749,15 @@
 
     <section class="branch-view" id="branch-view-report" aria-labelledby="branch-heading-report" hidden>
         <header class="workspace-hero branch-hero">
-            <div><div class="eyebrow"><i class="bi bi-file-earmark-bar-graph me-1"></i>Branch reporting</div><h1 id="branch-heading-report">Daily branch report</h1><p>Preview of the end-of-day summary assembled from sales, expenses, inventory, customer activity, and calls.</p></div>
-            <span class="branch-pill"><i class="bi bi-check-circle"></i> Live report entry</span>
+            <div><div class="eyebrow"><i class="bi bi-file-earmark-bar-graph me-1"></i>Branch reporting</div><h1 id="branch-heading-report">Daily branch report</h1><p>Today's report is calculated from recorded sales, stock movements, customer visits, deliveries, and calls.</p></div>
+            <span class="branch-pill"><i class="bi bi-lock"></i> Daily submission only</span>
         </header>
-        <div class="branch-preview-note"><i class="bi bi-info-circle-fill"></i><span>Submit a reconciled daily report. Re-submitting today updates the existing report.</span></div>
+        <div class="branch-preview-note"><i class="bi bi-info-circle-fill"></i><span>Report figures are read-only and calculated from saved branch activity. Select a batch in the top bar, then submit today's report.</span></div>
         <div class="workspace-kpis" aria-label="Daily report summary">
-            <article class="workspace-kpi"><div class="kpi-label">Sales total</div><div class="kpi-value">{{ sales_today|default_if_none:"0"|floatformat:"2"|intcomma:False }}</div><div class="kpi-note">Recorded today</div></article>
-            <article class="workspace-kpi"><div class="kpi-label">Expenses total</div><div class="kpi-value">{% for expense in expenses %}{% if forloop.first %}{{ expense.amount|floatformat:"2"|intcomma:False }}{% endif %}{% empty %}0{% endfor %}</div><div class="kpi-note">Saved expense records</div></article>
+            <article class="workspace-kpi"><div class="kpi-label">Sales total</div><div class="kpi-value">{{ daily_report_data.sales_last_day|default_if_none:"0"|floatformat:"2"|intcomma:False }}</div><div class="kpi-note">Recorded on {{ report_date|date:"d/m/Y" }}</div></article>
+            <article class="workspace-kpi"><div class="kpi-label">Expenses total</div><div class="kpi-value">{{ daily_report_data.expense_total|floatformat:"2"|intcomma:False }}</div><div class="kpi-note">Saved expense records</div></article>
             <article class="workspace-kpi"><div class="kpi-label">Incoming transfers</div><div class="kpi-value">{{ incoming_transfers|length }}</div><div class="kpi-note">Pending receipts</div></article>
-            <article class="workspace-kpi"><div class="kpi-label">Loss quantity</div><div class="kpi-value">0</div><div class="kpi-note">Enter report loss</div></article>
+            <article class="workspace-kpi"><div class="kpi-label">Loss quantity</div><div class="kpi-value">{{ daily_report_data.loss_total|floatformat:"0" }}</div><div class="kpi-note">Recorded on report date</div></article>
         </div>
         <section class="workspace-card">
             <header class="workspace-card-head"><div><h2><i class="bi bi-journal-check text-success me-2"></i>End-of-day report</h2><p>{{ branch_name }} · {% now "d F Y" %}</p></div>{% if current_daily_report %}<span class="workspace-status {% if current_daily_report.status == 'APPROVED' %}ready{% endif %}"><i class="bi bi-lock"></i> {{ current_daily_report.get_status_display }}</span>{% else %}<span class="workspace-status neutral">Draft</span>{% endif %}</header>
@@ -766,26 +787,24 @@
                 </div>
                 <form method="post" action="{% url 'submit_daily_report' %}">
                     {% csrf_token %}
-                    <div class="workspace-field mb-3"><label for="report-batch">Production batch</label><select id="report-batch" name="batch_id" required><option value="">Select batch for this report</option>{% for batch in available_batches %}<option value="{{ batch.pk }}"{% if selected_batch and selected_batch.pk == batch.pk %} selected{% endif %}>{{ batch.reference }}</option>{% endfor %}</select></div>
-                    <div class="branch-form-grid">
-                        <div class="workspace-field"><label for="report-sales">Units sold</label><input id="report-sales" name="units_sold" type="number" min="0" step="0.001" value="0"></div>
-                        <div class="workspace-field"><label for="report-balance">Closing balance</label><input id="report-balance" name="closing_balance" type="number" min="0" step="0.001" value="{{ stock|default:0 }}"></div>
-                        <div class="workspace-field"><label for="report-loss">Loss quantity</label><input id="report-loss" name="loss_quantity" type="number" min="0" step="0.001" value="0"></div>
-                        <div class="workspace-grid-3 wide branch-report-activity">
-                            <div class="branch-mini-stat"><span>Customer visits</span><strong>{{ today_new_customers|add:today_returning_customers }}</strong></div>
-                            <div class="branch-mini-stat"><span>New customers</span><strong>{{ today_new_customers }}</strong></div>
-                            <div class="branch-mini-stat"><span>Returning customers</span><strong>{{ today_returning_customers }}</strong></div>
-                            <div class="branch-mini-stat"><span>Visitors</span><strong>{{ today_visitors }}</strong></div>
-                            <div class="branch-mini-stat"><span>Deliveries</span><strong>{{ today_delivery_count }}</strong></div>
-                            <div class="branch-mini-stat"><span>Parcels</span><strong>{{ today_parcel_count }}</strong></div>
-                            <p class="branch-section-subtitle wide">These counts are calculated from today's saved visits and delivery records; they do not need to be entered again.</p>
-                        </div>
-                        <div class="workspace-field"><label for="report-instruction-calls">Instruction calls</label><input id="report-instruction-calls" name="instruction_calls" type="number" min="0" value="0"></div>
-                        <div class="workspace-field"><label for="report-compliance-calls">Compliance calls</label><input id="report-compliance-calls" name="compliance_calls" type="number" min="0" value="0"></div>
-                        <div class="workspace-field"><label for="report-followup-calls">Follow-up calls</label><input id="report-followup-calls" name="followup_calls" type="number" min="0" value="0"></div>
-                        <div class="workspace-field wide"><label for="report-addresses">Customer addresses / areas</label><textarea id="report-addresses" name="customer_addresses"></textarea></div>
+                    {% if selected_batch and daily_report_snapshot and can_submit_daily_report %}
+                    <input type="hidden" name="batch_id" value="{{ selected_batch.pk }}">
+                    <div class="workspace-grid-3 mb-3">
+                        <div class="branch-mini-stat"><span>Production batch</span><strong>{{ selected_batch.reference }}</strong></div>
+                        <div class="branch-mini-stat"><span>Units sold today</span><strong>{{ daily_report_snapshot.units_sold|floatformat:"-3" }}</strong></div>
+                        <div class="branch-mini-stat"><span>Current closing balance</span><strong>{{ daily_report_snapshot.closing_balance|floatformat:"-3" }}</strong></div>
+                        <div class="branch-mini-stat"><span>Loss quantity today</span><strong>{{ daily_report_snapshot.loss_quantity|floatformat:"-3" }}</strong></div>
+                        <div class="branch-mini-stat"><span>New / returning customers</span><strong>{{ daily_report_snapshot.new_customers }} / {{ daily_report_snapshot.returning_customers }}</strong></div>
+                        <div class="branch-mini-stat"><span>Visitors</span><strong>{{ daily_report_snapshot.visitors }}</strong></div>
+                        <div class="branch-mini-stat"><span>Deliveries / parcels</span><strong>{{ daily_report_snapshot.deliveries }} / {{ daily_report_snapshot.parcels }}</strong></div>
+                        <div class="branch-mini-stat"><span>Instruction / compliance calls</span><strong>{{ daily_report_snapshot.instruction_calls }} / {{ daily_report_snapshot.compliance_calls }}</strong></div>
+                        <div class="branch-mini-stat"><span>Follow-up calls</span><strong>{{ daily_report_snapshot.followup_calls }}</strong></div>
                     </div>
-                    <button class="branch-action mt-3" type="submit"><i class="bi bi-send"></i> Submit daily report</button>
+                    <div class="workspace-field mb-3"><label>Customer addresses / areas recorded today</label><textarea readonly>{{ daily_report_snapshot.customer_addresses|default:"—" }}</textarea></div>
+                    <button class="branch-action mt-2" type="submit"><i class="bi bi-send"></i> Submit daily report</button>
+                    {% else %}
+                    <div class="workspace-notice"><i class="bi bi-info-circle"></i><span>{% if selected_batch %}This batch has not been received into branch stock yet. Confirm its incoming transfer before submitting the daily report.{% else %}Select a batch from the top bar to review its read-only daily figures and submit the report.{% endif %}</span></div>
+                    {% endif %}
                 </form>
                 {% endif %}
             </div>

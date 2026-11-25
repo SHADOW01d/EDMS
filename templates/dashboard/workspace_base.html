@@ -5,13 +5,18 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#0a3a22">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="EDMS">
     <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/static/img/icon-192x192.png" type="image/png" sizes="192x192">
+    <link rel="apple-touch-icon" href="/static/img/icon-192x192.png">
     <title>{% block title %}EDMS Workspace{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="/static/css/action_feedback.css" rel="stylesheet">
     <style>
         :root {
             --ink: #0b1f12;
@@ -133,7 +138,9 @@
             text-align: left;
         }
         .workspace-logout button:hover { background: rgba(239,68,68,.14); }
-        .workspace-main { min-height: 100vh; margin-left: 252px; }
+        .workspace-main { min-height: 100vh; margin-left: 252px; transition: margin-left .2s ease; }
+        body.workspace-nav-collapsed .workspace-sidebar { transform: translateX(-100%); }
+        body.workspace-nav-collapsed .workspace-main { margin-left: 0; }
         .workspace-topbar {
             position: sticky;
             z-index: 10;
@@ -267,8 +274,25 @@
             font-size: 10px;
             font-weight: 700;
         }
+        .workspace-form-grid[data-report-date-range] .workspace-button {
+            justify-content: center;
+            color: #fff;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
         .workspace-button:disabled { background: #dce6dd; color: #718075; cursor: not-allowed; }
-        .workspace-mobile-toggle { display: none; }
+        .workspace-mobile-toggle {
+            display: grid;
+            width: 36px;
+            height: 36px;
+            flex: 0 0 auto;
+            place-items: center;
+            border: 1px solid var(--line);
+            border-radius: 9px;
+            background: white;
+            color: var(--ink);
+            cursor: pointer;
+        }
         .workspace-toast {
             position: fixed;
             right: 20px;
@@ -286,6 +310,25 @@
             transform: translateY(10px);
             transition: opacity .2s, transform .2s;
         }
+        .pwa-install-wrap { position: relative; }
+        .pwa-install-button {
+            display: inline-flex;
+            min-height: 36px;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 11px;
+            border: 1px solid #d5e7d8;
+            border-radius: 9px;
+            background: #f3fbf4;
+            color: #0d5a31;
+            font: inherit;
+            font-size: 10px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .pwa-install-button:hover { border-color: #9bcba5; background: #e8f7eb; }
+        .pwa-install-button[hidden], [data-pwa-install-help][hidden] { display: none; }
+        [data-pwa-install-help] { position: absolute; z-index: 30; right: 12px; top: 100%; max-width: 290px; margin: 6px 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 9px; background: white; box-shadow: var(--shadow); color: var(--ink); font-size: 11px; }
         .workspace-toast.show { opacity: 1; transform: translateY(0); }
         .workspace-confirm-dialog {
             width: min(460px, calc(100vw - 32px));
@@ -319,7 +362,6 @@
             body.workspace-nav-open .workspace-sidebar { transform: translateX(0); box-shadow: 0 0 0 100vmax rgba(4,31,17,.38); }
             .workspace-main { margin-left: 0; }
             .workspace-topbar { min-height: 58px; padding: 9px 15px; }
-            .workspace-mobile-toggle { display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid var(--line); border-radius: 9px; background: white; color: var(--ink); }
             .workspace-main-content { padding: 18px 14px 28px; }
             .workspace-hero { min-height: 150px; padding: 22px 20px; }
             .workspace-date { display: none; }
@@ -352,22 +394,20 @@
 
         <main class="workspace-main">
             <header class="workspace-topbar">
-                <button class="workspace-mobile-toggle" id="workspaceMenuToggle" type="button" aria-label="Open navigation"><i class="bi bi-list"></i></button>
+                <button class="workspace-mobile-toggle" id="workspaceMenuToggle" type="button" aria-label="Open navigation" aria-controls="workspaceSidebar" aria-expanded="true" title="Toggle navigation"><i class="bi bi-list"></i></button>
                 <span class="crumb"><i class="bi bi-house-door me-2"></i>EDMS <span class="mx-1">/</span> <strong>{% block breadcrumb %}{% endblock %}</strong></span>
+                <div class="pwa-install-wrap ms-auto">
+                    <button class="pwa-install-button" type="button" data-pwa-install hidden><i class="bi bi-download" aria-hidden="true"></i>Install app</button>
+                    <span data-pwa-install-help hidden>On iPhone or iPad, tap Share, then choose “Add to Home Screen”.</span>
+                </div>
                 {% block workspace_topbar_right %}<div class="ms-auto d-flex align-items-center gap-3"><span class="text-muted small">{% now "D, d M Y" %}</span>{% include "components/account_menu.html" with account_menu_variant="workspace-topbar-account" account_menu_role=account_menu_role user_initial=user_initial user_name=user_name %}</div>{% endblock %}
             </header>
             <div class="workspace-main-content">
-                {% if messages %}
-                    <div aria-live="polite">
-                        {% for message in messages %}
-                            <div class="workspace-notice" role="status">{{ message }}</div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
                 {% block workspace_content %}{% endblock %}
             </div>
         </main>
     </div>
+    {% include "components/action_feedback.html" %}
     <dialog class="workspace-confirm-dialog" id="workspaceConfirmDialog" aria-labelledby="workspaceConfirmTitle" aria-describedby="workspaceConfirmMessage">
         <div class="workspace-confirm-content">
             <span class="workspace-confirm-icon" aria-hidden="true"><i class="bi bi-box-arrow-in-down"></i></span>
@@ -382,14 +422,10 @@
         </div>
     </dialog>
     <div class="workspace-toast" id="workspaceToast" role="status" aria-live="polite"></div>
+    <script defer src="/static/js/pwa.js"></script>
     <script>
-        const workspaceToast = document.getElementById("workspaceToast");
-        let workspaceToastTimer;
         function showWorkspaceToast(message) {
-            workspaceToast.textContent = message;
-            workspaceToast.classList.add("show");
-            window.clearTimeout(workspaceToastTimer);
-            workspaceToastTimer = window.setTimeout(() => workspaceToast.classList.remove("show"), 3200);
+            window.showActionFeedback(message, "info");
         }
 
         const workspaceConfirmDialog = document.getElementById("workspaceConfirmDialog");
@@ -434,20 +470,84 @@
             pendingConfirmation = null;
         });
 
-        document.getElementById("workspaceMenuToggle")?.addEventListener("click", () => {
-            document.body.classList.toggle("workspace-nav-open");
+        const workspaceMenuToggle = document.getElementById("workspaceMenuToggle");
+        const workspaceDesktopQuery = window.matchMedia("(min-width: 761px)");
+        const workspaceSidebarPreferenceKey = "edmsWorkspaceSidebarCollapsed";
+        const syncWorkspaceSidebarToggle = () => {
+            const isOpen = workspaceDesktopQuery.matches
+                ? !document.body.classList.contains("workspace-nav-collapsed")
+                : document.body.classList.contains("workspace-nav-open");
+            workspaceMenuToggle.setAttribute("aria-expanded", String(isOpen));
+            workspaceMenuToggle.setAttribute("aria-label", isOpen ? "Close navigation" : "Open navigation");
+            workspaceMenuToggle.title = isOpen ? "Close navigation" : "Open navigation";
+        };
+        if (workspaceDesktopQuery.matches && localStorage.getItem(workspaceSidebarPreferenceKey) === "true") {
+            document.body.classList.add("workspace-nav-collapsed");
+        }
+        workspaceMenuToggle?.addEventListener("click", () => {
+            if (workspaceDesktopQuery.matches) {
+                const isCollapsed = document.body.classList.toggle("workspace-nav-collapsed");
+                localStorage.setItem(workspaceSidebarPreferenceKey, String(isCollapsed));
+            } else {
+                document.body.classList.toggle("workspace-nav-open");
+            }
+            syncWorkspaceSidebarToggle();
         });
+        workspaceDesktopQuery.addEventListener("change", () => {
+            document.body.classList.remove("workspace-nav-open");
+            document.body.classList.toggle(
+                "workspace-nav-collapsed",
+                workspaceDesktopQuery.matches && localStorage.getItem(workspaceSidebarPreferenceKey) === "true",
+            );
+            syncWorkspaceSidebarToggle();
+        });
+        syncWorkspaceSidebarToggle();
         document.querySelectorAll(".workspace-nav a").forEach((link) => {
-            link.addEventListener("click", () => document.body.classList.remove("workspace-nav-open"));
+            link.addEventListener("click", () => {
+                document.body.classList.remove("workspace-nav-open");
+                syncWorkspaceSidebarToggle();
+            });
         });
 
-        if ("serviceWorker" in navigator) {
-            window.addEventListener("load", () => {
-                navigator.serviceWorker.register("/sw.js")
-                    .catch((error) => console.error("Service Worker registration failed:", error));
+        document.querySelectorAll("form[data-report-date-range]").forEach((form) => {
+            const type = form.querySelector("[data-report-type]");
+            const start = form.querySelector("[data-report-start]");
+            const end = form.querySelector("[data-report-end]");
+            if (!type || !start || !end) return;
+
+            const formatDate = (date) => [
+                date.getFullYear(),
+                String(date.getMonth() + 1).padStart(2, "0"),
+                String(date.getDate()).padStart(2, "0"),
+            ].join("-");
+            const parseDate = (value) => {
+                const [year, month, day] = value.split("-").map(Number);
+                return new Date(year, month - 1, day);
+            };
+            const syncRange = () => {
+                const selectedType = type.value;
+                const endDate = end.value ? parseDate(end.value) : new Date();
+                if (selectedType === "daily") {
+                    start.value = formatDate(endDate);
+                } else if (selectedType === "weekly") {
+                    const startDate = new Date(endDate);
+                    startDate.setDate(startDate.getDate() - 6);
+                    start.value = formatDate(startDate);
+                } else if (selectedType === "monthly") {
+                    const startDate = new Date(endDate);
+                    startDate.setDate(startDate.getDate() - 29);
+                    start.value = formatDate(startDate);
+                }
+            };
+            type.addEventListener("change", syncRange);
+            end.addEventListener("change", () => {
+                if (type.value !== "custom") syncRange();
             });
-        }
+            if (type.value !== "custom") syncRange();
+        });
+
     </script>
+    <script defer src="{% static 'js/pwa.js' %}"></script>
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>

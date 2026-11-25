@@ -330,13 +330,6 @@
 {% endblock %}
 
 {% block workspace_content %}
-    {% if messages %}
-    <div class="workspace-main-content pb-0" role="status" aria-live="polite">
-        {% for message in messages %}
-        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}success{% endif %} py-2 mb-2">{{ message }}</div>
-        {% endfor %}
-    </div>
-    {% endif %}
     <section class="factory-view" id="factory-overview" data-factory-panel="overview" aria-label="Factory overview">
         <header class="workspace-hero factory-hero">
             <div class="factory-hero-content">

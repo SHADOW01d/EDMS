@@ -1,0 +1,16 @@
+<div id="actionFeedbackQueue" hidden>
+    {% for message in messages %}
+        <div data-feedback-item data-level="{{ message.level_tag }}">{{ message }}</div>
+    {% endfor %}
+</div>
+<dialog class="action-feedback-dialog" id="actionFeedbackDialog" aria-labelledby="actionFeedbackTitle" aria-describedby="actionFeedbackMessage">
+    <div class="action-feedback-content">
+        <span class="action-feedback-icon" id="actionFeedbackIcon" aria-hidden="true"></span>
+        <h2 id="actionFeedbackTitle"></h2>
+        <p id="actionFeedbackMessage"></p>
+    </div>
+    <div class="action-feedback-actions">
+        <button type="button" id="actionFeedbackClose">Sawa</button>
+    </div>
+</dialog>
+<script defer src="/static/js/action_feedback.js"></script>

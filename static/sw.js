@@ -1,9 +1,11 @@
-const CACHE_VERSION = "edms-v2";
+const CACHE_VERSION = "edms-v4";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const OFFLINE_URL = "/offline/";
 const PRECACHE_URLS = [
     OFFLINE_URL,
     "/manifest.json",
+    "/static/img/icon-192x192.png",
+    "/static/img/icon-512x512.png",
 ];
 
 self.addEventListener("install", (event) => {
