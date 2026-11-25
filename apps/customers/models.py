@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 from apps.inventory.models import StockLocation
 
@@ -15,6 +16,8 @@ class Customer(models.Model):
     )
     phone = models.CharField(max_length=30, blank=True)
     email = models.EmailField(blank=True)
+    diagnosis = models.CharField(max_length=255, blank=True)
+    short_description = models.TextField(blank=True)
     address = models.TextField(blank=True)
     active = models.BooleanField(default=True)
 
@@ -25,16 +28,133 @@ class Customer(models.Model):
         return self.name
 
 
+class CustomerVisit(models.Model):
+    class VisitType(models.TextChoices):
+        NEW_CUSTOMER = "NEW_CUSTOMER", "Mteja mpya"
+        RETURNING_CUSTOMER = "RETURNING_CUSTOMER", "Mteja aliyerudi"
+        CUSTOMER_INQUIRY = "CUSTOMER_INQUIRY", "Ameulizia bidhaa/huduma"
+        MANAGEMENT_GUEST = "MANAGEMENT_GUEST", "Mgeni wa menejimenti/CEO"
+        GOVERNMENT_OFFICIAL = "GOVERNMENT_OFFICIAL", "Afisa wa serikali"
+        OTHER = "OTHER", "Mgeni mwingine"
+
+    customer = models.ForeignKey(
+        Customer,
+        on_delete=models.SET_NULL,
+        related_name="visits",
+        null=True,
+        blank=True,
+    )
+    location = models.ForeignKey(
+        StockLocation,
+        on_delete=models.PROTECT,
+        related_name="customer_visits",
+    )
+    visit_type = models.CharField(max_length=24, choices=VisitType.choices)
+    visitor_name = models.CharField(max_length=150)
+    visitor_phone = models.CharField(max_length=30, blank=True)
+    notes = models.TextField(blank=True)
+    visited_at = models.DateTimeField(auto_now_add=True)
+    recorded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+
+    class Meta:
+        ordering = ("-visited_at",)
+        indexes = [
+            models.Index(fields=("location", "visited_at"), name="custvisit_loc_date_idx"),
+            models.Index(fields=("location", "visitor_phone"), name="custvisit_loc_phone_idx"),
+        ]
+
+    @property
+    def contact_name(self):
+        return self.customer.name if self.customer_id else self.visitor_name
+
+
+class BranchDelivery(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "Inasubiri"
+        DISPATCHED = "DISPATCHED", "Imetumwa"
+        DELIVERED = "DELIVERED", "Imefikishwa"
+        FAILED = "FAILED", "Imeshindikana"
+
+    customer = models.ForeignKey(
+        Customer,
+        on_delete=models.SET_NULL,
+        related_name="deliveries",
+        null=True,
+        blank=True,
+    )
+    location = models.ForeignKey(
+        StockLocation,
+        on_delete=models.PROTECT,
+        related_name="branch_deliveries",
+    )
+    recipient_name = models.CharField(max_length=150)
+    recipient_phone = models.CharField(max_length=30, blank=True)
+    destination = models.CharField(max_length=255)
+    parcel_count = models.PositiveIntegerField(default=1)
+    delivery_date = models.DateField(default=timezone.localdate)
+    status = models.CharField(max_length=12, choices=Status.choices, default=Status.PENDING)
+    notes = models.TextField(blank=True)
+    recorded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("-delivery_date", "-created_at")
+        indexes = [
+            models.Index(fields=("location", "delivery_date"), name="delivery_loc_date_idx"),
+            models.Index(fields=("location", "status"), name="delivery_loc_status_idx"),
+        ]
+
+
 class CustomerCall(models.Model):
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="calls")
+    class Direction(models.TextChoices):
+        UNKNOWN = "UNKNOWN", "Haikubainishwa"
+        INBOUND = "INBOUND", "Tumepigiwa na mteja"
+        OUTBOUND = "OUTBOUND", "Tumempigia mteja"
+
+    class CallType(models.TextChoices):
+        INSTRUCTION = "INSTRUCTION", "Simu ya maelekezo"
+        COMPLIANCE = "COMPLIANCE", "Simu ya kufuatilia utekelezaji"
+        FOLLOW_UP = "FOLLOW_UP", "Simu ya ufuatiliaji"
+
+    customer = models.ForeignKey(
+        Customer,
+        on_delete=models.CASCADE,
+        related_name="calls",
+        null=True,
+        blank=True,
+    )
+    location = models.ForeignKey(
+        StockLocation,
+        on_delete=models.PROTECT,
+        related_name="customer_calls",
+        null=True,
+        blank=True,
+    )
     called_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     called_at = models.DateTimeField(auto_now_add=True)
+    direction = models.CharField(
+        max_length=10,
+        choices=Direction.choices,
+        default=Direction.UNKNOWN,
+    )
+    call_type = models.CharField(max_length=20, choices=CallType.choices, blank=True)
+    caller_name = models.CharField(max_length=150, blank=True)
+    caller_phone = models.CharField(max_length=30, blank=True)
     outcome = models.CharField(max_length=100)
     notes = models.TextField(blank=True)
     follow_up_date = models.DateField(null=True, blank=True)
 
     class Meta:
         ordering = ("-called_at",)
+
+    @property
+    def contact_name(self):
+        return self.caller_name or (self.customer.name if self.customer else "")
+
+    @property
+    def branch_location(self):
+        return self.location or (self.customer.location if self.customer else None)
 
 
 class BranchExpense(models.Model):
@@ -96,4 +216,15 @@ class BranchDailyReport(models.Model):
 
     class Meta:
         ordering = ("-report_date", "-created_at")
-        unique_together = ("location", "report_date")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("location", "report_date"),
+                condition=models.Q(batch__isnull=True),
+                name="unique_unbatched_branch_daily_report",
+            ),
+            models.UniqueConstraint(
+                fields=("location", "report_date", "batch"),
+                condition=models.Q(batch__isnull=False),
+                name="unique_batched_branch_daily_report",
+            ),
+        ]

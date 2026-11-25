@@ -1,3 +1,5 @@
+import uuid
+
 from django.conf import settings
 from django.db import models
 
@@ -11,6 +13,7 @@ class Sale(models.Model):
     sold_at = models.DateTimeField(auto_now_add=True)
     sold_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     total_amount = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    request_key = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
 
     class Meta:
         ordering = ("-sold_at",)

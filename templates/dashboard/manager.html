@@ -95,7 +95,6 @@ a{text-decoration:none}
 }
 .nav-item.logout{color:#fca5a5;margin-top:8px}
 .nav-item.logout:hover{background:rgba(239,68,68,.14)}
-.sidebar-foot{margin-top:auto;padding-top:18px;border-top:1px solid rgba(255,255,255,.08)}
 .sidebar-user{display:flex;align-items:center;gap:11px;padding:8px 6px;border-radius:10px;cursor:pointer;transition:background .15s}
 .sidebar-user:hover{background:rgba(255,255,255,.06)}
 .sidebar-avatar{
@@ -149,6 +148,8 @@ a{text-decoration:none}
 }
 .topbar-avatar .nm{font-size:12.5px;font-weight:700;color:var(--ink)}
 .topbar-avatar .rl{font-size:10px;color:var(--muted)}
+#batchWelcome{animation:batchWelcomeIn .65s cubic-bezier(.2,.8,.2,1) both}
+@keyframes batchWelcomeIn{from{opacity:0;transform:translateY(-12px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 
 /* ---------- CONTENT ---------- */
 .content{padding:28px 26px 40px;flex:1}
@@ -441,7 +442,53 @@ a{text-decoration:none}
 .modal-header .btn-close{filter:invert(1);opacity:.8}
 .modal-body{padding:24px}
 .modal-footer{border-top:1px solid var(--line-soft);padding:16px 24px}
+.batch-confirm-dialog{
+  width:min(92vw,480px);max-width:none;padding:0;border:0;border-radius:20px;
+  color:var(--ink);box-shadow:0 28px 80px rgba(4,31,17,.32);
+}
+.batch-confirm-dialog::backdrop{background:rgba(4,31,17,.58);backdrop-filter:blur(3px)}
+.batch-confirm-dialog[open]{animation:batchDialogIn .2s ease-out both}
+@keyframes batchDialogIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.batch-confirm-head{
+  padding:22px 24px;background:linear-gradient(120deg,var(--g-700),var(--g-900));color:#fff;
+}
+.batch-confirm-head h2{margin:0;font-size:17px;font-weight:800}
+.batch-confirm-head p{margin:5px 0 0;color:#d0e5d6;font-size:12px}
+.batch-confirm-body{padding:22px 24px}
+.batch-confirm-warning{
+  display:flex;gap:12px;align-items:flex-start;margin-bottom:16px;padding:13px;
+  border:1px solid #f4d28a;border-radius:12px;background:#fffbeb;color:#825314;
+  font-size:12px;line-height:1.6;
+}
+.batch-confirm-warning .warning-emoji{font-size:21px;line-height:1.2}
+.batch-confirm-list{margin:0;padding-left:20px;color:var(--ink-soft);font-size:12px;line-height:1.7}
+.batch-confirm-list li+li{margin-top:7px}
+.batch-confirm-actions{
+  display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;padding:16px 24px;
+  border-top:1px solid var(--line-soft);background:#fbfdfb;
+}
+.workspace-confirm-dialog{
+  width:min(92vw,460px);max-width:none;padding:0;overflow:hidden;border:1px solid var(--line);
+  border-radius:18px;background:#fff;color:var(--ink);box-shadow:0 28px 80px rgba(4,31,17,.32);
+}
+.workspace-confirm-dialog::backdrop{background:rgba(4,31,17,.58);backdrop-filter:blur(3px)}
+.workspace-confirm-content{display:flex;align-items:flex-start;gap:14px;padding:24px}
+.workspace-confirm-icon{display:grid;width:42px;height:42px;flex:0 0 auto;place-items:center;border-radius:13px;background:var(--g-100);color:var(--g-700);font-size:20px}
+.workspace-confirm-copy h2{margin:2px 0 7px;color:var(--g-900);font-size:16px;font-weight:800}
+.workspace-confirm-copy p{margin:0;color:var(--ink-soft);font-size:12px;line-height:1.7;white-space:pre-line}
+.workspace-confirm-actions{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--line-soft);background:#fbfdfb}
+.workspace-confirm-actions button{min-width:100px;min-height:40px;padding:9px 16px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink-soft);font:inherit;font-size:12px;font-weight:700}
+.workspace-confirm-actions button:hover{background:#f0f7f1}
+.workspace-confirm-actions .workspace-confirm-accept{border-color:var(--g-900);background:linear-gradient(135deg,var(--g-700),var(--g-900));color:#fff}
+.workspace-confirm-actions .workspace-confirm-accept:hover{background:var(--g-900)}
+.workspace-confirm-actions button:focus-visible{outline:3px solid rgba(34,197,94,.3);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){.batch-confirm-dialog[open]{animation:none}}
+[hidden]{display:none!important}
 .form-label-sm{font-size:12px;font-weight:700;color:var(--ink-soft);margin-bottom:6px;display:block}
+.purchase-new-fields{
+  padding:16px;border:1px solid var(--g-100);border-radius:14px;background:linear-gradient(135deg,#fbfefb,#f4faf5);
+}
+.purchase-new-fields-title{color:var(--g-700);font-size:12px;font-weight:800;margin-bottom:12px}
 .form-control, .form-select{
   border:1px solid var(--line);border-radius:10px;padding:10px 13px;font-size:13px;
   transition:all .15s;
@@ -504,26 +551,110 @@ a{text-decoration:none}
   .hero-stats{width:100%}
 }
 @media (max-width:991px){
-  .sidebar{transform:translateX(-100%)}
+  .sidebar{width:min(86vw,300px);transform:translateX(-100%);padding:calc(18px + env(safe-area-inset-top)) 14px calc(18px + env(safe-area-inset-bottom))}
   body.sidebar-open .sidebar{transform:translateX(0);box-shadow:0 0 60px rgba(0,0,0,.4)}
   .main{margin-left:0}
   .topbar-toggle{display:grid;place-items:center}
   .search-global{display:none}
-  .content{padding:20px 16px 32px}
-  .section-hero{padding:22px}
+  .topbar{height:auto;min-height:62px;flex-wrap:wrap;gap:8px;padding:10px 16px}
+  .topbar-spacer{display:none}
+  .topbar-batch-form{order:5;flex:1 1 56%;min-width:0}
+  .topbar-batch-form label{display:none}
+  .topbar-batch-form .form-select{width:100%;min-width:0;min-height:40px}
+  .topbar-new-batch-form{order:6;flex:1 1 39%;min-width:0}
+  .topbar-new-batch-form .btn-brand{width:100%;justify-content:center;min-height:40px;padding:9px 10px}
+  .topbar .icon-btn{width:38px;height:38px}
+  .content{padding:18px 16px 32px}
+  .section-hero{padding:22px;border-radius:18px}
   .hero-title{font-size:22px}
+  .hero-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .hero-stat{min-width:0}
+  .kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .mini-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .split-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:12px}
+  .panel-head{padding:16px}
+  .panel-body{padding:16px}
+  .panel-body.tight{padding:0}
+  .chart-box{height:230px}
+  .chart-box.lg{height:260px}
+  .table-wrap{-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+  .filter-bar{align-items:stretch;padding:12px}
+  .filter-bar .fb-group{flex:1 1 190px;min-width:0;flex-wrap:wrap}
+  .filter-bar select,.filter-bar input{max-width:100%}
   body.sidebar-open::after{
     content:'';position:fixed;inset:0;background:rgba(4,31,17,.4);z-index:1035;backdrop-filter:blur(2px);
   }
 }
 @media (max-width:576px){
-  .topbar{padding:0 14px;gap:9px}
-  .topbar-avatar .nm,.topbar-avatar .rl{display:none}
-  .topbar-avatar{padding:4px}
-  .kpi-value{font-size:23px}
-  .hero-title{font-size:19px}
-  .hero-stat{padding:10px 14px;min-width:90px}
+  .topbar{padding:8px 12px;gap:7px;backdrop-filter:none;-webkit-backdrop-filter:none}
+  .topbar-toggle{width:40px;height:40px}
+  .page-crumb{gap:5px;font-size:10px}
+  .page-crumb b{font-size:12px}
+  .topbar-batch-form{flex:1 1 100%;order:5}
+  .topbar-new-batch-form{position:fixed;z-index:1025;right:16px;bottom:calc(18px + env(safe-area-inset-bottom));width:68px;height:68px}
+  .topbar-new-batch-form .btn-brand{display:grid;width:68px;height:68px;place-items:center;padding:0;border-radius:50%;font-size:0;box-shadow:0 10px 24px rgba(22,163,74,.38)}
+  .topbar-new-batch-form .btn-brand i{font-size:26px}
+  .topbar-new-batch-form .btn-brand span{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  .topbar>.icon-btn{display:none}
+  .content{padding:14px 12px calc(104px + env(safe-area-inset-bottom))}
+  .section-hero{padding:18px 16px;margin-bottom:18px}
+  .hero-inner{align-items:stretch;gap:14px}
+  .hero-title{font-size:20px;overflow-wrap:anywhere}
+  .hero-sub{font-size:12px}
+  .hero-stats{width:100%}
+  .hero-stat{padding:10px 12px}
   .hero-stat .h-val{font-size:18px}
+  .hero-stat .h-lab{font-size:9px}
+  .topbar>.account-menu.manager-account{margin-left:auto}
+  .topbar .account-menu.manager-account .account-menu-trigger{width:38px;min-width:38px;height:38px;min-height:38px;justify-content:center;padding:0;border:0;background:transparent;box-shadow:none}
+  .topbar .account-menu.manager-account .account-menu-avatar{position:relative;width:34px;height:34px;border:1px solid #eadfbf;background:#fff9e8;color:#75622a;font-size:11px}
+  .topbar .account-menu.manager-account .account-menu-avatar::after{content:'';position:absolute;right:-1px;bottom:0;width:8px;height:8px;border:1.5px solid #fff;border-radius:50%;background:#22c55e}
+  .topbar .account-menu.manager-account .account-menu-chevron{display:none}
+  .kpi-grid{gap:9px;margin-bottom:18px}
+  .kpi-card{padding:14px 12px;border-radius:14px}
+  .kpi-top{margin-bottom:10px}
+  .kpi-ic{width:38px;height:38px;border-radius:11px;font-size:19px}
+  .kpi-trend{font-size:9px;padding:3px 7px}
+  .kpi-label{font-size:9px;letter-spacing:.3px}
+  .kpi-value{font-size:clamp(17px,5vw,22px);overflow-wrap:anywhere}
+  .kpi-sub{font-size:10px}
+  .mini-stat{padding:12px 10px;gap:8px}
+  .mini-stat .ms-ic{width:34px;height:34px}
+  .mini-stat .ms-val{font-size:16px}
+  .mini-stat .ms-lab{font-size:9px}
+  .role-banner{padding:12px;gap:10px}
+  .role-chips{width:100%}
+  .role-chip{font-size:10px;padding:6px 10px}
+  .panel{border-radius:14px;margin-bottom:16px}
+  .panel-head{align-items:flex-start;padding:14px 12px}
+  .panel-title{font-size:13px}
+  .panel-sub{font-size:10px}
+  .panel-head>.btn-soft,.panel-head>.btn-brand{max-width:100%;font-size:11px;padding:8px 10px}
+  .panel-body{padding:12px}
+  .panel-body.tight{padding:0}
+  .chart-box{height:210px}
+  .chart-box.sm{height:190px}
+  .chart-box.lg{height:230px}
+  .data-table{font-size:11px;min-width:620px}
+  .data-table thead th{padding:11px 12px;font-size:9px}
+  .data-table tbody td,.data-table tfoot td{padding:11px 12px}
+  .split-grid{grid-template-columns:minmax(0,1fr)}
+  .split-card{padding:17px}
+  .filter-bar .fb-group{flex-basis:100%}
+  .filter-bar .fb-group select,.filter-bar .fb-group input{flex:1 1 120px}
+  .section-hero .btn-brand{width:100%;justify-content:center}
+  .modal-dialog{margin:10px}
+  .modal-header{padding:16px}
+  .modal-body{padding:16px}
+  .modal-footer{padding:12px 16px}
+  .batch-confirm-actions{padding:14px}
+  .batch-confirm-actions .workspace-button{flex:1 1 100%;justify-content:center}
+  .toast-container{left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom))}
+  .app-toast{font-size:12px;padding:12px 14px}
+}
+@media (prefers-reduced-motion:reduce){
+  .sidebar,.main,.topbar-toggle,.nav-item,.kpi-card,.split-card{transition:none}
+  #batchWelcome{animation:none}
 }
 </style>
 </head>
@@ -584,21 +715,6 @@ a{text-decoration:none}
       </button>
     </div>
 
-    <div class="sidebar-foot">
-      <div class="sidebar-user">
-        <div class="sidebar-avatar">{{ manager_initial }}</div>
-        <div>
-        <div class="u-name">{{ manager_name }}</div>
-          <div class="u-role">Manager / CEO</div>
-        </div>
-      </div>
-      <form method="post" action="{% url 'logout' %}">
-        {% csrf_token %}
-        <button class="nav-item logout" type="submit">
-        <i class="bi bi-box-arrow-right"></i><span>Ondoka</span>
-        </button>
-      </form>
-    </div>
   </aside>
 
   <!-- ============================================================
@@ -608,7 +724,7 @@ a{text-decoration:none}
 
     <!-- TOPBAR -->
     <header class="topbar">
-      <button class="topbar-toggle" id="sidebarToggle"><i class="bi bi-list"></i></button>
+      <button class="topbar-toggle" id="sidebarToggle" type="button" aria-label="Fungua menyu" aria-controls="sidebar" aria-expanded="false"><i class="bi bi-list"></i></button>
       <div class="page-crumb">
         <i class="bi bi-house-door"></i>
         <span>EDMS</span>
@@ -616,6 +732,21 @@ a{text-decoration:none}
         <b id="crumbCurrent">Dashboard</b>
       </div>
       <div class="topbar-spacer"></div>
+      <form method="get" action="{% url 'manager_dashboard' %}" class="topbar-batch-form d-flex align-items-center gap-2" aria-label="Select production batch">
+        <label class="small fw-bold text-muted mb-0" for="managerBatchSelect">Batch</label>
+        <select class="form-select form-select-sm" id="managerBatchSelect" name="batch" onchange="this.form.submit()">
+          <option value="">All batches</option>
+          {% for batch in batches %}
+          <option value="{{ batch.pk }}"{% if selected_batch and selected_batch.pk == batch.pk %} selected{% endif %}>
+            {{ batch.reference }}{% if batch.recipe_id %} — {{ batch.recipe.product.name }}{% endif %}
+          </option>
+          {% endfor %}
+        </select>
+      </form>
+      <form method="post" action="{% url 'start_new_batch' %}" class="topbar-new-batch-form" data-batch-confirm>
+        {% csrf_token %}
+        <button class="btn-brand" type="submit" aria-label="Anzisha batch mpya" title="Anzisha batch mpya"><i class="bi bi-plus-lg" aria-hidden="true"></i><span>Start new batch</span></button>
+      </form>
       <div class="search-global">
         <i class="bi bi-search"></i>
         <input type="text" placeholder="Tafuta bidhaa, ofisi, n.k...">
@@ -624,14 +755,7 @@ a{text-decoration:none}
         <i class="bi bi-bell"></i><span class="dot-alert"></span>
       </button>
       <button class="icon-btn" title="Mipangilio"><i class="bi bi-sliders"></i></button>
-      <div class="topbar-avatar">
-        <div class="av">{{ manager_initial }}</div>
-        <div>
-        <div class="nm">{{ manager_name }}</div>
-          <div class="rl">CEO / Manager</div>
-        </div>
-        <i class="bi bi-chevron-down" style="font-size:11px;color:var(--muted)"></i>
-      </div>
+      {% include "components/account_menu.html" with account_menu_variant="manager-account" account_menu_role="CEO / Manager" user_initial=manager_initial user_name=manager_name %}
     </header>
 
     <!-- CONTENT -->
@@ -643,6 +767,28 @@ a{text-decoration:none}
         {% endfor %}
       </div>
       {% endif %}
+      {% if request.GET.welcome == "1" and selected_batch %}
+      <div class="alert alert-success d-flex align-items-center gap-2" role="status" id="batchWelcome">
+        <i class="bi bi-stars fs-4"></i>
+        <div><strong>Karibu kwenye batch mpya {{ selected_batch.reference }}!</strong><br>Dashboard hii inaanza bila miamala ya batch hii. Historia ya batches nyingine imehifadhiwa.</div>
+      </div>
+      {% endif %}
+      {% if pending_batch_requests %}
+      <section class="panel mb-4" aria-labelledby="pendingBatchRequestsHeading">
+        <div class="panel-head"><div class="panel-title" id="pendingBatchRequestsHeading"><i class="bi bi-hourglass-split"></i> Maombi ya batch yanayosubiri idhini ya CEO</div></div>
+        <div class="panel-body tight">
+          {% for batch in pending_batch_requests %}
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 border-bottom py-2">
+            <div><strong>{{ batch.reference }}</strong> · Imeombwa na {{ batch.created_by.get_full_name|default:batch.created_by.username }} · {{ batch.created_at|date:"d/m/Y H:i" }}{% if batch.request_note %}<div class="small text-muted">{{ batch.request_note }}</div>{% endif %}</div>
+            <div class="d-flex gap-2">
+              <form method="post" action="{% url 'approve_batch_request' batch.pk %}" data-confirm-message="Una uhakika unataka kuidhinisha batch {{ batch.reference }}? Itabadilika kuwa ACTIVE na uzalishaji utaweza kurekodiwa ndani yake. Rekodi za batch nyingine hazitabadilika.">{% csrf_token %}<button class="btn btn-success btn-sm" type="submit">Approve &amp; open</button></form>
+              <form method="post" action="{% url 'reject_batch_request' batch.pk %}" data-confirm-message="Una uhakika unataka kukataa ombi la batch {{ batch.reference }}? Batch hii haitaweza kutumika kwa uzalishaji.">{% csrf_token %}<button class="btn btn-outline-danger btn-sm" type="submit">Reject</button></form>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
       <!-- ============================================================
            VIEW: DASHBOARD
       ============================================================ -->
@@ -651,8 +797,13 @@ a{text-decoration:none}
           <div class="hero-inner">
             <div>
               <div class="hero-eyebrow"><span class="pulse-dot"></span> Mfumo Uko Hai</div>
+              {% if selected_batch %}
+              <h1 class="hero-title">Batch: <span>{{ selected_batch.reference }}</span></h1>
+              <p class="hero-sub">{{ selected_batch.quantity|floatformat:"-3" }} units produced so far. Only this batch's operations are shown.</p>
+              {% else %}
               <h1 class="hero-title">Karibu tena, <span>{{ manager_name }}</span> 👋</h1>
-              <p class="hero-sub">Hii ni muhtasari wa leo wa Effective Diet — uzalishaji, ugawaji, mauzo na huduma kwa wateja kwa ofisi zote mbili.</p>
+              <p class="hero-sub">Hii ni muhtasari wa semua batches — uzalishaji, ugawaji, mauzo na huduma kwa wateja kwa ofisi zote mbili.</p>
+              {% endif %}
             </div>
             <div class="hero-stats">
               <div class="hero-stat">
@@ -714,13 +865,41 @@ a{text-decoration:none}
           </div>
         </div>
 
+        <div class="panel mb-4">
+          <div class="panel-head">
+            <div><div class="panel-title"><i class="bi bi-boxes"></i> Stock by product across all locations</div><div class="panel-sub">Lifetime production compared with current stock at Store, Mwanza and Dar es Salaam</div></div>
+            <span class="badge-soft green"><i class="bi bi-arrow-repeat"></i> Live inventory</span>
+          </div>
+          <div class="panel-body tight">
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead><tr><th>Product / category</th><th class="text-end">Produced all time</th><th class="text-end">Store</th><th class="text-end">Mwanza</th><th class="text-end">Dar</th><th class="text-end">Total current stock</th></tr></thead>
+                <tbody>
+                  {% for row in production_by_product %}
+                  <tr>
+                    <td class="cell-strong">{{ row.product.name }}</td>
+                    <td class="text-end mono">{{ row.produced_total|floatformat:"-3" }}</td>
+                    <td class="text-end mono">{{ row.factory_balance|floatformat:"-3" }}</td>
+                    <td class="text-end mono">{{ row.mwanza_balance|floatformat:"-3" }}</td>
+                    <td class="text-end mono">{{ row.dar_balance|floatformat:"-3" }}</td>
+                    <td class="text-end mono cell-strong">{{ row.current_stock|floatformat:"-3" }}</td>
+                  </tr>
+                  {% empty %}
+                  <tr><td colspan="6" class="text-center text-muted">Hakuna stock ya bidhaa zilizotengenezwa.</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
         <div class="row g-4">
           <div class="col-lg-7">
             <div class="panel">
               <div class="panel-head">
                 <div>
                   <div class="panel-title"><i class="bi bi-graph-up"></i> Mwenendo wa Mauzo</div>
-                  <div class="panel-sub">Wiki 8 zilizopita · Mwanza vs Dar</div>
+                  <div class="panel-sub">Mauzo ya kila siku · {{ sales_trend_week_start|date:"d/m/Y" }} hadi {{ sales_trend_week_end|date:"d/m/Y" }} · Jumatatu–Jumapili</div>
                 </div>
                 <div class="d-flex gap-3 small">
                   <span class="d-flex align-items-center gap-1"><span style="width:9px;height:9px;border-radius:50%;background:var(--g-500);display:inline-block"></span>Mwanza</span>
@@ -757,7 +936,7 @@ a{text-decoration:none}
             <div>
               <div class="hero-eyebrow"><i class="bi bi-tags"></i> Catalog ya Bidhaa</div>
               <h1 class="hero-title">Bidhaa, Malighafi &amp; <span>Bei</span></h1>
-              <p class="hero-sub">Manager anaweza kubadilisha majina, SKU, vipimo na bei. Mabadiliko hutumika moja kwa moja kwenye mauzo na orodha za mfumo.</p>
+              <p class="hero-sub">CEO anaweza kuongeza bidhaa za kuuzwa na kubadilisha majina, SKU, vipimo na bei. Mabadiliko hutumika moja kwa moja kwenye mauzo na orodha za mfumo.</p>
             </div>
           </div>
         </div>
@@ -770,6 +949,7 @@ a{text-decoration:none}
                   <div class="panel-title"><i class="bi bi-box-seam"></i> Bidhaa Zilizomalizika</div>
                   <div class="panel-sub">Bei hizi hutumika moja kwa moja wakati mauzo yanarekodiwa</div>
                 </div>
+                <button class="btn-soft" type="button" onclick="document.getElementById('catalogNewProductForm').scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('catalogNewName').focus()"><i class="bi bi-plus-lg"></i> Ongeza bidhaa</button>
               </div>
               <div class="panel-body tight">
                 <div class="table-wrap">
@@ -795,6 +975,14 @@ a{text-decoration:none}
                     </tbody>
                   </table>
                 </div>
+                <form id="catalogNewProductForm" method="post" action="{% url 'create_catalog_product' %}" class="row g-2 align-items-end p-3 border-top">
+                  {% csrf_token %}
+                  <div class="col-md-4"><label class="form-label-sm" for="catalogNewName">Bidhaa mpya</label><input id="catalogNewName" class="form-control form-control-sm" name="name" placeholder="Jina la bidhaa" required></div>
+                  <div class="col-md-2"><label class="form-label-sm" for="catalogNewSku">SKU</label><input id="catalogNewSku" class="form-control form-control-sm" name="sku" placeholder="SKU" required></div>
+                  <div class="col-md-2"><label class="form-label-sm" for="catalogNewUnit">Kipimo</label><input id="catalogNewUnit" class="form-control form-control-sm" name="unit" placeholder="pcs, kg, litre" required></div>
+                  <div class="col-md-2"><label class="form-label-sm" for="catalogNewPrice">Bei (TZS)</label><input id="catalogNewPrice" class="form-control form-control-sm" type="number" name="unit_price" min="0" step="0.01" required></div>
+                  <div class="col-md-2"><button class="btn-brand w-100" type="submit"><i class="bi bi-plus-lg"></i> Sajili</button></div>
+                </form>
               </div>
             </div>
           </div>
@@ -891,6 +1079,42 @@ a{text-decoration:none}
           </div>
         </div>
 
+        <div class="panel mb-4">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title"><i class="bi bi-boxes"></i> Hali ya sasa ya malighafi na vifungashio</div>
+              <div class="panel-sub">{% if selected_batch %}Salio la batch hii = mabaki yaliyokuwepo ilipoanza + manunuzi yake - matumizi yake. Stoo nzima inaonyeshwa pembeni.{% else %}Stock iliyobaki huhesabiwa moja kwa moja kutoka ledger baada ya manunuzi, uzalishaji na hasara.{% endif %}</div>
+            </div>
+          </div>
+          <div class="panel-body tight">
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead><tr><th>Bidhaa</th><th>Aina</th><th>Kipimo</th>{% if selected_batch %}<th class="text-end">Mabaki batch ilipoanza</th><th class="text-end">Manunuzi ya batch</th><th class="text-end">Imetumika batch hii</th><th class="text-end">Stoo nzima</th>{% else %}<th class="text-end">Iliyotumika jumla</th><th class="text-end">Iliyobaki stoo sasa</th>{% endif %}</tr></thead>
+                <tbody>
+                  {% for row in material_inventory_rows %}
+                  <tr>
+                    <td class="cell-strong">{{ row.product.name }}</td>
+                    <td>{% if row.product.category == "PACKAGING" %}Kifungashio{% else %}Malighafi{% endif %}</td>
+                    <td>{{ row.product.unit }}</td>
+                    {% if selected_batch %}
+                    <td class="text-end mono">{{ row.batch_opening_balance|floatformat:"-3" }} {{ row.product.unit }}</td>
+                    <td class="text-end mono">{{ row.batch_purchase_quantity|floatformat:"-3" }} {{ row.product.unit }}</td>
+                    <td class="text-end mono">{{ row.used_quantity|floatformat:"-3" }} {{ row.product.unit }}</td>
+                    <td class="text-end mono">{{ row.balance|floatformat:"-3" }} {{ row.product.unit }}</td>
+                    {% else %}
+                    <td class="text-end mono">{{ row.used_quantity|floatformat:"-3" }} {{ row.product.unit }}</td>
+                    <td class="text-end mono cell-strong">{{ row.balance|floatformat:"-3" }} {{ row.product.unit }}</td>
+                    {% endif %}
+                  </tr>
+                  {% empty %}
+                  <tr><td colspan="{% if selected_batch %}7{% else %}5{% endif %}" class="text-center text-muted">Hakuna malighafi au vifungashio vilivyosajiliwa.</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
         <div class="panel">
           <div class="panel-head">
             <div>
@@ -960,7 +1184,7 @@ a{text-decoration:none}
             <div>
               <div class="hero-eyebrow"><i class="bi bi-gear-wide-connected"></i> Module B — Production</div>
               <h1 class="hero-title">Uzalishaji &amp; <span>Matumizi ya Malighafi</span></h1>
-              <p class="hero-sub">Rekodi malighafi zilizotumika, zilizobaki, na jumla ya bidhaa zilizozalishwa. Supervisor anarekodi, Manager/CEO anaweza pia kurekodi na kuthibitisha.</p>
+              <p class="hero-sub">Bidhaa tatu: Effective Diet, Presha Masala, na Wild Honey inayofungashwa kwenye vikopo maalumu vya 800 g.</p>
             </div>
             <button class="btn-brand" data-bs-toggle="modal" data-bs-target="#modalProduction">
               <i class="bi bi-plus-lg"></i> Rekodi Uzalishaji
@@ -980,15 +1204,31 @@ a{text-decoration:none}
           </div>
         </div>
 
+        <div class="panel mb-4">
+          <div class="panel-head"><div><div class="panel-title"><i class="bi bi-droplet-half text-warning"></i> Mgawanyo wa Wild Honey</div><div class="panel-sub">Asali mbichi ya madumu → vikopo maalumu vya 800 g vya kuuzwa</div></div></div>
+          <div class="panel-body">
+            <form method="post" action="{% url 'record_honey_bottling' %}" class="row g-3 align-items-end">
+              {% csrf_token %}
+              <input type="hidden" name="production_request_key" value="{{ honey_bottling_request_key }}">
+              <div class="col-md-4"><label class="form-label-sm" for="managerHoneyBatch">Batch iliyoidhinishwa</label><select class="form-select" id="managerHoneyBatch" name="batch_id" required><option value="">Chagua batch</option>{% for batch in batches %}{% if batch.status == "ACTIVE" %}<option value="{{ batch.pk }}"{% if selected_batch and selected_batch.pk == batch.pk %} selected{% endif %}>{{ batch.reference }}</option>{% endif %}{% endfor %}</select></div>
+              <div class="col-md-3"><label class="form-label-sm" for="managerHoneyQuantity">Madumu yaliyotumika (galoni)</label><input class="form-control" id="managerHoneyQuantity" name="honey_quantity" type="number" min="0.001" step="0.001" required></div>
+              <div class="col-md-2"><label class="form-label-sm" for="managerHoneyJars">Vikopo vya 800 g vilivyojazwa</label><input class="form-control" id="managerHoneyJars" name="jars_filled" type="number" min="1" step="1" required></div>
+              <div class="col-md-2"><label class="form-label-sm" for="managerHoneyDate">Tarehe</label><input class="form-control" id="managerHoneyDate" name="production_date" type="date" value="{% now 'Y-m-d' %}" required></div>
+              <div class="col-md-1"><button class="btn-brand w-100" type="submit" aria-label="Hifadhi mgawanyo wa asali"><i class="bi bi-check2"></i></button></div>
+              <div class="col-12"><small class="text-muted">Kila kopo la Wild Honey lina uzito wa 800 g kama ilivyo kwenye bidhaa. Stock ipo: {{ raw_honey_stock|floatformat:"-3" }} madumu na {{ honey_jar_stock|floatformat:"-3" }} vikopo tupu. Mfumo utapunguza madumu na idadi hiyo hiyo ya Kopo za Asali, kisha kuongeza vikopo vya Wild Honey kwenye stock ya batch.</small></div>
+            </form>
+          </div>
+        </div>
+
         <!-- TOTAL PRODUCED -->
         <div class="kpi-grid">
-          {% for row in production_by_product %}
+          {% for row in production_cards %}
           <div class="kpi-card">
             <div class="kpi-top">
               <div class="kpi-ic green"><i class="bi bi-cup-hot"></i></div>
               <span class="kpi-trend flat"><i class="bi bi-check-circle"></i> Live</span>
             </div>
-            <div class="kpi-label">{{ row.product.name }}</div>
+            <div class="kpi-label">{{ row.name }}</div>
             <div class="kpi-value">{{ row.total|floatformat:"0" }}</div>
             <div class="kpi-sub">Vipande · mwezi huu</div>
           </div>
@@ -1010,11 +1250,11 @@ a{text-decoration:none}
           <span class="badge-soft gray"><i class="bi bi-info-circle"></i> Store · Mwanza · Dar</span>
         </div>
         <div class="split-grid">
-          {% for row in production_by_product %}
+          {% for row in production_cards %}
           <div class="split-card">
             <div class="split-head">
               <div class="split-ic"><i class="bi bi-cup-hot"></i></div>
-              <div><h4>{{ row.product.name }}</h4><div class="total">Jumla: {{ row.total|floatformat:"0" }} pcs</div></div>
+              <div><h4>{{ row.name }}</h4><div class="total">Jumla: {{ row.total|floatformat:"0" }} pcs</div></div>
             </div>
             <div class="split-rows">
               <div class="split-row"><span class="dot store"></span><span class="lbl">Store (Main)</span><span class="num">{{ row.factory_balance|floatformat:"0" }}</span></div>
@@ -1031,7 +1271,7 @@ a{text-decoration:none}
         <div class="panel">
           <div class="panel-head">
             <div>
-              <div class="panel-title"><i class="bi bi-clipboard-data"></i> Malighafi Zilizotumika &amp; Zilizobaki</div>
+              <div class="panel-title"><i class="bi bi-clipboard-data"></i> Matumizi ya Uzalishaji na Stock Iliyobaki</div>
               <div class="panel-sub">Kwa kila batch ya uzalishaji</div>
             </div>
             <button class="btn-soft"><i class="bi bi-download"></i> Pakua</button>
@@ -1040,25 +1280,23 @@ a{text-decoration:none}
             <div class="table-wrap">
               <table class="data-table">
                 <thead>
-                  <tr>
-                    <th>Batch</th><th>Bidhaa</th><th>Malighafi</th>
-                    <th class="text-end">Iliyotumika</th><th class="text-end">Iliyobaki</th>
-                    <th>Aliyerekodi</th><th>Tarehe</th>
-                  </tr>
+                  <tr><th>Batch</th><th>Bidhaa iliyozalishwa</th><th>Malighafi / kifungashio</th><th class="text-end">Kiasi kilichotumika</th><th class="text-end">Stock iliyobaki sasa</th><th>Aliyerekodi</th><th>Tarehe</th></tr>
                 </thead>
                 <tbody>
-                  {% for batch in recent_batches %}
+                  {% for row in production_consumption_rows %}
+                  {% with consumption=row.consumption %}
                   <tr>
-                    <td class="cell-strong">{{ batch.reference }}</td>
-                    <td>{{ batch.recipe.product.name }}</td>
-                    <td>{{ batch.recipe.items.all|length }} recipe item(s)</td>
-                    <td class="text-end mono">{{ batch.quantity|floatformat:"0" }} {{ batch.recipe.product.unit }}</td>
-                    <td class="text-end mono">—</td>
-                    <td>{{ batch.created_by.get_full_name|default:batch.created_by.username }}</td>
-                    <td>{{ batch.production_date|date:"d/m/Y" }}</td>
+                    <td class="cell-strong">{{ consumption.batch.reference }}</td>
+                    <td>{% if consumption.output %}{{ consumption.output.product.name }}{% elif consumption.batch.recipe_id %}{{ consumption.batch.recipe.product.name }}{% else %}—{% endif %}</td>
+                    <td>{{ consumption.product.name }}</td>
+                    <td class="text-end mono">{{ consumption.quantity|floatformat:"-3" }} {{ consumption.unit }}</td>
+                    <td class="text-end mono">{{ row.balance|floatformat:"-3" }} {{ consumption.product.unit }}</td>
+                    <td>{% if consumption.output %}{{ consumption.output.created_by.get_full_name|default:consumption.output.created_by.username }}{% else %}{{ consumption.batch.created_by.get_full_name|default:consumption.batch.created_by.username }}{% endif %}</td>
+                    <td>{{ consumption.created_at|date:"d/m/Y H:i" }}</td>
                   </tr>
+                  {% endwith %}
                   {% empty %}
-                  <tr><td colspan="7" class="text-center text-muted">Hakuna batches za uzalishaji.</td></tr>
+                  <tr><td colspan="7" class="text-center text-muted">Hakuna matumizi ya uzalishaji yaliyorekodiwa{% if selected_batch %} kwenye batch hii{% endif %}.</td></tr>
                   {% endfor %}
                 </tbody>
               </table>
@@ -1351,6 +1589,8 @@ a{text-decoration:none}
               <div class="panel-body">
                 <div class="mini-stats">
                   <div class="mini-stat"><div class="ms-ic"><i class="bi bi-people"></i></div><div><div class="ms-val">{{ mwanza_data.customer_count }}</div><div class="ms-lab">Customers</div></div></div>
+                  <div class="mini-stat green"><div class="ms-ic"><i class="bi bi-person-check"></i></div><div><div class="ms-val">{{ mwanza_data.customer_visits_today }}</div><div class="ms-lab">Customer visits today</div></div></div>
+                  <div class="mini-stat amber"><div class="ms-ic"><i class="bi bi-person-walking"></i></div><div><div class="ms-val">{{ mwanza_data.visitors_today }}</div><div class="ms-lab">Visitors today</div></div></div>
                   <div class="mini-stat blue"><div class="ms-ic"><i class="bi bi-person-plus"></i></div><div><div class="ms-val">{{ mwanza_data.customer_call_count }}</div><div class="ms-lab">Recorded calls</div></div></div>
                   <div class="mini-stat amber"><div class="ms-ic"><i class="bi bi-person-check"></i></div><div><div class="ms-val">{{ mwanza_data.open_followup_count }}</div><div class="ms-lab">Follow-ups</div></div></div>
                 </div>
@@ -1391,7 +1631,7 @@ a{text-decoration:none}
           <div class="panel-body tight">
             <div class="table-wrap"><table class="data-table">
               <thead><tr><th>Report date</th><th>Visitors</th><th>Deliveries</th><th>Parcels</th><th>Instruction calls</th><th>Compliance calls</th><th>Follow-ups</th><th>Submitted by</th><th>Status</th></tr></thead>
-              <tbody><tr><td class="cell-strong">{{ today|date:"d/m/Y" }}</td><td class="mono">—</td><td class="mono">{{ mwanza_data.incoming_count }}</td><td class="mono">—</td><td class="mono">{{ recent_call_counts.instruction }}</td><td class="mono">{{ recent_call_counts.compliance }}</td><td class="mono">{{ recent_call_counts.followup }}</td><td>System</td><td><span class="badge-soft green">Live</span></td></tr></tbody>
+              <tbody><tr><td class="cell-strong">{{ today|date:"d/m/Y" }}</td><td class="mono">{{ mwanza_data.visitors_today }}</td><td class="mono">{{ mwanza_data.delivery_count_today }}</td><td class="mono">{{ mwanza_data.parcel_count_today }}</td><td class="mono">{{ recent_call_counts.instruction }}</td><td class="mono">{{ recent_call_counts.compliance }}</td><td class="mono">{{ recent_call_counts.followup }}</td><td>System</td><td><span class="badge-soft green">Live</span></td></tr></tbody>
             </table></div>
           </div>
         </div>
@@ -1444,6 +1684,8 @@ a{text-decoration:none}
               <div class="panel-body">
                 <div class="mini-stats">
                   <div class="mini-stat"><div class="ms-ic"><i class="bi bi-people"></i></div><div><div class="ms-val">{{ dar_data.customer_count }}</div><div class="ms-lab">Customers</div></div></div>
+                  <div class="mini-stat green"><div class="ms-ic"><i class="bi bi-person-check"></i></div><div><div class="ms-val">{{ dar_data.customer_visits_today }}</div><div class="ms-lab">Customer visits today</div></div></div>
+                  <div class="mini-stat amber"><div class="ms-ic"><i class="bi bi-person-walking"></i></div><div><div class="ms-val">{{ dar_data.visitors_today }}</div><div class="ms-lab">Visitors today</div></div></div>
                   <div class="mini-stat blue"><div class="ms-ic"><i class="bi bi-person-plus"></i></div><div><div class="ms-val">{{ dar_data.customer_call_count }}</div><div class="ms-lab">Recorded calls</div></div></div>
                   <div class="mini-stat amber"><div class="ms-ic"><i class="bi bi-person-check"></i></div><div><div class="ms-val">{{ dar_data.open_followup_count }}</div><div class="ms-lab">Follow-ups</div></div></div>
                 </div>
@@ -1481,7 +1723,7 @@ a{text-decoration:none}
           <div class="panel-head"><div><div class="panel-title"><i class="bi bi-clipboard2-check"></i> Daily report detail</div><div class="panel-sub">Sales, losses, customers, office activity, and service calls</div></div><span class="badge-soft blue"><i class="bi bi-lock"></i> Read only</span></div>
           <div class="panel-body tight"><div class="table-wrap"><table class="data-table">
             <thead><tr><th>Report date</th><th>Visitors</th><th>Deliveries</th><th>Parcels</th><th>Instruction calls</th><th>Compliance calls</th><th>Follow-ups</th><th>Submitted by</th><th>Status</th></tr></thead>
-            <tbody><tr><td class="cell-strong">{{ today|date:"d/m/Y" }}</td><td class="mono">—</td><td class="mono">{{ dar_data.incoming_count }}</td><td class="mono">—</td><td class="mono">{{ recent_call_counts.instruction }}</td><td class="mono">{{ recent_call_counts.compliance }}</td><td class="mono">{{ recent_call_counts.followup }}</td><td>System</td><td><span class="badge-soft green">Live</span></td></tr></tbody>
+            <tbody><tr><td class="cell-strong">{{ today|date:"d/m/Y" }}</td><td class="mono">{{ dar_data.visitors_today }}</td><td class="mono">{{ dar_data.delivery_count_today }}</td><td class="mono">{{ dar_data.parcel_count_today }}</td><td class="mono">{{ recent_call_counts.instruction }}</td><td class="mono">{{ recent_call_counts.compliance }}</td><td class="mono">{{ recent_call_counts.followup }}</td><td>System</td><td><span class="badge-soft green">Live</span></td></tr></tbody>
           </table></div></div>
         </div>
       </section>
@@ -1497,29 +1739,27 @@ a{text-decoration:none}
               <h1 class="hero-title">Ripoti ya Mauzo — <span>Ofisi Zote</span></h1>
               <p class="hero-sub">Muhtasari kamili wa mauzo, hasara, wateja, shughuli na simu kwa Mwanza na Dar es Salaam kwa siku.</p>
             </div>
-            <a class="btn-soft" href="{% url 'export_manager_report' %}?type=sales" style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2);color:#fff">
-              <i class="bi bi-download"></i> Pakua Ripoti (PDF/Excel)
+            <a class="btn-soft" href="{% url 'export_manager_report' %}?type=branch_pdf" style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2);color:#fff">
+              <i class="bi bi-file-earmark-pdf"></i> Pakua Ripoti ya PDF
             </a>
           </div>
         </div>
 
         <!-- FILTER BAR -->
-        <div class="filter-bar">
-          <div class="fb-group"><i class="bi bi-calendar3"></i> <strong>Tarehe:</strong></div>
-          <input type="date" value="{{ today|date:'Y-m-d' }}">
+        <form class="filter-bar" method="get" action="{% url 'export_manager_report' %}">
+          <input type="hidden" name="type" value="branch_pdf">
+          <div class="fb-group"><i class="bi bi-calendar3"></i> <strong>Kuanzia:</strong></div>
+          <input type="date" name="start_date" value="{{ report_start_date|date:'Y-m-d' }}" required>
+          <div class="fb-group"><i class="bi bi-calendar3"></i> <strong>Mpaka:</strong></div>
+          <input type="date" name="end_date" value="{{ today|date:'Y-m-d' }}" required>
           <div class="fb-group"><i class="bi bi-shop"></i> <strong>Ofisi:</strong></div>
-          <select>
-            <option>Zote (Mwanza + Dar)</option>
-            <option>Mwanza</option>
-            <option>Dar es Salaam</option>
+          <select name="branch">
+            <option value="all">Zote (Mwanza + Dar)</option>
+            <option value="mwanza">Mwanza</option>
+            <option value="dar">Dar es Salaam</option>
           </select>
-          <div class="fb-group"><i class="bi bi-cup-hot"></i> <strong>Bidhaa:</strong></div>
-          <select>
-            <option>Zote</option>
-            {% for product in products %}<option>{{ product.name }}</option>{% endfor %}
-          </select>
-          <button class="btn-brand ms-auto"><i class="bi bi-funnel"></i> Chuja</button>
-        </div>
+          <button class="btn-brand ms-auto" type="submit"><i class="bi bi-file-earmark-pdf"></i> Pakua PDF</button>
+        </form>
 
         <!-- SUMMARY MINI STATS -->
         <div class="mini-stats">
@@ -1698,8 +1938,8 @@ a{text-decoration:none}
           <input type="date" aria-label="Call records to date">
           <div class="fb-group"><i class="bi bi-shop"></i><strong>Branch:</strong></div>
           <select aria-label="Filter calls by branch"><option>All branches</option><option>Mwanza</option><option>Dar es Salaam</option></select>
-          <div class="fb-group"><i class="bi bi-telephone"></i><strong>Call type:</strong></div>
-          <select aria-label="Filter calls by type"><option>All call types</option><option>Instruction</option><option>Compliance</option><option>Follow-up</option></select>
+          <div class="fb-group"><i class="bi bi-telephone"></i><strong>Aina ya mawasiliano:</strong></div>
+          <select aria-label="Chuja mawasiliano kwa aina"><option>Aina zote</option>{% for value, label in call_type_choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select>
           <button class="btn-brand ms-auto" type="button" onclick="showToast('Filters are ready to connect to call records.')"><i class="bi bi-funnel"></i> Filter</button>
         </div>
 
@@ -1711,22 +1951,23 @@ a{text-decoration:none}
           <div class="panel-body tight">
             <div class="table-wrap">
               <table class="data-table">
-                <thead><tr><th>Next due</th><th>Branch</th><th>Customer ref.</th><th>Call type</th><th>Last outcome</th><th>Next action</th><th>Assigned to</th><th>Priority</th><th>Status</th></tr></thead>
+                <thead><tr><th>Tarehe ya kufuatilia</th><th>Tawi</th><th>Mteja</th><th>Mwelekeo wa simu</th><th>Aina ya mawasiliano</th><th>Matokeo ya mwisho</th><th>Hatua inayofuata</th><th>Aliyepangiwa</th><th>Kipaumbele</th><th>Hali</th></tr></thead>
                 <tbody>
                   {% for call in open_followups %}
                   <tr>
                     <td class="cell-strong">{{ call.follow_up_date|date:"d/m/Y" }}</td>
-                    <td><span class="badge-soft green">System customer</span></td>
-                    <td>{{ call.customer.name }}</td>
-                    <td>{{ call.outcome }}</td>
-                    <td>{{ call.notes|default:"—"|truncatechars:60 }}</td>
-                    <td>Call and record response</td>
+                    <td><span class="badge-soft green">{{ call.branch_location.name|default:"—" }}</span></td>
+                    <td>{{ call.contact_name }}{% if not call.customer %}<small class="d-block text-muted">Mteja mtarajiwa</small>{% endif %}</td>
+                    <td>{{ call.get_direction_display }}</td>
+                    <td>{{ call.get_call_type_display|default:"Aina haijaainishwa" }}</td>
+                    <td>{{ call.outcome|truncatechars:60 }}</td>
+                    <td>Wasiliana na mteja na rekodi majibu</td>
                     <td>{{ call.called_by.get_full_name|default:call.called_by.username }}</td>
-                    <td><span class="badge-soft blue">Normal</span></td>
-                    <td><span class="badge-soft amber">{% if call.follow_up_date == today %}Due today{% else %}Scheduled{% endif %}</span></td>
+                    <td><span class="badge-soft blue">Kawaida</span></td>
+                    <td><span class="badge-soft amber">{% if call.follow_up_date == today %}Leo{% else %}Imepangwa{% endif %}</span></td>
                   </tr>
                   {% empty %}
-                  <tr><td colspan="9" class="text-center text-muted">Hakuna follow-ups zilizo na tarehe inayofuata.</td></tr>
+                  <tr><td colspan="10" class="text-center text-muted">Hakuna follow-ups zilizo na tarehe inayofuata.</td></tr>
                   {% endfor %}
                 </tbody>
               </table>
@@ -1736,27 +1977,28 @@ a{text-decoration:none}
 
         <div class="panel">
           <div class="panel-head">
-            <div><div class="panel-title"><i class="bi bi-telephone-inbound"></i> Recent call log</div><div class="panel-sub">Summary of customer-care contacts by branch and outcome</div></div>
+            <div><div class="panel-title"><i class="bi bi-telephone-inbound"></i> Historia ya mawasiliano</div><div class="panel-sub">Mawasiliano ya wateja yaliyorekodiwa kwenye matawi</div></div>
             <button class="btn-soft" type="button" onclick="showToast('Call log is read-only in this dashboard preview.')"><i class="bi bi-download"></i> Export</button>
           </div>
           <div class="panel-body tight">
             <div class="table-wrap">
               <table class="data-table">
-                <thead><tr><th>Date / time</th><th>Branch</th><th>Customer ref.</th><th>Call category</th><th>Reason</th><th>Outcome</th><th>Follow-up date</th><th>Recorded by</th></tr></thead>
+                <thead><tr><th>Tarehe / muda</th><th>Tawi</th><th>Mteja</th><th>Mwelekeo wa simu</th><th>Aina ya mawasiliano</th><th>Matokeo</th><th>Maelezo mafupi</th><th>Tarehe ya kuwasiliana tena</th><th>Aliyerekodi</th></tr></thead>
                 <tbody>
                   {% for call in recent_calls %}
                   <tr>
                     <td class="cell-strong">{{ call.called_at|date:"d/m/Y · H:i" }}</td>
-                    <td><span class="badge-soft green">System</span></td>
-                    <td>{{ call.customer.name }}</td>
-                    <td>{{ call.outcome }}</td>
-                    <td>{{ call.notes|default:"—"|truncatechars:50 }}</td>
+                    <td><span class="badge-soft green">{{ call.branch_location.name|default:"—" }}</span></td>
+                    <td>{{ call.contact_name }}{% if not call.customer %}<small class="d-block text-muted">Mteja mtarajiwa</small>{% endif %}</td>
+                    <td>{{ call.get_direction_display }}</td>
+                    <td>{{ call.get_call_type_display|default:"Aina haijaainishwa" }}</td>
                     <td><span class="badge-soft blue">{{ call.outcome }}</span></td>
+                    <td>{{ call.notes|default:"—"|truncatechars:50 }}</td>
                     <td>{% if call.follow_up_date %}{{ call.follow_up_date|date:"d/m/Y" }}{% else %}—{% endif %}</td>
                     <td>{{ call.called_by.get_full_name|default:call.called_by.username }}</td>
                   </tr>
                   {% empty %}
-                  <tr><td colspan="8" class="text-center text-muted">Hakuna simu zilizorekodiwa.</td></tr>
+                  <tr><td colspan="9" class="text-center text-muted">Hakuna mawasiliano yaliyorekodiwa.</td></tr>
                   {% endfor %}
                 </tbody>
               </table>
@@ -1768,6 +2010,27 @@ a{text-decoration:none}
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /app-shell -->
+
+<dialog class="batch-confirm-dialog" id="managerBatchConfirm" aria-labelledby="managerBatchConfirmTitle" aria-describedby="managerBatchConfirmDescription">
+  <div class="batch-confirm-head">
+    <h2 id="managerBatchConfirmTitle">⚠️ Hakiki kabla ya kuanzisha batch</h2>
+    <p id="managerBatchConfirmDescription">Batch mpya itafunguliwa mara moja.</p>
+  </div>
+  <div class="batch-confirm-body">
+    <div class="batch-confirm-warning">
+      <span class="warning-emoji" aria-hidden="true">⚠️</span>
+      <span>Uzalishaji na manunuzi mapya yatahusishwa na batch hii mpya.</span>
+    </div>
+    <ul class="batch-confirm-list">
+      <li>Rekodi za batch zilizopo hazitafutwa wala kuhamishwa.</li>
+      <li>Stock iliyobaki itaendelea kuhesabiwa stoo na itaonekana kama mabaki ya mwanzo wa batch mpya.</li>
+    </ul>
+  </div>
+  <div class="batch-confirm-actions">
+    <button class="btn-soft" type="button" data-batch-confirm-cancel>Rudi</button>
+    <button class="btn-brand" type="button" data-batch-confirm-submit>Endelea, anzisha batch</button>
+  </div>
+</dialog>
 
 <!-- ============================================================
      MODAL: RECEIVE ONE STOCK ITEM
@@ -1785,30 +2048,35 @@ a{text-decoration:none}
       <div class="modal-body">
         <form method="post" action="{% url 'record_purchase' %}" id="managerRawForm">
           {% csrf_token %}
+          {% if selected_batch and selected_batch.status == "ACTIVE" %}<input type="hidden" name="batch_id" value="{{ selected_batch.pk }}">{% endif %}
           <div class="row g-3">
             <div class="col-12">
               <label class="form-label-sm" for="rawProduct">1. Chagua ulichonunua</label>
-              <select class="form-select" name="sku" id="rawProduct" required>
-                <option value="" selected disabled>Chagua malighafi au kifungashio</option>
-                <optgroup label="Malighafi">
-                  {% for row in purchase_product_rows %}{% if row.product.category == "RAW_MATERIAL" %}
-                  <option value="{{ row.product.sku }}" data-unit="{{ row.product.unit }}" data-stock="{{ row.balance }}">{{ row.product.name }}</option>
-                  {% endif %}{% endfor %}
-                </optgroup>
-                <optgroup label="Vifungashio">
-                  {% for row in purchase_product_rows %}{% if row.product.category == "PACKAGING" %}
-                  <option value="{{ row.product.sku }}" data-unit="{{ row.product.unit }}" data-stock="{{ row.balance }}">{{ row.product.name }}</option>
-                  {% endif %}{% endfor %}
-                </optgroup>
+              <select class="form-select" name="sku" id="rawProduct">
+                <option value="" selected>Chagua bidhaa iliyosajiliwa, au sajili mpya hapa chini</option>
+                {% for row in purchase_product_rows %}
+                <option value="{{ row.product.sku }}" data-unit="{{ row.product.unit }}" data-stock="{{ row.balance }}">{{ row.product.name }} — {% if row.product.category == "PACKAGING" %}Kifungashio{% else %}Malighafi{% endif %}</option>
+                {% empty %}
+                <option value="" disabled>Hakuna bidhaa iliyosajiliwa bado</option>
+                {% endfor %}
               </select>
               <div class="form-text" id="rawStockHelp">Chagua bidhaa ili kuona kipimo na kiasi kilichopo stoo.</div>
+            </div>
+            <div class="col-12 purchase-new-fields" id="rawNewFields">
+              <div class="purchase-new-fields-title">Au sajili bidhaa mpya kwa kupokea stock hii</div>
+              <div class="row g-2">
+                <div class="col-md-6"><label class="form-label-sm" for="rawNewName">Jina la bidhaa</label><input class="form-control" name="item_name" id="rawNewName" placeholder="Jina la malighafi au kifungashio"></div>
+                <div class="col-md-3"><label class="form-label-sm" for="rawNewCategory">Aina</label><select class="form-select" name="category" id="rawNewCategory"><option value="RAW_MATERIAL">Malighafi</option><option value="PACKAGING">Kifungashio</option></select></div>
+                <div class="col-md-3"><label class="form-label-sm" for="rawNewUnit">Kipimo</label><input class="form-control" name="item_unit" id="rawNewUnit" placeholder="Mfano: kg, ltr au pcs"></div>
+              </div>
+              <div class="form-text">Jaza jina, aina na kipimo ikiwa bidhaa haipo kwenye orodha. Mfumo utaiandikisha na kuongeza kiasi kilichopokelewa.</div>
             </div>
             <div class="col-md-6">
               <label class="form-label-sm" for="rawQty">2. Kiasi kilichoingia (<span id="rawUnit">kipimo</span>)</label>
               <input type="number" class="form-control" name="quantity" min="0.001" step="0.001" placeholder="Mfano: 10" id="rawQty" required>
             </div>
             <div class="col-md-6">
-              <label class="form-label-sm" for="rawPrice">3. Bei ya <span id="rawUnitPrice">kipimo</span> (TZS)</label>
+              <label class="form-label-sm" for="rawPrice">3. Bei kwa kila <span id="rawUnitPrice">kipimo</span> (TZS)</label>
               <input type="number" class="form-control" name="unit_cost" min="0" step="0.01" placeholder="Mfano: 5000" id="rawPrice" required>
             </div>
             <div class="col-12">
@@ -1851,11 +2119,22 @@ a{text-decoration:none}
       <div class="modal-body">
         <form method="post" action="{% url 'record_production' %}" id="managerProductionForm">
           {% csrf_token %}
+          <input type="hidden" name="production_request_key" value="{{ production_request_key }}">
         <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label-sm">Batch ya uzalishaji</label>
+            <select class="form-select" name="batch_id" required>
+              <option value="">Chagua batch iliyoidhinishwa</option>
+              {% for batch in batches %}{% if batch.status == "ACTIVE" %}
+              <option value="{{ batch.pk }}"{% if selected_batch and selected_batch.pk == batch.pk %} selected{% endif %}>{{ batch.reference }}</option>
+              {% endif %}{% endfor %}
+            </select>
+          </div>
           <div class="col-md-6">
-            <label class="form-label-sm">Bidhaa</label>
+            <label class="form-label-sm">Bidhaa inayozalishwa</label>
             <select class="form-select" name="sku" required>
-              {% for product in products %}<option value="{{ product.sku }}">{{ product.name }}</option>{% endfor %}
+              <option value="">Chagua bidhaa</option>
+              {% for group in manufacturing_groups %}{% if group.name != "Asali" %}<optgroup label="{{ group.name }}">{% for product in group.products %}<option value="{{ product.sku }}">{{ product.name }}</option>{% endfor %}</optgroup>{% endif %}{% endfor %}
             </select>
           </div>
           <div class="col-md-6">
@@ -1863,27 +2142,31 @@ a{text-decoration:none}
             <input type="number" class="form-control" name="quantity" min="0.001" step="0.001" placeholder="0" required>
           </div>
           <div class="col-md-6">
-            <label class="form-label-sm">Batch identifier (optional)</label>
-            <input type="text" class="form-control" name="batch_name" placeholder="Automatically generated if blank">
+            <label class="form-label-sm">Tarehe ya uzalishaji</label>
+            <input type="date" class="form-control" name="production_date" required value="{% now 'Y-m-d' %}">
           </div>
-          <div class="col-md-6">
-            <label class="form-label-sm">Malighafi</label>
-            <select class="form-select" name="material_sku" required>{% for row in purchase_product_rows %}{% if row.product.category == "RAW_MATERIAL" %}<option value="{{ row.product.sku }}">{{ row.product.name }} — {{ row.balance|floatformat:"-3" }} {{ row.product.unit }} stoo</option>{% endif %}{% endfor %}</select>
+          <div class="col-12">
+            <div class="alert alert-info mb-0 small">
+              Effective Diet hurekodiwa kwa idadi ya pakiti. Wild Honey ina form yake ya kufungasha kwenye vikopo maalumu vya 800 g hapo juu.
+            </div>
           </div>
-          <div class="col-md-6">
-            <label class="form-label-sm">Kiasi cha Malighafi</label>
-            <input type="number" class="form-control" name="material_quantity" min="0.001" step="0.001" placeholder="0" required>
+          <div class="col-12">
+            <label class="form-label-sm">Malighafi zilizotumika</label>
+            <div id="managerRawRows" class="row g-2">
+              <div class="col-md-5"><select class="form-select" name="material_sku"><option value="">Chagua malighafi</option>{% for row in purchase_product_rows %}{% if row.product.category == "RAW_MATERIAL" %}<option value="{{ row.product.sku }}" data-unit="{{ row.product.unit }}">{{ row.product.name }} — {% if selected_batch %}{{ row.batch_balance|floatformat:"-3" }} {{ row.product.unit }} batch hii{% else %}{{ row.balance|floatformat:"-3" }} {{ row.product.unit }} stoo{% endif %}</option>{% endif %}{% endfor %}</select></div>
+              <div class="col-md-3"><input class="form-control" data-consumption-unit type="text" placeholder="Kipimo hujitokeza" readonly aria-label="Kipimo cha malighafi kilichochaguliwa"></div>
+              <div class="col-md-4"><input type="number" class="form-control" name="material_quantity" min="0.001" step="0.001" placeholder="Kiasi"></div>
+            </div>
+            <button type="button" class="btn-soft mt-2" id="addManagerRawRow"><i class="bi bi-plus"></i> Ongeza malighafi</button>
           </div>
-          <div class="col-md-6">
-            <label class="form-label-sm">Kifungashio (hiari)</label>
-            <select class="form-select" name="material_sku">
-              <option value="">Hakuna</option>
-              {% for row in purchase_product_rows %}{% if row.product.category == "PACKAGING" %}<option value="{{ row.product.sku }}">{{ row.product.name }} — {{ row.balance|floatformat:"-3" }} {{ row.product.unit }} stoo</option>{% endif %}{% endfor %}
-            </select>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label-sm">Kiasi cha kifungashio</label>
-            <input type="number" class="form-control" name="material_quantity" min="0" step="0.001" value="0">
+          <div class="col-12">
+            <label class="form-label-sm">Vifungashio vilivyotumika</label>
+            <div id="managerPackagingRows" class="row g-2">
+              <div class="col-md-5"><select class="form-select" name="packaging_sku"><option value="">Chagua kifungashio</option>{% for row in purchase_product_rows %}{% if row.product.category == "PACKAGING" %}<option value="{{ row.product.sku }}" data-unit="{{ row.product.unit }}">{{ row.product.name }} — {% if selected_batch %}{{ row.batch_balance|floatformat:"-3" }} {{ row.product.unit }} batch hii{% else %}{{ row.balance|floatformat:"-3" }} {{ row.product.unit }} stoo{% endif %}</option>{% endif %}{% endfor %}</select></div>
+              <div class="col-md-3"><input class="form-control" data-consumption-unit type="text" placeholder="Kipimo hujitokeza" readonly aria-label="Kipimo cha kifungashio kilichochaguliwa"></div>
+              <div class="col-md-4"><input type="number" class="form-control" name="packaging_quantity" min="0.001" step="0.001" placeholder="Kiasi"></div>
+            </div>
+            <button type="button" class="btn-soft mt-2" id="addManagerPackagingRow"><i class="bi bi-plus"></i> Ongeza kifungashio</button>
           </div>
         </div>
         </form>
@@ -1901,7 +2184,7 @@ a{text-decoration:none}
 <div class="modal fade" id="managerTransferModal" tabindex="-1" aria-labelledby="managerTransferModalTitle" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <form method="post" action="{% url 'record_dispatch' %}">
+      <form method="post" action="{% url 'record_dispatch' %}" data-confirm-message="Una uhakika unataka kutuma mzigo? Stock itapunguzwa kiwandani na transfer itakuwa DISPATCHED. Stock ya tawi na takwimu zake hazitabadilika mpaka tawi lithibitishe kupokea; hapo status itakuwa RECEIVED au PARTIAL kulingana na kiasi kilichopokelewa.">
         {% csrf_token %}
         <div class="modal-header">
           <h2 class="modal-title fs-5" id="managerTransferModalTitle">Dispatch stock to a branch</h2>
@@ -1922,7 +2205,7 @@ a{text-decoration:none}
             <select class="form-select" id="managerTransferBatch" name="batch_id" required>
               <option value="">Select batch</option>
               {% for batch in batches %}
-              <option value="{{ batch.pk }}">{{ batch.reference }} — {{ batch.recipe.product.name }}</option>
+              <option value="{{ batch.pk }}">{{ batch.reference }}</option>
               {% endfor %}
             </select>
           </div>
@@ -1949,6 +2232,19 @@ a{text-decoration:none}
 
 <!-- TOAST CONTAINER -->
 <div class="toast-container" id="toastContainer"></div>
+<dialog class="workspace-confirm-dialog" id="workspaceConfirmDialog" aria-labelledby="workspaceConfirmTitle" aria-describedby="workspaceConfirmMessage">
+  <div class="workspace-confirm-content">
+    <span class="workspace-confirm-icon" aria-hidden="true"><i class="bi bi-box-arrow-in-down"></i></span>
+    <div class="workspace-confirm-copy">
+      <h2 id="workspaceConfirmTitle">Thibitisha hatua</h2>
+      <p id="workspaceConfirmMessage"></p>
+    </div>
+  </div>
+  <div class="workspace-confirm-actions">
+    <button type="button" data-confirm-cancel>Ghairi</button>
+    <button class="workspace-confirm-accept" type="button" data-confirm-accept><i class="bi bi-check2-circle me-1"></i>Thibitisha</button>
+  </div>
+</dialog>
 
 <!-- ============================================================
      SCRIPTS
@@ -1968,6 +2264,78 @@ a{text-decoration:none}
 {{ distribution_mwanza_stock|json_script:"distribution-mwanza-stock-data" }}
 {{ distribution_dar_stock|json_script:"distribution-dar-stock-data" }}
 <script>
+const confirmDialog = document.getElementById("workspaceConfirmDialog");
+const confirmMessage = document.getElementById("workspaceConfirmMessage");
+let pendingConfirmation = null;
+let confirmedForm = null;
+
+document.querySelectorAll("form[data-confirm-message]").forEach((form) => {
+  form.addEventListener("submit", (event) => {
+    if (confirmedForm === form) {
+      confirmedForm = null;
+      return;
+    }
+    event.preventDefault();
+    if (pendingConfirmation) return;
+    pendingConfirmation = { form, submitter: event.submitter };
+    confirmMessage.textContent = form.dataset.confirmMessage;
+    confirmDialog.showModal();
+  });
+});
+document.querySelector("[data-confirm-cancel]").addEventListener("click", () => {
+  pendingConfirmation = null;
+  confirmDialog.close();
+});
+document.querySelector("[data-confirm-accept]").addEventListener("click", () => {
+  const confirmation = pendingConfirmation;
+  pendingConfirmation = null;
+  confirmDialog.close();
+  if (!confirmation) return;
+  confirmedForm = confirmation.form;
+  if (confirmation.submitter) confirmation.form.requestSubmit(confirmation.submitter);
+  else confirmation.form.requestSubmit();
+  window.setTimeout(() => {
+    if (confirmedForm === confirmation.form) confirmedForm = null;
+  }, 0);
+});
+confirmDialog.addEventListener("cancel", () => { pendingConfirmation = null; });
+
+const addConsumptionRow = (containerId, skuName, quantityName) => {
+  const container = document.getElementById(containerId);
+  const template = container?.querySelector("select");
+  if (!container || !template) return;
+  const row = document.createElement("div");
+  row.className = "col-12 mt-2";
+  row.innerHTML =
+    '<div class="row g-2 align-items-end">' +
+      '<div class="col-md-5"><select class="form-select" name="' + skuName + '">' + template.innerHTML + '</select></div>' +
+      '<div class="col-md-3"><input class="form-control" data-consumption-unit type="text" placeholder="Kipimo hujitokeza" readonly aria-label="Kipimo cha bidhaa iliyochaguliwa"></div>' +
+      '<div class="col-md-3"><input type="number" class="form-control" name="' + quantityName + '" min="0.001" step="0.001" placeholder="Kiasi"></div>' +
+      '<div class="col-md-1"><button type="button" class="btn-soft w-100" aria-label="Remove row"><i class="bi bi-trash"></i></button></div>' +
+    '</div>';
+  const select = row.querySelector("select");
+  select.addEventListener("change", () => {
+    row.querySelector("[data-consumption-unit]").value =
+      select.options[select.selectedIndex]?.dataset.unit || "";
+  });
+  row.querySelector("button").addEventListener("click", () => row.remove());
+  container.appendChild(row);
+};
+["managerRawRows", "managerPackagingRows"].forEach((containerId) => {
+  const container = document.getElementById(containerId);
+  container?.querySelectorAll("select").forEach((select) => {
+    select.addEventListener("change", () => {
+      container.querySelector("[data-consumption-unit]").value =
+        select.options[select.selectedIndex]?.dataset.unit || "";
+    });
+  });
+});
+document.getElementById("addManagerRawRow")?.addEventListener("click", () =>
+  addConsumptionRow("managerRawRows", "material_sku", "material_quantity")
+);
+document.getElementById("addManagerPackagingRow")?.addEventListener("click", () =>
+  addConsumptionRow("managerPackagingRows", "packaging_sku", "packaging_quantity")
+);
 /* ============================================================
    NAVIGATION
 ============================================================ */
@@ -1998,21 +2366,39 @@ navItems.forEach(item => {
     targetView.classList.add('active');
     crumb.textContent = crumbMap[v] || v;
     // close mobile sidebar
-    document.body.classList.remove('sidebar-open');
+    closeMobileSidebar();
     // re-render charts so they size correctly
     Object.values(charts).forEach(c => { try { c.resize(); } catch(e){} });
   });
 });
+const requestedView = new URLSearchParams(window.location.search).get('view');
+if (requestedView) {
+  document.querySelector(`.nav-item[data-view="${requestedView}"]`)?.click();
+}
 
 /* Mobile sidebar toggle */
-document.getElementById('sidebarToggle').addEventListener('click', () => {
-  document.body.classList.toggle('sidebar-open');
+const sidebarToggle = document.getElementById('sidebarToggle');
+function closeMobileSidebar() {
+  document.body.classList.remove('sidebar-open');
+  sidebarToggle.setAttribute('aria-expanded', 'false');
+  sidebarToggle.setAttribute('aria-label', 'Fungua menyu');
+}
+sidebarToggle.addEventListener('click', () => {
+  const isOpen = document.body.classList.toggle('sidebar-open');
+  sidebarToggle.setAttribute('aria-expanded', String(isOpen));
+  sidebarToggle.setAttribute('aria-label', isOpen ? 'Funga menyu' : 'Fungua menyu');
 });
 document.addEventListener('click', (e) => {
   if (document.body.classList.contains('sidebar-open') &&
       !e.target.closest('.sidebar') &&
       !e.target.closest('#sidebarToggle')) {
-    document.body.classList.remove('sidebar-open');
+    closeMobileSidebar();
+  }
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.body.classList.contains('sidebar-open')) {
+    closeMobileSidebar();
+    sidebarToggle.focus();
   }
 });
 
@@ -2033,6 +2419,26 @@ function showToast(msg) {
   }, 2800);
 }
 
+const managerBatchForm = document.querySelector("form[data-batch-confirm]");
+const managerBatchDialog = document.getElementById("managerBatchConfirm");
+managerBatchForm?.addEventListener("submit", (event) => {
+  if (managerBatchForm.dataset.confirmed === "true") {
+    delete managerBatchForm.dataset.confirmed;
+    return;
+  }
+  event.preventDefault();
+  managerBatchDialog.showModal();
+});
+managerBatchDialog.querySelector("[data-batch-confirm-cancel]").addEventListener("click", () => {
+  managerBatchDialog.close();
+});
+managerBatchDialog.querySelector("[data-batch-confirm-submit]").addEventListener("click", () => {
+  if (!managerBatchForm.reportValidity()) return;
+  managerBatchForm.dataset.confirmed = "true";
+  managerBatchDialog.close();
+  managerBatchForm.requestSubmit();
+});
+
 /* Live total for raw material modal */
 const rawQty = document.getElementById('rawQty');
 const rawPrice = document.getElementById('rawPrice');
@@ -2042,9 +2448,20 @@ const rawUnit = document.getElementById('rawUnit');
 const rawUnitPrice = document.getElementById('rawUnitPrice');
 const rawStockHelp = document.getElementById('rawStockHelp');
 const rawCalculatedTotal = document.getElementById('rawCalculatedTotal');
+const rawNewName = document.getElementById('rawNewName');
+const rawNewUnit = document.getElementById('rawNewUnit');
+const rawNewFields = document.getElementById('rawNewFields');
+const rawNewInputs = Array.from(rawNewFields.querySelectorAll('input, select'));
 let rawTotalEdited = false;
 const quantityFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 });
-const stockUnitLabels = { kg: 'kg', lita: 'lita', pcs: 'vipande', unit: 'kipande' };
+const stockUnitLabels = { kg: 'kg', l: 'ltr', ltr: 'ltr', litre: 'ltr', liter: 'ltr', lita: 'ltr', pcs: 'pcs', pc: 'pcs', piece: 'pcs', unit: 'pcs' };
+function updateRawProductMode() {
+  const hasSelectedProduct = Boolean(rawProduct.value);
+  rawNewFields.hidden = hasSelectedProduct;
+  rawNewInputs.forEach((input) => {
+    input.disabled = hasSelectedProduct;
+  });
+}
 function updateRawTotal() {
   const total = (parseFloat(rawQty.value) || 0) * (parseFloat(rawPrice.value) || 0);
   const formatted = total.toLocaleString('en-US', { maximumFractionDigits: 2 });
@@ -2068,11 +2485,25 @@ rawTotal.addEventListener('input', () => {
   rawTotalEdited = rawTotal.value !== '';
 });
 rawProduct.addEventListener('change', () => {
+  updateRawProductMode();
   const selected = rawProduct.options[rawProduct.selectedIndex];
+  if (!selected || !selected.value) {
+    rawUnit.textContent = rawNewUnit.value || 'kipimo';
+    rawUnitPrice.textContent = rawNewUnit.value || 'kipimo';
+    rawStockHelp.textContent = 'Sajili bidhaa mpya kwa kujaza jina, aina na kipimo hapa chini.';
+    return;
+  }
   const unit = stockUnitLabels[selected.dataset.unit] || selected.dataset.unit;
   rawUnit.textContent = unit;
   rawUnitPrice.textContent = unit;
   updateRawTotal();
+});
+updateRawProductMode();
+rawNewUnit.addEventListener('input', () => {
+  if (!rawProduct.value) {
+    rawUnit.textContent = rawNewUnit.value || 'kipimo';
+    rawUnitPrice.textContent = rawNewUnit.value || 'kipimo';
+  }
 });
 
 /* ============================================================

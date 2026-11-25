@@ -25,10 +25,7 @@
 {% block workspace_topbar_right %}
     <div class="factory-topbar-tools">
         <button class="factory-notification" type="button" aria-label="Factory notifications" onclick="activateFactorySection('dispatch', true)" title="Review dispatch notifications"><i class="bi bi-bell"></i></button>
-        <span class="factory-account" aria-label="Signed in as {{ user_name }}, Factory Manager">
-            <span class="factory-account-avatar">{{ user_initial }}</span>
-            <span><span class="factory-account-name d-block">{{ user_name }}</span><span class="factory-account-role d-block">Factory Manager</span></span>
-        </span>
+        {% include "components/account_menu.html" with account_menu_variant="workspace-topbar-account" account_menu_role="Factory Manager" user_initial=user_initial user_name=user_name %}
         <span class="factory-topbar-date">{% now "D, d M Y" %}</span>
     </div>
 {% endblock %}
@@ -185,6 +182,19 @@
         gap: 14px;
     }
     .factory-purchase-grid .wide { grid-column: 1 / -1; }
+    .factory-new-product {
+        padding: 13px;
+        border: 1px solid #e4eee5;
+        border-radius: 11px;
+        background: #f8fbf8;
+    }
+    .factory-new-product-title {
+        display: block;
+        margin-bottom: 10px;
+        color: #155e36;
+        font-size: 10px;
+        font-weight: 800;
+    }
     .factory-purchase-form label {
         display: block;
         margin-bottom: 6px;
@@ -240,6 +250,8 @@
         gap: 8px;
         padding-top: 8px;
     }
+    .batch-approved-banner { animation: batchApprovedIn .7s cubic-bezier(.2,.8,.2,1) both; }
+    @keyframes batchApprovedIn { from { opacity: 0; transform: translateY(-10px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
     .factory-purchase-reset {
         min-height: 38px;
         padding: 8px 14px;
@@ -257,9 +269,52 @@
         .factory-purchase-actions { width: 100%; }
         .factory-purchase-actions button { flex: 1; }
     }
-    @media (max-width: 760px) {
-        .workspace-sidebar { width: 196px; }
-        .workspace-main { margin-left: 0; }
+    .batch-confirm-dialog {
+        width: min(92vw, 480px);
+        max-width: none;
+        padding: 0;
+        border: 0;
+        border-radius: 20px;
+        color: var(--ink);
+        box-shadow: 0 28px 80px rgba(4,31,17,.32);
+    }
+    .batch-confirm-dialog::backdrop { background: rgba(4,31,17,.58); backdrop-filter: blur(3px); }
+    .batch-confirm-dialog[open] { animation: batchDialogIn .2s ease-out both; }
+    @keyframes batchDialogIn { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    .batch-confirm-head { padding: 22px 24px; background: linear-gradient(120deg, #0d4a2b, #062b18); color: #fff; }
+    .batch-confirm-head h2 { margin: 0; font-size: 17px; font-weight: 800; }
+    .batch-confirm-head p { margin: 5px 0 0; color: #d0e5d6; font-size: 12px; }
+    .batch-confirm-body { padding: 22px 24px; }
+    .batch-confirm-warning {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 16px;
+        padding: 13px;
+        border: 1px solid #f4d28a;
+        border-radius: 12px;
+        background: #fffbeb;
+        color: #825314;
+        font-size: 12px;
+        line-height: 1.6;
+    }
+    .batch-confirm-warning .warning-emoji { font-size: 21px; line-height: 1.2; }
+    .batch-confirm-list { margin: 0; padding-left: 20px; color: #3f5445; font-size: 12px; line-height: 1.7; }
+    .batch-confirm-list li + li { margin-top: 7px; }
+    .batch-confirm-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 16px 24px;
+        border-top: 1px solid #eef4ee;
+        background: #fbfdfb;
+    }
+    .batch-confirm-cancel { background: #fff; color: #3f5445; border: 1px solid #dfe8df; }
+    @media (prefers-reduced-motion: reduce) { .batch-confirm-dialog[open] { animation: none; } }
+        @media (max-width: 760px) {
+            .workspace-sidebar { width: 196px; }
+            .workspace-main { margin-left: 0; }
         .workspace-topbar { min-height: 58px; padding: 9px 15px; }
         .workspace-main-content { padding: 18px 14px 28px; }
         .factory-topbar-date { display: none; }
@@ -322,26 +377,41 @@
             </header>
             <form method="post" action="{% url 'record_purchase' %}" class="factory-purchase-form" id="factoryPurchaseForm">
                 {% csrf_token %}
+                {% if selected_batch %}<input type="hidden" name="batch_id" value="{{ selected_batch.pk }}">{% endif %}
                 <div class="factory-purchase-grid">
                     <div class="wide">
                         <label for="purchaseSku">1. Chagua ulichonunua</label>
-                        <select id="purchaseSku" name="sku" required>
-                            <option value="" selected disabled>Chagua malighafi au kifungashio</option>
-                            <optgroup label="Malighafi">
-                                {% for product in raw_materials %}<option value="{{ product.sku }}" data-unit="{{ product.unit }}">{% for row in factory_product_rows %}{% if row.product.pk == product.pk %}{{ product.name }} — {{ row.balance|floatformat:"-3" }} {{ product.unit }}{% endif %}{% endfor %}</option>{% endfor %}
-                            </optgroup>
-                            <optgroup label="Vifungashio">
-                                {% for product in packaging_products %}<option value="{{ product.sku }}" data-unit="{{ product.unit }}">{% for row in factory_product_rows %}{% if row.product.pk == product.pk %}{{ product.name }} — {{ row.balance|floatformat:"-3" }} {{ product.unit }}{% endif %}{% endfor %}</option>{% endfor %}
-                            </optgroup>
+                        <select id="purchaseSku" name="sku">
+                            <option value="" selected>Chagua bidhaa iliyosajiliwa, au sajili mpya hapa chini</option>
+                            {% if not raw_materials and not packaging_products %}<option value="" disabled>Hakuna bidhaa iliyosajiliwa bado</option>{% endif %}
+                            {% for row in factory_product_rows %}{% if row.product.category == "RAW_MATERIAL" or row.product.category == "PACKAGING" %}<option value="{{ row.product.sku }}" data-unit="{{ row.product.unit }}">{{ row.product.name }} — {{ row.balance|floatformat:"-3" }} {{ row.product.unit }} stoo</option>{% endif %}{% endfor %}
                         </select>
                         <span class="factory-purchase-help" id="purchaseStockHelp">Chagua bidhaa ili kuona kipimo na kiasi kilichopo stoo.</span>
+                    </div>
+                    <div class="wide factory-new-product" id="purchaseNewFields">
+                        <span class="factory-new-product-title">Au sajili bidhaa mpya kwa kupokea stock hii</span>
+                        <div class="factory-purchase-grid">
+                            <div class="wide">
+                                <label for="purchaseNewName">Jina la bidhaa mpya</label>
+                                <input id="purchaseNewName" name="item_name" placeholder="Jina la malighafi au kifungashio">
+                            </div>
+                            <div>
+                                <label for="purchaseNewCategory">Aina ya bidhaa mpya</label>
+                                <select id="purchaseNewCategory" name="category"><option value="RAW_MATERIAL">Malighafi</option><option value="PACKAGING">Kifungashio</option></select>
+                            </div>
+                            <div>
+                                <label for="purchaseNewUnit">Kipimo cha bidhaa mpya</label>
+                                <input id="purchaseNewUnit" name="item_unit" placeholder="Mfano: kg, ltr au pcs">
+                            </div>
+                            <div class="wide"><span class="factory-purchase-help">Ikiwa bidhaa haipo kwenye orodha, jaza jina, aina na kipimo. Itaandikishwa na kiasi kilichopokelewa kitaingia stoo.</span></div>
+                        </div>
                     </div>
                     <div>
                         <label for="purchaseQuantity">2. Kiasi kilichoingia (<span id="purchaseUnit">kipimo</span>)</label>
                         <input id="purchaseQuantity" name="quantity" type="number" min="0.001" step="0.001" placeholder="Mfano: 10" required>
                     </div>
                     <div>
-                        <label for="purchaseCost">3. Bei ya <span id="purchaseUnitPrice">kipimo</span> (TZS)</label>
+                        <label for="purchaseCost">3. Bei kwa kila <span id="purchaseUnitPrice">kipimo</span> (TZS)</label>
                         <input id="purchaseCost" name="unit_cost" type="number" min="0" step="0.01" placeholder="Mfano: 5000" required>
                     </div>
                     <div class="wide">
@@ -377,29 +447,99 @@
                 {% endfor %}
             </tbody></table></div>
             {% else %}<div class="workspace-empty"><div><i class="bi bi-inbox"></i><strong>No purchase records yet</strong><span>Received purchases and inventory increases will appear here.</span></div></div>{% endif %}
+            <h3 class="h6 fw-bold mt-4">Stock ya sasa ya malighafi na vifungashio</h3>
+            <p class="text-muted small">{% if selected_batch %}Batch {{ selected_batch.reference }} inaanza na mabaki yaliyokuwepo stoo, kisha manunuzi yake yanaongezwa na matumizi yake yanapunguzwa. Salio la stoo nzima linaonyeshwa pembeni.{% else %}Salio ni la stoo nzima. Chagua batch kuona mabaki ya mwanzo, manunuzi, matumizi na jumla ya stock yake.{% endif %}</p>
+            <div class="workspace-table-wrap"><table class="workspace-table">
+                <thead><tr><th>Bidhaa</th><th>Aina</th><th>Kipimo</th>{% if selected_batch %}<th>Mabaki wakati batch inaanza</th><th>Manunuzi ya batch</th><th>Imetumika batch hii</th><th>Stoo nzima</th>{% else %}<th>Imetumika jumla</th><th>Iliyobaki stoo sasa</th>{% endif %}</tr></thead>
+                <tbody>
+                {% for row in material_inventory_rows %}
+                <tr><td>{{ row.product.name }}</td><td>{% if row.product.category == "PACKAGING" %}Kifungashio{% else %}Malighafi{% endif %}</td><td>{{ row.product.unit }}</td>{% if selected_batch %}<td>{{ row.batch_opening_balance|floatformat:"-3" }} {{ row.product.unit }}</td><td>{{ row.batch_purchase_quantity|floatformat:"-3" }} {{ row.product.unit }}</td><td>{{ row.used_quantity|floatformat:"-3" }} {{ row.product.unit }}</td><td>{{ row.balance|floatformat:"-3" }} {{ row.product.unit }}</td>{% else %}<td>{{ row.used_quantity|floatformat:"-3" }} {{ row.product.unit }}</td><td><strong>{{ row.balance|floatformat:"-3" }} {{ row.product.unit }}</strong></td>{% endif %}</tr>
+                {% empty %}<tr><td colspan="{% if selected_batch %}7{% else %}5{% endif %}"><div class="workspace-empty"><div><i class="bi bi-box-seam"></i><strong>Hakuna malighafi au vifungashio</strong><span>Vipokelewe kwa kutumia fomu ya manunuzi ili stock ifuatiliwe.</span></div></div></td></tr>{% endfor %}
+                </tbody>
+            </table></div>
         </div>
     </section>
 
     <section class="workspace-card factory-workflow-card" id="factory-production" data-factory-panel="production" aria-labelledby="factoryProductionTitle" hidden>
         <header class="workspace-card-head">
-            <div><h2 id="factoryProductionTitle"><i class="bi bi-gear-wide-connected text-success me-2"></i>Production batches</h2><p>Capture material consumption, output, and batch traceability</p></div>
+            <div><h2 id="factoryProductionTitle"><i class="bi bi-gear-wide-connected text-success me-2"></i>Uzalishaji</h2><p>Bidhaa tatu: Effective Diet, Presha Masala, na Wild Honey inayofungashwa kwenye vikopo maalumu vya 800 g.</p></div>
             <span class="workspace-status ready">Live ledger</span>
         </header>
         <div class="workspace-card-body">
-            <form method="post" action="{% url 'record_production' %}" class="workspace-form-grid mb-3">
+            {% if show_batch_welcome %}
+            <div class="alert alert-success batch-approved-banner" role="status"><i class="bi bi-stars me-2"></i><strong>Hongera! Karibu kwenye batch mpya {{ recently_approved_batch.reference }}.</strong> Sasa unaweza kuanza kurekodi production.</div>
+            {% endif %}
+            <form method="post" action="{% url 'start_new_batch' %}" class="workspace-form-grid mb-3" data-batch-confirm>
                 {% csrf_token %}
-                <div class="workspace-field"><label for="batchSku">Finished product</label><select id="batchSku" name="sku" required><option value="">Select finished good</option>{% for product in finished_products %}<option value="{{ product.sku }}">{{ product.name }} ({{ product.sku }})</option>{% endfor %}</select></div>
-                <div class="workspace-field"><label for="batchName">Batch identifier (optional)</label><input id="batchName" name="batch_name" placeholder="Automatically generated if blank"></div>
-                <div class="workspace-field"><label for="batchQuantity">Quantity produced</label><input id="batchQuantity" name="quantity" type="number" min="0.001" step="0.001" required></div>
-                <div class="workspace-field"><label for="batchMaterial">Raw material</label><select id="batchMaterial" name="material_sku" required>{% for row in factory_product_rows %}{% if row.product.category == "RAW_MATERIAL" %}<option value="{{ row.product.sku }}">{{ row.product.name }} — {{ row.balance|floatformat:"-3" }} {{ row.product.unit }} available</option>{% endif %}{% endfor %}</select></div>
-                <div class="workspace-field"><label for="batchMaterialQuantity">Material quantity</label><input id="batchMaterialQuantity" name="material_quantity" type="number" min="0.001" step="0.001" required></div>
-                <div class="workspace-field"><label for="batchPackaging">Packaging</label><select id="batchPackaging" name="material_sku"><option value="">Select packaging (optional)</option>{% for row in factory_product_rows %}{% if row.product.category == "PACKAGING" %}<option value="{{ row.product.sku }}">{{ row.product.name }} — {{ row.balance|floatformat:"-3" }} {{ row.product.unit }} available</option>{% endif %}{% endfor %}</select></div>
-                <div class="workspace-field"><label for="batchPackagingQuantity">Packaging quantity</label><input id="batchPackagingQuantity" name="material_quantity" type="number" min="0" step="0.001" value="0"></div>
+                <div class="workspace-field"><label for="factoryBatchReference">Batch identifier (optional)</label><input id="factoryBatchReference" name="reference" placeholder="Automatically generated"></div>
+                <div class="workspace-field"><label for="factoryBatchNote">Note for CEO</label><input id="factoryBatchNote" name="request_note" placeholder="Reason / production plan"></div>
+                <div class="wide"><button class="workspace-button" type="submit"><i class="bi bi-hourglass-split"></i>Request CEO approval for new batch</button></div>
+            </form>
+            {% if pending_batch_requests %}
+            <div class="workspace-notice mb-3"><i class="bi bi-hourglass-split"></i><span>Pending CEO approval: {% for batch in pending_batch_requests %}{{ batch.reference }}{% if not forloop.last %}, {% endif %}{% endfor %}. Production entry remains disabled until approved.</span></div>
+            {% endif %}
+            <form method="get" action="{% url 'factory_dashboard' %}" class="workspace-form-grid mb-3">
+                <div class="workspace-field"><label for="factoryActiveBatch">Choose approved batch</label><select id="factoryActiveBatch" name="batch" onchange="this.form.submit()"><option value="">Select active batch</option>{% for batch in batches %}{% if batch.status == "ACTIVE" %}<option value="{{ batch.pk }}"{% if selected_batch and selected_batch.pk == batch.pk %} selected{% endif %}>{{ batch.reference }}</option>{% endif %}{% endfor %}</select></div>
+            </form>
+            <div class="workspace-grid-2 mb-3">
+                {% for card in batch_production_cards %}
+                <article class="workflow-card"><span class="workflow-icon"><i class="bi bi-box-seam"></i></span><div><h3>{{ card.name }}</h3><p>{{ card.quantity|floatformat:"-3" }} produced in selected batch</p></div></article>
+                {% endfor %}
+            </div>
+            {% if selected_batch and selected_batch.status == "ACTIVE" %}
+            <form method="post" action="{% url 'record_production' %}" class="workspace-form-grid mb-3" id="factoryProductionForm">
+                {% csrf_token %}
+                <input type="hidden" name="batch_id" value="{{ selected_batch.pk }}">
+                <input type="hidden" name="production_request_key" value="{{ production_request_key }}">
+                <div class="workspace-field"><label for="batchSku">Bidhaa inayozalishwa</label><select id="batchSku" name="sku" required><option value="">Chagua Effective Diet au Presha Masala</option>{% for group in manufacturing_groups %}{% if group.name != "Asali" %}<optgroup label="{{ group.name }}">{% for product in group.products %}<option value="{{ product.sku }}">{{ product.name }}</option>{% endfor %}</optgroup>{% endif %}{% endfor %}</select></div>
+                <div class="workspace-field"><label for="batchQuantity">Idadi iliyozalishwa</label><input id="batchQuantity" name="quantity" type="number" min="0.001" step="0.001" required></div>
+                <div class="workspace-field"><label for="batchProductionDate">Production date</label><input id="batchProductionDate" name="production_date" type="date" value="{% now 'Y-m-d' %}" required></div>
+                <div class="wide">
+                    <label>Malighafi zilizotumika</label>
+                    <div id="factoryRawRows" class="workspace-form-grid">
+                        <div class="workspace-field"><select name="material_sku"><option value="">Select raw material</option>{% for row in factory_product_rows %}{% if row.product.category == "RAW_MATERIAL" %}<option value="{{ row.product.sku }}" data-unit="{{ row.product.unit }}">{{ row.product.name }} — {% if selected_batch %}{{ row.batch_balance|floatformat:"-3" }} {{ row.product.unit }} for this batch{% else %}{{ row.balance|floatformat:"-3" }} {{ row.product.unit }} available{% endif %}</option>{% endif %}{% endfor %}</select></div>
+                        <div class="workspace-field"><input data-consumption-unit type="text" placeholder="Unit is automatic" readonly aria-label="Unit of selected raw material"></div>
+                        <div class="workspace-field"><input name="material_quantity" type="number" min="0.001" step="0.001" placeholder="Quantity consumed"></div>
+                    </div>
+                    <button class="branch-action mt-2" type="button" id="addFactoryRawRow"><i class="bi bi-plus"></i>Add raw material</button>
+                </div>
+                <div class="wide">
+                    <label>Packaging consumed</label>
+                    <div id="factoryPackagingRows" class="workspace-form-grid">
+                        <div class="workspace-field"><select name="packaging_sku"><option value="">Select packaging</option>{% for row in factory_product_rows %}{% if row.product.category == "PACKAGING" %}<option value="{{ row.product.sku }}" data-unit="{{ row.product.unit }}">{{ row.product.name }} — {% if selected_batch %}{{ row.batch_balance|floatformat:"-3" }} {{ row.product.unit }} for this batch{% else %}{{ row.balance|floatformat:"-3" }} {{ row.product.unit }} available{% endif %}</option>{% endif %}{% endfor %}</select></div>
+                        <div class="workspace-field"><input data-consumption-unit type="text" placeholder="Unit is automatic" readonly aria-label="Unit of selected packaging"></div>
+                        <div class="workspace-field"><input name="packaging_quantity" type="number" min="0.001" step="0.001" placeholder="Quantity consumed"></div>
+                    </div>
+                    <button class="branch-action mt-2" type="button" id="addFactoryPackagingRow"><i class="bi bi-plus"></i>Add packaging</button>
+                </div>
                 <div class="wide"><button class="workspace-button" type="submit"><i class="bi bi-check2-circle"></i>Complete batch</button></div>
             </form>
+            <form method="post" action="{% url 'record_honey_bottling' %}" class="workspace-form-grid mb-3">
+                {% csrf_token %}
+                <input type="hidden" name="batch_id" value="{{ selected_batch.pk }}">
+                <input type="hidden" name="production_request_key" value="{{ honey_bottling_request_key }}">
+                <div class="wide"><h3 class="h6 fw-bold mb-0"><i class="bi bi-droplet-half text-warning me-2"></i>Kufungasha Wild Honey kwenye vikopo vya 800 g</h3><small class="text-muted">Kila kopo maalumu linajazwa asali na lina uzito wa 800 g kama ilivyo kwenye bidhaa. Stock ipo: {{ raw_honey_stock|floatformat:"-3" }} madumu ya asali mbichi na {{ honey_jar_stock|floatformat:"-3" }} vikopo tupu. Rekodi madumu yaliyotumika na vikopo vilivyojazwa; mfumo utapunguza stock zote mbili.</small></div>
+                <div class="workspace-field"><label for="factoryHoneyQuantity">Asali mbichi iliyotumika (madumu/galoni)</label><input id="factoryHoneyQuantity" name="honey_quantity" type="number" min="0.001" step="0.001" required></div>
+                <div class="workspace-field"><label for="factoryHoneyJars">Vikopo vilivyojazwa</label><input id="factoryHoneyJars" name="jars_filled" type="number" min="1" step="1" required></div>
+                <div class="workspace-field"><label for="factoryHoneyDate">Tarehe ya kufungasha</label><input id="factoryHoneyDate" name="production_date" type="date" value="{% now 'Y-m-d' %}" required></div>
+                <div class="wide"><button class="workspace-button" type="submit"><i class="bi bi-check2-circle"></i>Hifadhi mgawanyo wa asali</button></div>
+            </form>
+            {% else %}
+            <div class="workspace-empty"><div><i class="bi bi-lock"></i><strong>No approved active batch selected</strong><span>Request CEO approval for a new batch, or choose an approved batch before recording production or bottling honey.</span></div></div>
+            {% endif %}
             {% if batches %}
-            <div class="workspace-table-wrap"><table class="workspace-table"><thead><tr><th>Reference</th><th>Product</th><th>Quantity</th><th>Status</th><th>Date</th></tr></thead><tbody>{% for batch in batches %}<tr><td>{{ batch.reference }}</td><td>{{ batch.recipe.product.name }}</td><td>{{ batch.quantity }}</td><td>{{ batch.status }}</td><td>{{ batch.production_date }}</td></tr>{% endfor %}</tbody></table></div>
+            <div class="workspace-table-wrap"><table class="workspace-table"><thead><tr><th>Reference</th><th>Products</th><th>Quantity</th><th>Status</th><th>Date</th></tr></thead><tbody>{% for batch in batches %}<tr><td>{{ batch.reference }}</td><td>{% for output in batch.outputs.all %}{{ output.product.name }}{% if not forloop.last %}, {% endif %}{% empty %}{% if batch.recipe_id %}{{ batch.recipe.product.name }}{% else %}—{% endif %}{% endfor %}</td><td>{{ batch.quantity }}</td><td>{{ batch.get_status_display }}</td><td>{{ batch.production_date }}</td></tr>{% endfor %}</tbody></table></div>
             {% else %}<div class="workspace-empty"><div><i class="bi bi-clipboard2-plus"></i><strong>No production batches yet</strong><span>Completed batches and finished-goods movements will appear here.</span></div></div>{% endif %}
+            <h3 class="h6 fw-bold mt-4">Matumizi halisi ya malighafi na vifungashio, pamoja na bidhaa za package</h3>
+            <p class="text-muted small">Kiasi kilichotumika kinahifadhiwa kwa kila uzalishaji; full package huonyesha bidhaa moja moja zilizopunguzwa.</p>
+            <div class="workspace-table-wrap"><table class="workspace-table">
+                <thead><tr><th>Batch</th><th>Bidhaa iliyozalishwa</th><th>Malighafi / kifungashio / bidhaa ya package</th><th>Kiasi kilichotumika</th><th>Salio</th><th>Tarehe</th></tr></thead>
+                <tbody>
+                {% for row in production_consumption_rows %}{% with consumption=row.consumption %}
+                <tr><td>{{ consumption.batch.reference }}</td><td>{% if consumption.output %}{{ consumption.output.product.name }}{% elif consumption.batch.recipe_id %}{{ consumption.batch.recipe.product.name }}{% else %}—{% endif %}</td><td>{{ consumption.product.name }}</td><td>{{ consumption.quantity|floatformat:"-3" }} {{ consumption.unit }}</td><td>{{ row.balance|floatformat:"-3" }} {{ consumption.product.unit }}</td><td>{{ consumption.created_at|date:"d/m/Y H:i" }}</td></tr>
+                {% endwith %}{% empty %}<tr><td colspan="6"><div class="workspace-empty"><div><i class="bi bi-clipboard-data"></i><strong>Hakuna matumizi ya production yaliyorekodiwa</strong><span>Matumizi yataonekana baada ya uzalishaji kuhifadhiwa.</span></div></div></td></tr>{% endfor %}
+                </tbody>
+            </table></div>
         </div>
     </section>
 
@@ -409,10 +549,10 @@
             <span class="workspace-status ready">Live dispatch</span>
         </header>
         <div class="workspace-card-body">
-            <form method="post" action="{% url 'record_dispatch' %}" class="workspace-form-grid mb-3">
+            <form method="post" action="{% url 'record_dispatch' %}" class="workspace-form-grid mb-3" data-confirm-message="Una uhakika unataka kutuma mzigo? Stock itapunguzwa kiwandani na transfer itakuwa DISPATCHED. Stock ya tawi na takwimu zake hazitabadilika mpaka tawi lithibitishe kupokea; hapo status itakuwa RECEIVED au PARTIAL kulingana na kiasi kilichopokelewa.">
                 {% csrf_token %}
-                <div class="workspace-field"><label for="dispatchSku">Finished product</label><select id="dispatchSku" name="sku" required><option value="">Select finished good</option>{% for row in factory_product_rows %}{% if row.product.category == "FINISHED_GOOD" %}<option value="{{ row.product.sku }}">{{ row.product.name }} — {{ row.balance|floatformat:"-3" }} {{ row.product.unit }} available</option>{% endif %}{% endfor %}</select></div>
-                <div class="workspace-field"><label for="dispatchBatch">Production batch</label><select id="dispatchBatch" name="batch_id" required><option value="">Select batch</option>{% for batch in batches %}<option value="{{ batch.pk }}">{{ batch.reference }} — {{ batch.recipe.product.name }}</option>{% endfor %}</select></div>
+                <div class="workspace-field"><label for="dispatchSku">Finished product</label><select id="dispatchSku" name="sku" required><option value="">Select product in selected batch</option>{% for group in manufacturing_groups %}{% for product in group.products %}<option value="{{ product.sku }}">{{ product.name }}</option>{% endfor %}{% endfor %}</select></div>
+                <div class="workspace-field"><label for="dispatchBatch">Production batch</label><select id="dispatchBatch" name="batch_id" required><option value="">Select batch</option>{% for batch in batches %}{% if batch.status == "ACTIVE" or batch.status == "COMPLETED" %}<option value="{{ batch.pk }}">{{ batch.reference }}</option>{% endif %}{% endfor %}</select></div>
                 <div class="workspace-field"><label for="dispatchQuantity">Quantity</label><input id="dispatchQuantity" name="quantity" type="number" min="0.001" step="0.001" required></div>
                 <div class="workspace-field"><label for="dispatchDestination">Destination</label><select id="dispatchDestination" name="destination"><option value="MWANZA">Mwanza</option><option value="DAR">Dar es Salaam</option></select></div>
                 <div class="wide"><button class="workspace-button" type="submit"><i class="bi bi-truck"></i>Dispatch stock</button></div>
@@ -436,10 +576,90 @@
             </div>
         </div>
     </section>
+    <dialog class="batch-confirm-dialog" id="factoryBatchConfirm" aria-labelledby="factoryBatchConfirmTitle" aria-describedby="factoryBatchConfirmDescription">
+        <div class="batch-confirm-head">
+            <h2 id="factoryBatchConfirmTitle">⚠️ Hakiki ombi la batch</h2>
+            <p id="factoryBatchConfirmDescription">Ombi litatumwa kwa CEO kwa ajili ya idhini.</p>
+        </div>
+        <div class="batch-confirm-body">
+            <div class="batch-confirm-warning">
+                <span class="warning-emoji" aria-hidden="true">⚠️</span>
+                <span>Batch hii haitakuwa tayari kwa uzalishaji mpaka CEO aidhinishe.</span>
+            </div>
+            <ul class="batch-confirm-list">
+                <li>Batch za sasa na rekodi zake hazitabadilishwa.</li>
+                <li>Jina na maelezo uliyojaza yatatumwa pamoja na ombi.</li>
+            </ul>
+        </div>
+        <div class="batch-confirm-actions">
+            <button class="workspace-button batch-confirm-cancel" type="button" data-batch-confirm-cancel>Rudi</button>
+            <button class="workspace-button" type="button" data-batch-confirm-submit><i class="bi bi-send"></i>Tuma ombi kwa CEO</button>
+        </div>
+    </dialog>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
+    const factoryBatchForm = document.querySelector("form[data-batch-confirm]");
+    const factoryBatchDialog = document.getElementById("factoryBatchConfirm");
+    factoryBatchForm?.addEventListener("submit", (event) => {
+        if (factoryBatchForm.dataset.confirmed === "true") {
+            delete factoryBatchForm.dataset.confirmed;
+            return;
+        }
+        event.preventDefault();
+        factoryBatchDialog.showModal();
+    });
+    factoryBatchDialog.querySelector("[data-batch-confirm-cancel]").addEventListener("click", () => {
+        factoryBatchDialog.close();
+    });
+    factoryBatchDialog.querySelector("[data-batch-confirm-submit]").addEventListener("click", () => {
+        if (!factoryBatchForm.reportValidity()) return;
+        factoryBatchForm.dataset.confirmed = "true";
+        factoryBatchDialog.close();
+        factoryBatchForm.requestSubmit();
+    });
+
+    function addFactoryConsumptionRow(containerId, kind) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        const row = document.createElement("div");
+        row.className = "workspace-field wide";
+        const options = container.querySelector("select").innerHTML;
+        const quantityName = kind === "raw" ? "material_quantity" : "packaging_quantity";
+        row.innerHTML =
+            '<div class="d-flex align-items-end gap-2">' +
+            '<div class="flex-grow-1"><select name="' + (kind === "raw" ? "material_sku" : "packaging_sku") + '" class="form-select">' + options + '</select></div>' +
+            '<div class="flex-grow-1"><input data-consumption-unit type="text" class="form-control" placeholder="Unit is automatic" readonly></div>' +
+            '<div class="flex-grow-1"><input name="' + quantityName + '" type="number" min="0.001" step="0.001" class="form-control" placeholder="Quantity consumed"></div>' +
+            '<button type="button" class="branch-action" aria-label="Remove row"><i class="bi bi-trash"></i></button></div>';
+        const select = row.querySelector("select");
+        select.addEventListener("change", () => {
+            row.querySelector("[data-consumption-unit]").value =
+                select.options[select.selectedIndex]?.dataset.unit || "";
+        });
+        row.querySelector("button").addEventListener("click", () => row.remove());
+        container.appendChild(row);
+    }
+    function updateFactoryConsumptionUnit(container, select) {
+        const selects = Array.from(container.querySelectorAll("select"));
+        const unitInputs = Array.from(container.querySelectorAll("[data-consumption-unit]"));
+        const index = selects.indexOf(select);
+        if (index >= 0 && unitInputs[index]) {
+            unitInputs[index].value = select.options[select.selectedIndex]?.dataset.unit || "";
+        }
+    }
+    ["factoryRawRows", "factoryPackagingRows"].forEach((containerId) => {
+        const container = document.getElementById(containerId);
+        container?.querySelectorAll("select").forEach((select) => {
+            select.addEventListener("change", () => {
+                updateFactoryConsumptionUnit(container, select);
+            });
+        });
+    });
+    document.getElementById("addFactoryRawRow")?.addEventListener("click", () => addFactoryConsumptionRow("factoryRawRows", "raw"));
+    document.getElementById("addFactoryPackagingRow")?.addEventListener("click", () => addFactoryConsumptionRow("factoryPackagingRows", "packaging"));
+
     const factoryPurchaseForm = document.getElementById("factoryPurchaseForm");
     const factoryPurchaseSku = document.getElementById("purchaseSku");
     const factoryPurchaseQuantity = document.getElementById("purchaseQuantity");
@@ -449,7 +669,18 @@
     const factoryPurchaseUnit = document.getElementById("purchaseUnit");
     const factoryPurchaseUnitPrice = document.getElementById("purchaseUnitPrice");
     const factoryPurchaseStockHelp = document.getElementById("purchaseStockHelp");
+    const factoryPurchaseNewUnit = document.getElementById("purchaseNewUnit");
+    const factoryPurchaseNewFields = document.getElementById("purchaseNewFields");
+    const factoryPurchaseNewInputs = Array.from(factoryPurchaseNewFields.querySelectorAll("input, select"));
     let factoryActualPaymentEdited = false;
+
+    function updateFactoryPurchaseProductMode() {
+        const hasSelectedProduct = Boolean(factoryPurchaseSku.value);
+        factoryPurchaseNewFields.hidden = hasSelectedProduct;
+        factoryPurchaseNewInputs.forEach((input) => {
+            input.disabled = hasSelectedProduct;
+        });
+    }
 
     function updateFactoryPurchaseTotal() {
         const quantity = parseFloat(factoryPurchaseQuantity.value) || 0;
@@ -469,16 +700,32 @@
         factoryActualPaymentEdited = factoryActualPayment.value !== "";
     });
     factoryPurchaseSku.addEventListener("change", () => {
+        updateFactoryPurchaseProductMode();
         const selected = factoryPurchaseSku.options[factoryPurchaseSku.selectedIndex];
-        if (!selected || !selected.value) return;
+        if (!selected || !selected.value) {
+            const unit = factoryPurchaseNewUnit.value || "kipimo";
+            factoryPurchaseUnit.textContent = unit;
+            factoryPurchaseUnitPrice.textContent = unit;
+            factoryPurchaseStockHelp.textContent =
+                "Sajili bidhaa mpya kwa kujaza jina, aina na kipimo hapa chini.";
+            return;
+        }
         const unit = selected.dataset.unit || "kipimo";
         factoryPurchaseUnit.textContent = unit;
         factoryPurchaseUnitPrice.textContent = unit;
         factoryPurchaseStockHelp.textContent = selected.textContent + " stoo.";
     });
+    factoryPurchaseNewUnit.addEventListener("input", () => {
+        if (!factoryPurchaseSku.value) {
+            const unit = factoryPurchaseNewUnit.value || "kipimo";
+            factoryPurchaseUnit.textContent = unit;
+            factoryPurchaseUnitPrice.textContent = unit;
+        }
+    });
     factoryPurchaseForm.addEventListener("reset", () => {
         factoryActualPaymentEdited = false;
         window.setTimeout(() => {
+            updateFactoryPurchaseProductMode();
             factoryPurchaseUnit.textContent = "kipimo";
             factoryPurchaseUnitPrice.textContent = "kipimo";
             factoryPurchaseStockHelp.textContent =

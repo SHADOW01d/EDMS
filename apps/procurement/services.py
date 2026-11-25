@@ -23,6 +23,7 @@ def receive_purchase(purchase):
             movement="PURCHASE",
             quantity=item.quantity,
             reference=purchase.reference,
+            production_batch=purchase.batch,
         )
     purchase.status = Purchase.Status.RECEIVED
     purchase.save(update_fields=["status"])

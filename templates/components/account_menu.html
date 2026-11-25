@@ -1,0 +1,44 @@
+<style>
+.account-menu{position:relative}.account-menu-trigger{display:flex;align-items:center;gap:8px;border:0;background:transparent;color:inherit;text-align:left}.account-menu-trigger.dropdown-toggle::after{display:none}.account-menu-avatar{display:grid;width:32px;height:32px;flex:0 0 auto;place-items:center;border-radius:50%;background:linear-gradient(135deg,#22c55e,#15803d);color:#fff;font-size:11px;font-weight:800}.account-menu-copy{display:flex;min-width:0;flex-direction:column}.account-menu-name{max-width:150px;overflow:hidden;color:#0b1f12;font-size:11px;font-weight:700;text-overflow:ellipsis;white-space:nowrap}.account-menu-role{color:#708174;font-size:9px}.account-menu-chevron{margin-left:2px;color:#708174;font-size:10px}.account-menu-panel{display:none;position:absolute;z-index:1200;top:calc(100% + 9px);right:0;width:220px;padding:7px;border:1px solid #dfe8e1;border-radius:12px;background:#fff;box-shadow:0 16px 38px rgba(4,31,17,.18)}.account-menu.open>.account-menu-panel{display:block}.account-menu-heading{display:flex;align-items:center;gap:9px;margin-bottom:6px;padding:8px 8px 10px;border-bottom:1px solid #edf2ed}.account-menu-heading-avatar{display:grid;width:36px;height:36px;place-items:center;border-radius:50%;background:#e5f7e9;color:#0d4a2b;font-size:13px;font-weight:800}.account-menu-heading strong{display:block;color:#0b1f12;font-size:11px}.account-menu-heading small{display:block;color:#708174;font-size:9px}.account-menu-panel>a,.account-menu-panel form button{display:flex;width:100%;align-items:center;gap:10px;padding:9px 10px;border:0;border-radius:8px;background:transparent;color:#3f5445;font-size:11px;text-decoration:none;text-align:left}.account-menu-panel>a:hover,.account-menu-panel form button:hover{background:#f2f7f3;color:#0d4a2b}.account-menu-panel form{margin:0}.account-menu-panel form button{color:#b91c1c}.account-menu-panel form button:hover{background:#fff1f1;color:#991b1b}.account-menu.workspace-topbar-account .account-menu-trigger,.account-menu.manager-account .account-menu-trigger{min-height:38px;padding:3px 9px 3px 4px;border:1px solid #dfe8e1;border-radius:999px;background:#fff;box-shadow:0 1px 2px rgba(4,31,17,.04)}.account-menu.workspace-topbar-account .account-menu-trigger:hover,.account-menu.manager-account .account-menu-trigger:hover{border-color:#86efac}.account-menu.manager-account .account-menu-avatar{width:38px;height:38px;font-size:13px}.account-menu.manager-account .account-menu-name{font-size:12px}.account-menu.manager-account .account-menu-role{font-size:10px}@media(max-width:700px){.account-menu-copy{display:none}.account-menu-panel{right:-8px}.account-menu.workspace-topbar-account .account-menu-trigger,.account-menu.manager-account .account-menu-trigger{padding-right:5px}}
+</style>
+<div class="account-menu dropdown {{ account_menu_variant|default:'' }}">
+    <button class="account-menu-trigger dropdown-toggle" type="button" aria-expanded="false" aria-haspopup="true">
+        {% if account_menu_compact %}
+            <span class="account-menu-avatar">{{ user_initial }}</span>
+            <span class="account-menu-copy">
+                <span class="account-menu-name">{{ user_name }}</span>
+                <span class="account-menu-role">{{ account_menu_role|default:"User" }}</span>
+            </span>
+        {% else %}
+            <span class="account-menu-avatar">{{ user_initial }}</span>
+            <span class="account-menu-copy">
+                <span class="account-menu-name">{{ user_name }}</span>
+                <span class="account-menu-role">{{ account_menu_role|default:"User" }}</span>
+            </span>
+        {% endif %}
+        <i class="bi bi-chevron-down account-menu-chevron"></i>
+    </button>
+    <div class="account-menu-panel" role="menu">
+        <div class="account-menu-heading">
+            <span class="account-menu-heading-avatar">{{ user_initial }}</span>
+            <span>
+                <strong>{{ user_name }}</strong>
+                <small>{{ account_menu_role|default:"User" }}</small>
+            </span>
+        </div>
+        <a href="{% url 'profile' %}" role="menuitem"><i class="bi bi-person-circle"></i><span>View Profile</span></a>
+        <a href="{% url 'password_change' %}" role="menuitem"><i class="bi bi-lock"></i><span>Change Password</span></a>
+        <form method="post" action="{% url 'logout' %}" role="none">
+            {% csrf_token %}
+            <button type="submit" role="menuitem"><i class="bi bi-box-arrow-right"></i><span>Log Out</span></button>
+        </form>
+    </div>
+</div>
+<script>
+(function(){
+  function closeAccountMenus(except){document.querySelectorAll('.account-menu.open').forEach(function(menu){if(menu!==except)menu.classList.remove('open')});}
+  document.querySelectorAll('.account-menu-trigger').forEach(function(button){if(button.dataset.accountMenuBound)return;button.dataset.accountMenuBound='true';button.addEventListener('click',function(event){event.preventDefault();event.stopPropagation();var menu=button.closest('.account-menu');var willOpen=!menu.classList.contains('open');closeAccountMenus(menu);menu.classList.toggle('open',willOpen);button.setAttribute('aria-expanded',willOpen?'true':'false')})});
+  document.addEventListener('click',function(){closeAccountMenus()});
+  document.addEventListener('keydown',function(event){if(event.key==='Escape')closeAccountMenus()});
+})();
+</script>

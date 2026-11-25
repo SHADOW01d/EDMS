@@ -125,6 +125,10 @@
     .branch-account-role { color: #708174; font-size: 7px; }
     .branch-topbar-date { color: #708174; font-size: 9px; white-space: nowrap; }
     .branch-kpi-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .branch-stock-breakdown { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+    .branch-stock-item { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid #e3ebe3; border-radius: 10px; background: #fbfdfb; }
+    .branch-stock-item span { overflow: hidden; color: #708174; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+    .branch-stock-item strong { color: #0b1f12; font-size: 13px; white-space: nowrap; }
     .branch-kpi-icon {
         display: grid;
         width: 40px;
@@ -193,31 +197,203 @@
     .branch-mini-stat strong { color: #0b1f12; font-size: 12px; }
     .branch-section-heading { margin: 0 0 4px; font-size: 14px; font-weight: 800; }
     .branch-section-subtitle { margin: 0; color: var(--muted); font-size: 10px; }
+    .branch-report-activity { grid-column: 1 / -1; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 8px; }
+    .branch-report-activity > .wide { grid-column: 1 / -1; }
     .branch-activity-card { min-height: 150px; }
     .branch-activity-card .workspace-card-body { display: grid; min-height: 105px; place-items: center; }
+    .branch-activity-card .branch-activity-content { display: block; min-height: 105px; padding: 18px; }
     .branch-activity-empty { color: #8a9b8f; font-size: 9px; text-align: center; }
     .branch-activity-empty i { display: block; margin-bottom: 5px; font-size: 19px; }
+    .branch-quick-links { display: flex; flex-wrap: wrap; gap: 9px; }
+    .branch-quick-links .workspace-button { min-height: 40px; }
+    .branch-activity-list { display: grid; gap: 8px; }
+    .branch-activity-item { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid #edf2ed; border-radius: 11px; background: #fff; text-align: left; }
+    .branch-activity-icon { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 10px; background: #eef8f0; color: #16803d; }
+    .branch-activity-copy { min-width: 0; }
+    .branch-activity-copy strong,.branch-activity-copy span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .branch-activity-copy strong { color: #263c2d; font-size: 10px; }
+    .branch-activity-copy span { margin-top: 2px; color: #708174; font-size: 9px; }
+    .branch-activity-time { color: #7d8c80; font-size: 9px; white-space: nowrap; }
     .branch-empty-row { padding: 0 !important; }
     .branch-table { min-width: 650px; }
     .branch-status { display: inline-flex; align-items: center; gap: 6px; color: #65756a; font-size: 10px; }
     .branch-status i { color: #f59e0b; }
+    .branch-quick-customer {
+        position: fixed;
+        z-index: 30;
+        right: 20px;
+        bottom: calc(20px + env(safe-area-inset-bottom));
+        display: none;
+        width: 60px;
+        height: 60px;
+        place-items: center;
+        border: 0;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #16a34a, #08783c);
+        box-shadow: 0 10px 24px rgba(13, 105, 58, .34);
+        color: #fff;
+        font-size: 25px;
+    }
+    .branch-quick-customer-dialog {
+        width: min(440px, calc(100vw - 28px));
+        max-width: none;
+        padding: 0;
+        overflow: visible;
+        border: 1px solid #e3ebe3;
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 24px 70px rgba(4, 31, 17, .24);
+        color: var(--ink);
+    }
+    .branch-quick-customer-dialog::backdrop { background: rgba(4, 31, 17, .48); backdrop-filter: blur(3px); }
+    .branch-quick-customer-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; padding: 19px 20px 14px; border-bottom: 1px solid #edf2ed; }
+    .branch-quick-customer-head h2 { margin: 0; font-size: 16px; font-weight: 800; }
+    .branch-quick-customer-head p { margin: 4px 0 0; color: var(--muted); font-size: 10px; }
+    .branch-quick-customer-close { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: #526357; }
+    .branch-quick-customer-form { display: grid; gap: 14px; padding: 18px 20px 20px; }
+    .branch-quick-customer-form .workspace-field label { margin-bottom: 6px; font-size: 11px; }
+    .branch-quick-customer-form .workspace-field input,
+    .branch-quick-customer-form .workspace-field textarea { min-height: 44px; border-radius: 10px; font-size: 13px; }
+    .branch-quick-customer-form .workspace-field textarea { min-height: 72px; resize: vertical; }
+    .branch-quick-customer-form .workspace-button { width: 100%; min-height: 44px; justify-content: center; border-radius: 10px; font-size: 12px; }
+    #branch-view-sales .workspace-grid-2 { grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); align-items: start; gap: 20px; }
+    #branch-view-sales .workspace-card,
+    #branch-view-calls .workspace-card { border-color: #e6eee7; border-radius: 18px; box-shadow: 0 12px 32px rgba(13, 57, 31, .07); }
+    #branch-view-sales .workspace-card-head,
+    #branch-view-calls .workspace-card-head { padding: 18px 22px; background: linear-gradient(180deg, #fff, #fcfefc); }
+    #branch-view-sales .workspace-card-head h2,
+    #branch-view-calls .workspace-card-head h2 { font-size: 14px; letter-spacing: -.2px; }
+    #branch-view-sales .workspace-card-head p,
+    #branch-view-calls .workspace-card-head p { font-size: 11px; line-height: 1.55; }
+    #branch-view-sales .workspace-card-body,
+    #branch-view-calls .workspace-card-body { padding: 22px; }
+    #branch-view-sales .sale-entry-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 16px; }
+    #branch-view-sales .sale-entry-grid .sale-batch-field,
+    #branch-view-sales .sale-entry-grid .sale-submit { grid-column: 1 / -1; }
+    #branch-view-sales .workspace-field label,
+    #branch-view-calls .workspace-field label { margin-bottom: 7px; color: #34483a; font-size: 11px; }
+    #branch-view-sales .workspace-field input,
+    #branch-view-sales .workspace-field select,
+    #branch-view-calls .workspace-field input,
+    #branch-view-calls .workspace-field select,
+    #branch-view-calls .workspace-field textarea {
+        min-height: 44px;
+        padding: 10px 12px;
+        border-color: #dce8dd;
+        border-radius: 11px;
+        background-color: #fcfdfc;
+        font-size: 12px;
+        transition: border-color .18s, box-shadow .18s, background-color .18s;
+    }
+    #branch-view-sales .workspace-field input:focus,
+    #branch-view-sales .workspace-field select:focus,
+    #branch-view-calls .workspace-field input:focus,
+    #branch-view-calls .workspace-field select:focus,
+    #branch-view-calls .workspace-field textarea:focus { border-color: #22a653; outline: 0; background: #fff; box-shadow: 0 0 0 4px rgba(34, 166, 83, .11); }
+    #branch-view-sales .workspace-field small,
+    #branch-view-calls .workspace-field small { display: block; margin-top: 7px; color: #78887c; font-size: 10px; line-height: 1.55; }
+    #branch-view-sales .workspace-field #live-sale-price { background: #f3faf5; color: #12693a; font-weight: 800; }
+    #branch-view-sales .sale-submit { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 2px; padding-top: 16px; border-top: 1px solid #edf2ed; }
+    #branch-view-sales .sale-submit-note { display: flex; align-items: center; gap: 8px; color: #65756a; font-size: 10px; line-height: 1.5; }
+    #branch-view-sales .sale-submit-note i { color: #169447; font-size: 15px; }
+    #branch-view-sales .workspace-button,
+    #branch-view-calls .workspace-button { min-height: 44px; padding: 11px 17px; border-radius: 11px; box-shadow: 0 7px 16px rgba(18, 105, 58, .16); font-size: 11px; transition: transform .18s, box-shadow .18s; }
+    #branch-view-sales .workspace-button:hover,
+    #branch-view-calls .workspace-button:hover { transform: translateY(-1px); box-shadow: 0 10px 20px rgba(18, 105, 58, .22); }
+    #branch-view-sales .recent-sales-head,
+    #branch-view-calls .call-history-head { align-items: center; }
+    #branch-view-sales .recent-sales-table { min-width: 590px; }
+    #branch-view-sales .recent-sales-table th,
+    #branch-view-calls .call-history-table th { padding: 12px 14px; font-size: 9px; }
+    #branch-view-sales .recent-sales-table td,
+    #branch-view-calls .call-history-table td { padding: 14px; font-size: 11px; vertical-align: middle; }
+    #branch-view-sales .recent-sales-table .sale-receipt { color: #526357; font-size: 10px; font-weight: 700; }
+    #branch-view-sales .recent-sales-table .sale-total { color: #12693a; font-weight: 800; text-align: right; }
+    #branch-view-calls .workflow-card { min-height: 96px; align-items: center; padding: 17px 18px; border-color: #e6eee7; border-radius: 15px; box-shadow: 0 7px 20px rgba(13, 57, 31, .04); transition: transform .18s, box-shadow .18s; }
+    #branch-view-calls .workflow-card:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(13, 57, 31, .08); }
+    #branch-view-calls .workflow-icon { width: 42px; height: 42px; border-radius: 13px; }
+    #branch-view-calls .workflow-card h3 { color: #153c24; font-size: 12px; line-height: 1.45; }
+    #branch-view-calls .workflow-card p { font-size: 10px; line-height: 1.65; }
+    #branch-view-calls .call-entry-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    #branch-view-calls .call-entry-kicker { display: flex; align-items: center; gap: 9px; color: #12693a; font-size: 12px; font-weight: 800; }
+    #branch-view-calls .call-entry-kicker i { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 11px; background: #e8f8ed; font-size: 16px; }
+    #branch-view-calls .call-entry-kicker small { display: block; margin-top: 3px; color: #7a8b7e; font-size: 10px; font-weight: 500; }
+    #branch-view-calls .call-entry-tag { display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; border: 1px solid #dcefe1; border-radius: 999px; background: #f5fbf6; color: #267343; font-size: 10px; font-weight: 700; white-space: nowrap; }
+    #branch-view-calls .call-entry-grid { gap: 18px 16px; margin-top: 20px; }
+    #branch-view-calls .call-contact-hint { display: flex; align-items: flex-start; gap: 8px; margin-top: 9px; color: #66776a; font-size: 10px; line-height: 1.55; }
+    #branch-view-calls .call-contact-hint i { margin-top: 1px; color: #398454; }
+    #branch-view-calls .workspace-field textarea { min-height: 84px; }
+    #branch-view-calls .call-submit { display: flex; align-items: center; justify-content: flex-end; padding-top: 2px; }
+    #branch-view-calls .call-history-head { border-top: 1px solid #edf2ed; }
+    #branch-view-calls .call-history-table { min-width: 1040px; white-space: normal; }
+    #branch-view-calls .call-history-table td:first-child { min-width: 160px; color: #243d2b; font-weight: 700; }
+    #branch-view-calls .call-history-table td:nth-child(2),
+    #branch-view-calls .call-history-table td:nth-child(3) { min-width: 115px; color: #526357; white-space: nowrap; }
+    #branch-view-calls .call-history-table td:nth-child(4),
+    #branch-view-calls .call-history-table td:nth-child(5),
+    #branch-view-calls .call-history-table td:nth-child(6) { min-width: 150px; max-width: 260px; line-height: 1.55; }
+    #branch-view-calls .call-prospect-tag { display: inline-flex; margin-top: 5px; padding: 3px 7px; border-radius: 999px; background: #fff7e6; color: #92610d; font-size: 9px; font-weight: 700; }
+    #branch-view-calls .call-history-head .workspace-status { padding: 6px 10px; font-size: 10px; white-space: nowrap; }
     @media (max-width: 760px) {
         .workspace-main { margin-left: 0; }
-        .workspace-topbar { min-height: 58px; padding: 9px 15px; }
+        .workspace-topbar { min-height: 58px; padding: 8px 12px; gap: 8px; }
+        .workspace-topbar .crumb { display: flex; min-width: 0; flex: 1 1 90px; flex-wrap: wrap; align-content: center; gap: 2px 4px; font-size: 9px; line-height: 1.35; }
+        .workspace-topbar .crumb .mx-1 { margin: 0 !important; }
+        .workspace-topbar .crumb strong { overflow-wrap: anywhere; }
+        .workspace-topbar .crumb .bi-house-door { margin-right: 2px !important; }
         .workspace-main-content { padding: 18px 14px 28px; }
         .workspace-hero { min-height: 150px; padding: 22px 20px; }
+        .branch-hero { min-height: 0; align-items: flex-start; flex-direction: column; gap: 12px; padding: 20px; }
         .workspace-date { display: none; }
-        .branch-hero-actions { width: 100%; }
+        .branch-hero-actions { width: auto; }
         .branch-pill { white-space: normal; }
         .branch-topbar-date { display: none; }
+        .branch-topbar-tools { min-width: 0; gap: 6px; margin-left: auto; }
+        .branch-topbar-tools form { min-width: 0; gap: 5px !important; }
+        .branch-topbar-tools form label { font-size: 9px; }
+        .branch-topbar-tools form select { width: 72px; min-width: 0; padding: 5px 18px 5px 7px; font-size: 10px; }
+        .branch-notification { width: 32px; height: 32px; flex: 0 0 auto; }
+        .branch-topbar-tools .account-menu-trigger { width: 36px; min-width: 36px; height: 36px; justify-content: center; padding: 2px !important; }
+        .branch-topbar-tools .account-menu-avatar { width: 30px; height: 30px; }
+        .branch-topbar-tools .account-menu-chevron { display: none; }
+        .branch-quick-customer { display: grid; }
+        body.workspace-nav-open .branch-quick-customer { display: none; }
+        .workspace-main-content { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
+        #branch-view-sales .workspace-grid-2 { grid-template-columns: 1fr; gap: 0; }
+        #branch-view-calls .workspace-grid-3 { grid-template-columns: 1fr; }
+        #branch-view-calls .workflow-card { min-height: 0; }
     }
     @media (max-width: 520px) {
+        .branch-stock-breakdown { grid-template-columns: 1fr; }
         .branch-form-grid { grid-template-columns: 1fr; }
         .branch-form-grid .wide { grid-column: auto; }
         .branch-kpi-icon { width: 34px; height: 34px; font-size: 16px; }
+        #branch-view-sales .workspace-card-body,
+        #branch-view-calls .workspace-card-body { padding: 17px 15px; }
+        #branch-view-sales .sale-entry-grid,
+        #branch-view-calls .call-entry-grid { grid-template-columns: 1fr; }
+        #branch-view-sales .sale-entry-grid .sale-batch-field,
+        #branch-view-sales .sale-entry-grid .sale-submit,
+        #branch-view-sales .sale-submit { grid-column: auto; }
+        #branch-view-sales .sale-submit { align-items: flex-start; flex-direction: column; }
+        #branch-view-sales .sale-submit .workspace-button,
+        #branch-view-calls .call-submit .workspace-button { width: 100%; justify-content: center; }
+        #branch-view-calls .call-entry-head { align-items: flex-start; flex-direction: column; }
+        #branch-view-calls .call-entry-tag { white-space: normal; }
+        #branch-view-sales .workspace-card-head,
+        #branch-view-calls .workspace-card-head { padding: 16px 15px; }
     }
     @media (max-width: 420px) {
         .workspace-sidebar { width: 196px; }
+        .workspace-topbar { padding-right: 9px; padding-left: 9px; gap: 6px; }
+        .workspace-mobile-toggle { width: 32px; height: 32px; flex: 0 0 auto; }
+        .workspace-topbar .crumb { flex-basis: 76px; font-size: 8px; }
+        .branch-topbar-tools { gap: 5px; }
+        .branch-topbar-tools form label { display: none; }
+        .branch-topbar-tools form select { width: 68px; }
+        .branch-notification { width: 30px; height: 30px; }
+        .branch-topbar-tools .account-menu-trigger { width: 34px; min-width: 34px; height: 34px; }
+        .branch-topbar-tools .account-menu-avatar { width: 28px; height: 28px; }
         .workspace-kpis { gap: 9px; }
         .workspace-kpi { min-height: 100px; padding: 11px; }
         .workspace-kpi .kpi-value { font-size: 19px; }
@@ -236,9 +412,11 @@
         <div class="branch-nav-label">Sales &amp; customers</div>
         <button class="branch-nav-button" type="button" data-branch-view="sales" aria-controls="branch-view-sales"><i class="bi bi-cart-plus"></i> New sale (POS)</button>
         <button class="branch-nav-button" type="button" data-branch-view="customers" aria-controls="branch-view-customers"><i class="bi bi-people"></i> Customers</button>
+        <button class="branch-nav-button" type="button" data-branch-view="visitors" aria-controls="branch-view-visitors"><i class="bi bi-person-walking"></i> Visits &amp; visitors</button>
     </div>
     <div class="branch-nav-group">
         <div class="branch-nav-label">Branch activity</div>
+        <button class="branch-nav-button" type="button" data-branch-view="deliveries" aria-controls="branch-view-deliveries"><i class="bi bi-box-seam"></i> Deliveries &amp; parcels</button>
         <button class="branch-nav-button" type="button" data-branch-view="expenses" aria-controls="branch-view-expenses"><i class="bi bi-receipt"></i> Expenses</button>
         <button class="branch-nav-button" type="button" data-branch-view="calls" aria-controls="branch-view-calls"><i class="bi bi-telephone"></i> Customer calls</button>
     </div>
@@ -252,11 +430,17 @@
 {% block role_label %}{{ branch_name }} Branch{% endblock %}
 {% block workspace_topbar_right %}
     <div class="branch-topbar-tools">
+        <form method="get" action="{{ dashboard_url }}" class="d-flex align-items-center gap-2" aria-label="Select production batch">
+            <label class="small fw-bold mb-0" for="branchBatchSelect">Batch</label>
+            <select class="form-select form-select-sm" id="branchBatchSelect" name="batch" onchange="this.form.submit()">
+                <option value="">All batches</option>
+                {% for row in available_batches %}
+                <option value="{{ row.pk }}"{% if selected_batch and selected_batch.pk == row.pk %} selected{% endif %}>{{ row.reference }}</option>
+                {% endfor %}
+            </select>
+        </form>
         <button class="branch-notification" type="button" aria-label="Branch notifications" onclick="document.querySelector('[data-branch-view=transfers]').click()" title="Review incoming transfers"><i class="bi bi-bell"></i></button>
-        <span class="branch-account" aria-label="Signed in as {{ user_name }}, Branch Manager">
-            <span class="branch-account-avatar">{{ user_initial }}</span>
-            <span><span class="branch-account-name d-block">{{ user_name }}</span><span class="branch-account-role d-block">Branch Manager</span></span>
-        </span>
+        {% include "components/account_menu.html" with account_menu_variant="workspace-topbar-account" account_menu_role="Branch Manager" user_initial=user_initial user_name=user_name %}
         <span class="branch-topbar-date">{% now "D, d M Y" %}</span>
     </div>
 {% endblock %}
@@ -268,22 +452,24 @@
             <div>
                 <div class="eyebrow"><i class="bi bi-shop me-1"></i>{{ branch_name }} branch overview</div>
                 <h1 id="branch-heading-overview">Welcome, {{ user_name }}</h1>
-                <p>Review branch activity, record daily operations, and follow up on customer care. Live figures will appear when business records are connected.</p>
+                <p>{% if selected_batch %}Batch {{ selected_batch.reference }} selected. Figures and sales entry are scoped to this batch.{% else %}Review branch activity, record daily operations, and follow up on customer care.{% endif %}</p>
             </div>
             <div class="branch-hero-actions">
                 <span class="branch-pill"><i class="bi bi-shop"></i>{{ branch_name }} Branch</span>
             </div>
         </header>
 
-        <div class="workspace-notice" role="status">
-            <i class="bi bi-info-circle-fill mt-1"></i>
-            <span><strong>Branch records are not connected yet.</strong> Stock, sales, transfers, expenses, and customer activity will remain blank until the inventory and transaction workflows are implemented. No sample transactions are presented as real activity.</span>
-        </div>
-
         <section class="workspace-kpis" aria-label="{{ branch_name }} branch summary">
             <article class="workspace-kpi">
                 <div class="branch-kpi-top"><span class="kpi-label">Current stock</span><span class="branch-kpi-icon"><i class="bi bi-boxes"></i></span></div>
-                <div class="kpi-value">{{ stock|default:"—" }}</div><div class="kpi-note">Inventory ledger balance</div>
+                <div class="kpi-value">{{ stock|default:"—"|floatformat:"-3" }}</div><div class="kpi-note">Total inventory ledger balance</div>
+                <div class="branch-stock-breakdown">
+                    {% for stock_row in finished_stock_rows %}
+                    <div class="branch-stock-item" title="{{ stock_row.display_name }}"><span>{{ stock_row.display_name }}</span><strong>{{ stock_row.balance|floatformat:"-3" }}</strong></div>
+                    {% empty %}
+                    <div class="branch-stock-item"><span>No finished goods</span><strong>0</strong></div>
+                    {% endfor %}
+                </div>
             </article>
             <article class="workspace-kpi">
                 <div class="branch-kpi-top"><span class="kpi-label">Sales today</span><span class="branch-kpi-icon green"><i class="bi bi-cash-coin"></i></span></div>
@@ -299,9 +485,37 @@
             </article>
         </section>
 
+        <section class="workspace-card branch-quick-records" aria-label="Quick branch records">
+            <header class="workspace-card-head"><div><h2><i class="bi bi-lightning-charge text-success me-2"></i>Quick access</h2><p>Common records and branch tools, without opening the side menu first.</p></div></header>
+            <div class="workspace-card-body branch-quick-links">
+                <button class="workspace-button" type="button" data-open-quick-customer><i class="bi bi-person-plus"></i>New customer</button>
+                <button class="workspace-button" type="button" data-open-branch-view="sales"><i class="bi bi-cart-plus"></i>Record sale</button>
+                <button class="workspace-button" type="button" data-open-branch-view="visitors"><i class="bi bi-person-check"></i>Customer check-in / visitor</button>
+                <button class="workspace-button" type="button" data-open-branch-view="deliveries"><i class="bi bi-box-seam"></i>Delivery / parcels</button>
+                <button class="workspace-button" type="button" data-open-branch-view="calls"><i class="bi bi-telephone-plus"></i>Record call</button>
+                <button class="workspace-button" type="button" data-open-branch-view="expenses"><i class="bi bi-receipt"></i>Record expense</button>
+                <button class="workspace-button" type="button" data-open-branch-view="transfers"><i class="bi bi-truck"></i>Incoming transfers</button>
+                <button class="workspace-button" type="button" data-open-branch-view="report"><i class="bi bi-file-earmark-check"></i>Daily report</button>
+            </div>
+        </section>
+
         <section class="workspace-card branch-activity-card">
-            <header class="workspace-card-head"><div><h2><i class="bi bi-activity text-primary me-2"></i>Recent branch activity</h2><p>Recent recorded activity for {{ branch_name }}</p></div></header>
-            <div class="workspace-card-body"><div class="branch-activity-empty"><i class="bi bi-inbox"></i>No activity has been recorded yet.</div></div>
+            <header class="workspace-card-head"><div><h2><i class="bi bi-activity text-primary me-2"></i>Recent branch activity</h2><p>Latest sales, check-ins, visitors, deliveries, calls, expenses and transfers.</p></div><span class="workspace-status neutral">{{ recent_activity|length }} recent</span></header>
+            <div class="workspace-card-body branch-activity-content">
+                {% if recent_activity %}
+                <div class="branch-activity-list">
+                    {% for activity in recent_activity %}
+                    <button class="branch-activity-item" type="button" data-open-branch-view="{{ activity.view }}">
+                        <span class="branch-activity-icon"><i class="bi {{ activity.icon }}"></i></span>
+                        <span class="branch-activity-copy"><strong>{{ activity.kind }} · {{ activity.title }}</strong><span>{{ activity.detail }}</span></span>
+                        <time class="branch-activity-time" datetime="{{ activity.at|date:'c' }}">{{ activity.at|date:"d/m H:i" }}</time>
+                    </button>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="branch-activity-empty"><i class="bi bi-inbox"></i>No recent branch activity yet.<br>Sales, customer check-ins and other records will appear here.</div>
+                {% endif %}
+            </div>
         </section>
     </section>
 
@@ -320,7 +534,7 @@
                         {% for transfer in incoming_transfers %}
                             {% for item in transfer.items.all %}
                             <tr><td>{{ transfer.reference }}</td><td>{{ item.product.name }}</td><td>{{ item.quantity_sent }}</td><td>
-                                <form method="post" action="{% url 'receive_transfer' transfer.pk %}">
+                                <form method="post" action="{% url 'receive_transfer' transfer.pk %}" data-confirm-message="Unathibitisha kupokea mzigo huu? Stock ya tawi itaongezwa kwa kiasi kilichopokelewa na status ya transfer itabadilika kuwa Received au Partially received. Takwimu za tawi zitabadilika baada ya uthibitisho huu.">
                                     {% csrf_token %}<input name="received_{{ item.pk }}" type="number" min="0" max="{{ item.quantity_sent }}" step="0.001" value="{{ item.quantity_sent }}">
                                     <button class="branch-action" type="submit">Confirm receipt</button>
                                 </form>
@@ -338,32 +552,33 @@
 
     <section class="branch-view" id="branch-view-sales" aria-labelledby="branch-heading-sales" hidden>
         <header class="workspace-hero branch-hero">
-            <div><div class="eyebrow"><i class="bi bi-cart-check me-1"></i>Point of sale</div><h1 id="branch-heading-sales">Record a new sale</h1><p>Choose the customer and products, then record a sale against available branch stock.</p></div>
-            <span class="branch-pill"><i class="bi bi-check-circle"></i> Live stock posting</span>
+            <div><div class="eyebrow"><i class="bi bi-cart-check me-1"></i>Point of sale</div><h1 id="branch-heading-sales">Record a new sale</h1><p>Choose a customer, product and batch. Available stock is checked before the sale is saved.</p></div>
+            <span class="branch-pill"><i class="bi bi-shield-check"></i> Secure stock check</span>
         </header>
         <div class="workspace-grid-2">
             <section class="workspace-card">
-                <header class="workspace-card-head"><div><h2><i class="bi bi-cart-plus text-success me-2"></i>Sale entry</h2><p>Saved sales immediately reduce live branch stock.</p></div></header>
+                <header class="workspace-card-head"><div><h2><i class="bi bi-cart-plus text-success me-2"></i>Sale details</h2><p>Stock is updated as soon as the sale is saved.</p></div><span class="workspace-status ready"><i class="bi bi-lightning-charge-fill"></i> Live posting</span></header>
                 <div class="workspace-card-body">
-                    <form method="post" action="{% url 'record_sale' %}" class="workspace-form-grid mb-3">
+                    <form method="post" action="{% url 'record_sale' %}" class="workspace-form-grid sale-entry-grid mb-0">
                         {% csrf_token %}
+                        <input type="hidden" name="request_key" value="{{ sale_request_key }}">
                         <input type="hidden" name="location_type" value="{{ branch_location_type }}">
-                        <div class="workspace-field"><label for="live-sale-customer">Saved customer</label><select id="live-sale-customer" name="customer_id" required><option value="">Select a saved customer</option>{% for customer in branch_customers %}{% if customer.active %}<option value="{{ customer.pk }}">{{ customer.name }}{% if customer.phone %} — {{ customer.phone }}{% endif %}</option>{% endif %}{% endfor %}</select><small>Add the customer in the Customers section first if they are not listed.</small></div>
-                        <div class="workspace-field"><label for="live-sale-sku">Product</label><select id="live-sale-sku" name="sku" required><option value="">Select product</option>{% for product in finished_products %}<option value="{{ product.sku }}" data-price="{{ product.unit_price }}">{{ product.name }} ({{ product.sku }})</option>{% endfor %}</select></div>
-                        <div class="workspace-field"><label for="live-sale-batch">Production batch</label><select id="live-sale-batch" name="batch_id" required><option value="">Select available batch</option>{% for row in batches %}{% if row.balance > 0 %}<option value="{{ row.batch.pk }}">{{ row.batch.reference }} — {{ row.batch.recipe.product.name }} ({{ row.balance|floatformat:"-3" }} available)</option>{% endif %}{% endfor %}</select></div>
-                        <div class="workspace-field"><label for="live-sale-quantity">Quantity</label><input id="live-sale-quantity" name="quantity" type="number" min="0.001" step="0.001" required></div>
-                        <div class="workspace-field"><label for="live-sale-price">Unit price (TZS)</label><input id="live-sale-price" type="text" inputmode="decimal" readonly><small>Price is taken from the product catalog.</small></div>
-                        <div class="workspace-field wide"><button class="workspace-button" type="submit"><i class="bi bi-check2-circle"></i>Save sale</button></div>
+                        <div class="workspace-field"><label for="live-sale-customer">Customer</label><select id="live-sale-customer" name="customer_id" required><option value="">Select a saved customer</option>{% for customer in branch_customers %}{% if customer.active %}<option value="{{ customer.pk }}">{{ customer.name }}{% if customer.phone %} — {{ customer.phone }}{% endif %}</option>{% endif %}{% endfor %}</select><small>Add the customer in Customers before recording a sale.</small></div>
+                        <div class="workspace-field"><label for="live-sale-sku">Product</label><select id="live-sale-sku" name="sku" required><option value="">Select a product</option>{% for product in finished_products %}{% if product.sku == "ED-PK-FULL" %}<option value="{{ product.sku }}" data-price="{{ product.unit_price }}">Full Package (1 Wild Honey + 1 Presha Masala + 1 Effective Diet)</option>{% elif product.sku == "ED-SINGLE" %}<option value="{{ product.sku }}" data-price="{{ product.unit_price }}">Effective Diet (Pekee)</option>{% elif product.sku == "PRESHA-SINGLE" %}<option value="{{ product.sku }}" data-price="{{ product.unit_price }}">Pressure Masala</option>{% elif product.sku == "HONEY-SINGLE" %}<option value="{{ product.sku }}" data-price="{{ product.unit_price }}">Wild Honey / Asali Pekee</option>{% else %}<option value="{{ product.sku }}" data-price="{{ product.unit_price }}">{{ product.name }}</option>{% endif %}{% endfor %}</select><small>One Full Package equals 1 Wild Honey, 1 Presha Masala, and 1 Effective Diet. Stock for all three is deducted from the selected batch.</small></div>
+                        <div class="workspace-field sale-batch-field"><label for="live-sale-batch">Production batch</label><select id="live-sale-batch" name="batch_id" required><option value="">Select the batch being sold</option>{% for row in batches %}{% if row.balance > 0 %}<option value="{{ row.batch.pk }}"{% if selected_batch and selected_batch.pk == row.batch.pk %} selected{% endif %}>{{ row.batch.reference }}</option>{% endif %}{% endfor %}</select><small>Choose the batch that supplied this product. The system checks its available stock.</small></div>
+                        <div class="workspace-field"><label for="live-sale-quantity">Quantity sold</label><input id="live-sale-quantity" name="quantity" type="number" min="0.001" step="0.001" placeholder="Enter quantity" required></div>
+                        <div class="workspace-field"><label for="live-sale-price">Unit price (TZS)</label><input id="live-sale-price" type="text" inputmode="decimal" placeholder="Select a product" readonly><small>Automatically taken from the product catalog.</small></div>
+                        <div class="sale-submit"><span class="sale-submit-note"><i class="bi bi-info-circle"></i>Saving this sale immediately reduces branch stock.</span><button class="workspace-button" type="submit"><i class="bi bi-check2-circle"></i>Save sale</button></div>
                     </form>
                 </div>
             </section>
             <section class="workspace-card">
-                <header class="workspace-card-head"><div><h2><i class="bi bi-clock-history text-success me-2"></i>Recent sales</h2><p>Today's completed sales at {{ branch_name }}</p></div></header>
+                <header class="workspace-card-head recent-sales-head"><div><h2><i class="bi bi-clock-history text-success me-2"></i>Recent sales</h2><p>Completed sales today at {{ branch_name }}.</p></div><span class="workspace-status neutral">{{ recent_sales|length }} recent</span></header>
                 <div class="workspace-card-body p-0">
-                    <div class="workspace-table-wrap"><table class="workspace-table"><thead><tr><th>Receipt</th><th>Customer</th><th>Items</th><th>Total</th></tr></thead><tbody>
+                    <div class="workspace-table-wrap"><table class="workspace-table recent-sales-table"><thead><tr><th>Receipt</th><th>Customer</th><th>Items</th><th class="text-end">Total (TZS)</th></tr></thead><tbody>
                     {% for sale in recent_sales %}
-                        <tr><td>{{ sale.reference }}</td><td>{{ sale.customer.name|default:"Walk-in" }}</td><td>{% for item in sale.items.all %}{{ item.product.name }} ({{ item.quantity }}){% if not forloop.last %}, {% endif %}{% endfor %}</td><td>{{ sale.total_amount|floatformat:"2"|intcomma:False }}</td></tr>
-                    {% empty %}<tr><td class="branch-empty-row" colspan="4"><div class="branch-empty"><div><i class="bi bi-receipt"></i><strong>No sales recorded today</strong><span>Completed transactions will appear here.</span></div></div></td></tr>{% endfor %}
+                        <tr><td class="sale-receipt">{{ sale.reference }}</td><td>{{ sale.customer.name|default:"Walk-in" }}</td><td>{% for item in sale.items.all %}{{ item.product.name }} <span class="text-muted">({{ item.quantity }})</span>{% if not forloop.last %}, {% endif %}{% endfor %}</td><td class="sale-total">{{ sale.total_amount|floatformat:"2"|intcomma:False }}</td></tr>
+                    {% empty %}<tr><td class="branch-empty-row" colspan="4"><div class="branch-empty"><div><i class="bi bi-receipt"></i><strong>No sales recorded today</strong><span>Once a sale is saved, its receipt and total will appear here.</span></div></div></td></tr>{% endfor %}
                     </tbody></table></div>
                 </div>
             </section>
@@ -382,15 +597,71 @@
                     <input type="hidden" name="location_type" value="{{ branch_location_type }}">
                     <div class="workspace-field"><label for="customer-name">Name</label><input id="customer-name" name="name" required></div>
                     <div class="workspace-field"><label for="customer-phone">Phone</label><input id="customer-phone" name="phone"></div>
-                    <div class="workspace-field"><label for="customer-email">Email</label><input id="customer-email" name="email" type="email"></div>
+                    <div class="workspace-field"><label for="customer-diagnosis">Diagnosis / Ugonjwa</label><input id="customer-diagnosis" name="diagnosis"></div>
+                    <div class="workspace-field"><label for="customer-short-description">Short description</label><textarea id="customer-short-description" name="short_description"></textarea></div>
                     <div class="workspace-field wide"><label for="customer-address">Address</label><textarea id="customer-address" name="address"></textarea></div>
                     <div class="wide"><button class="workspace-button" type="submit"><i class="bi bi-person-plus"></i>Add customer</button></div>
                 </form>
             </div>
             <header class="workspace-card-head"><div><h2><i class="bi bi-person-lines-fill text-success me-2"></i>Branch customer directory</h2><p>Customer records are scoped to {{ branch_name }}.</p></div><span class="workspace-status neutral">{{ branch_customers|length }} saved customer{{ branch_customers|length|pluralize }}</span></header>
             <div class="workspace-card-body p-0">
-                <div class="workspace-table-wrap"><table class="workspace-table"><thead><tr><th>Customer</th><th>Phone</th><th>Email</th><th>Address</th><th>Active</th></tr></thead><tbody>{% for customer in branch_customers %}<tr><td>{{ customer.name }}</td><td>{{ customer.phone|default:"—" }}</td><td>{{ customer.email|default:"—" }}</td><td>{{ customer.address|default:"—" }}</td><td>{% if customer.active %}Active{% else %}Inactive{% endif %}</td></tr>{% empty %}<tr><td class="branch-empty-row" colspan="5"><div class="branch-empty"><div><i class="bi bi-person-x"></i><strong>No customers recorded</strong><span>Add a customer or record a branch sale/call.</span></div></div></td></tr>{% endfor %}</tbody></table></div>
+                <div class="workspace-table-wrap"><table class="workspace-table"><thead><tr><th>Customer</th><th>Branch visits</th><th>Phone</th><th>Diagnosis / Ugonjwa</th><th>Short description</th><th>Address</th></tr></thead><tbody>{% for customer in branch_customers %}<tr><td>{{ customer.name }}</td><td>{{ customer.branch_visit_count }}</td><td>{{ customer.phone|default:"—" }}</td><td>{{ customer.diagnosis|default:"—" }}</td><td>{{ customer.short_description|default:"—" }}</td><td>{{ customer.address|default:"—" }}</td></tr>{% empty %}<tr><td class="branch-empty-row" colspan="6"><div class="branch-empty"><div><i class="bi bi-person-x"></i><strong>No customers recorded</strong><span>Add a customer or record a branch sale/call.</span></div></div></td></tr>{% endfor %}</tbody></table></div>
             </div>
+        </section>
+    </section>
+
+    <section class="branch-view" id="branch-view-visitors" aria-labelledby="branch-heading-visitors" hidden>
+        <header class="workspace-hero branch-hero">
+            <div><div class="eyebrow"><i class="bi bi-person-walking me-1"></i>Branch visits</div><h1 id="branch-heading-visitors">Customer check-in &amp; visitors</h1><p>Record each arrival. Returning customers and visitors are recognized from earlier branch records; a visitor's history is linked when they become a customer.</p></div>
+            <span class="branch-pill"><i class="bi bi-calendar-check"></i> {{ today_new_customers|add:today_returning_customers }} customer visits · {{ today_visitors }} visitors today</span>
+        </header>
+        <section class="workspace-card">
+            <header class="workspace-card-head"><div><h2><i class="bi bi-person-plus text-success me-2"></i>Record an arrival</h2><p>Use a saved customer for a check-in, or record a non-customer visitor.</p></div></header>
+            <div class="workspace-card-body">
+                <form method="post" action="{% url 'record_branch_visit' %}" class="workspace-form-grid" id="branchVisitForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="location_type" value="{{ branch_location_type }}">
+                    <div class="workspace-field wide"><label for="visit-mode">Who arrived?</label><select id="visit-mode" name="visit_mode" required><option value="customer">Saved customer returning to the branch</option><option value="visitor">Visitor / guest (not here to buy)</option></select></div>
+                    <div class="workspace-field wide" id="visit-customer-field"><label for="visit-customer">Customer</label><select id="visit-customer" name="customer_id"><option value="">Select a saved customer</option>{% for customer in branch_customers %}{% if customer.active %}<option value="{{ customer.pk }}">{{ customer.name }}{% if customer.phone %} — {{ customer.phone }}{% endif %}</option>{% endif %}{% endfor %}</select><small>Every check-in is saved with today's date and added to the customer's visit history.</small></div>
+                    <div class="workspace-field" id="visit-name-field" hidden><label for="visit-name">Visitor name</label><input id="visit-name" name="visitor_name" maxlength="150" autocomplete="name"></div>
+                    <div class="workspace-field" id="visit-phone-field" hidden><label for="visit-phone">Phone <span class="fw-normal text-muted">(needed to recognize a returning visitor)</span></label><input id="visit-phone" name="visitor_phone" type="tel" autocomplete="tel"></div>
+                    <div class="workspace-field wide" id="visit-type-field" hidden><label for="visit-type">Reason for visit</label><select id="visit-type" name="visit_type">{% for value, label in visitor_visit_types %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></div>
+                    <div class="workspace-field wide"><label for="visit-notes">Notes <span class="fw-normal text-muted">(optional)</span></label><textarea id="visit-notes" name="notes"></textarea></div>
+                    <div class="wide"><button class="workspace-button" type="submit"><i class="bi bi-check2-circle"></i>Save arrival</button></div>
+                </form>
+            </div>
+        </section>
+        <section class="workspace-card">
+            <header class="workspace-card-head"><div><h2><i class="bi bi-clock-history text-success me-2"></i>Visit history</h2><p>Customer check-ins and visitor arrivals for {{ branch_name }}.</p></div><span class="workspace-status neutral">{{ recent_visits|length }} recent</span></header>
+            <div class="workspace-card-body p-0"><div class="workspace-table-wrap"><table class="workspace-table branch-table"><thead><tr><th>Date / time</th><th>Person</th><th>Visit type</th><th>Phone</th><th>Linked customer</th><th>Recorded by</th><th>Notes</th></tr></thead><tbody>{% for visit in recent_visits %}<tr><td>{{ visit.visited_at|date:"d/m/Y H:i" }}</td><td>{{ visit.contact_name }}</td><td>{{ visit.get_visit_type_display }}</td><td>{{ visit.visitor_phone|default:"—" }}</td><td>{% if visit.customer %}{{ visit.customer.name }}{% else %}—{% endif %}</td><td>{{ visit.recorded_by.get_full_name|default:visit.recorded_by.username }}</td><td>{{ visit.notes|default:"—"|truncatechars:60 }}</td></tr>{% empty %}<tr><td class="branch-empty-row" colspan="7"><div class="branch-empty"><div><i class="bi bi-person-x"></i><strong>No visits recorded yet</strong><span>Customer check-ins and visitor arrivals will appear here.</span></div></div></td>{% endfor %}</tbody></table></div></div>
+        </section>
+    </section>
+
+    <section class="branch-view" id="branch-view-deliveries" aria-labelledby="branch-heading-deliveries" hidden>
+        <header class="workspace-hero branch-hero">
+            <div><div class="eyebrow"><i class="bi bi-box-seam me-1"></i>Branch logistics</div><h1 id="branch-heading-deliveries">Deliveries &amp; parcels</h1><p>Track each delivery separately, including recipient, destination, parcel count and delivery status.</p></div>
+            <span class="branch-pill"><i class="bi bi-box"></i> {{ today_delivery_count }} deliveries · {{ today_parcel_count }} parcels today</span>
+        </header>
+        <section class="workspace-card">
+            <header class="workspace-card-head"><div><h2><i class="bi bi-send text-success me-2"></i>Record a delivery</h2><p>One record can contain multiple parcels sent to the same destination.</p></div></header>
+            <div class="workspace-card-body">
+                <form method="post" action="{% url 'record_branch_delivery' %}" class="workspace-form-grid">
+                    {% csrf_token %}
+                    <input type="hidden" name="location_type" value="{{ branch_location_type }}">
+                    <div class="workspace-field"><label for="delivery-recipient">Recipient name</label><input id="delivery-recipient" name="recipient_name" maxlength="150" required></div>
+                    <div class="workspace-field"><label for="delivery-phone">Phone</label><input id="delivery-phone" name="recipient_phone" type="tel"></div>
+                    <div class="workspace-field"><label for="delivery-customer">Saved customer <span class="fw-normal text-muted">(optional)</span></label><select id="delivery-customer" name="customer_id"><option value="">Not linked to a customer</option>{% for customer in branch_customers %}{% if customer.active %}<option value="{{ customer.pk }}">{{ customer.name }}{% if customer.phone %} — {{ customer.phone }}{% endif %}</option>{% endif %}{% endfor %}</select></div>
+                    <div class="workspace-field"><label for="delivery-destination">Destination / address</label><input id="delivery-destination" name="destination" maxlength="255" required></div>
+                    <div class="workspace-field"><label for="delivery-parcels">Number of parcels</label><input id="delivery-parcels" name="parcel_count" type="number" min="1" step="1" value="1" required></div>
+                    <div class="workspace-field"><label for="delivery-date">Delivery date</label><input id="delivery-date" name="delivery_date" type="date" value="{% now 'Y-m-d' %}" required></div>
+                    <div class="workspace-field wide"><label for="delivery-notes">Notes <span class="fw-normal text-muted">(optional)</span></label><textarea id="delivery-notes" name="notes"></textarea></div>
+                    <div class="wide"><button class="workspace-button" type="submit"><i class="bi bi-box-seam"></i>Save delivery</button></div>
+                </form>
+            </div>
+        </section>
+        <section class="workspace-card">
+            <header class="workspace-card-head"><div><h2><i class="bi bi-list-check text-success me-2"></i>Delivery &amp; parcel history</h2><p>Update status as each delivery moves from pending to completion.</p></div><span class="workspace-status neutral">{{ recent_deliveries|length }} recent</span></header>
+            <div class="workspace-card-body p-0"><div class="workspace-table-wrap"><table class="workspace-table branch-table"><thead><tr><th>Date</th><th>Recipient</th><th>Phone</th><th>Destination</th><th>Parcels</th><th>Status</th><th>Update status</th></tr></thead><tbody>{% for delivery in recent_deliveries %}<tr><td>{{ delivery.delivery_date|date:"d/m/Y" }}</td><td>{{ delivery.recipient_name }}{% if delivery.customer %}<small class="d-block text-muted">{{ delivery.customer.name }}</small>{% endif %}</td><td>{{ delivery.recipient_phone|default:"—" }}</td><td>{{ delivery.destination }}</td><td>{{ delivery.parcel_count }}</td><td>{{ delivery.get_status_display }}</td><td><form method="post" action="{% url 'update_branch_delivery_status' delivery.pk %}" class="d-flex align-items-center gap-1">{% csrf_token %}<select name="status" aria-label="Delivery status">{% for value, label in delivery_status_choices %}<option value="{{ value }}"{% if delivery.status == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select><button class="workspace-button" type="submit">Save</button></form></td></tr>{% empty %}<tr><td class="branch-empty-row" colspan="7"><div class="branch-empty"><div><i class="bi bi-box-seam"></i><strong>No deliveries recorded yet</strong><span>Saved delivery details and parcel counts will appear here.</span></div></div></td>{% endfor %}</tbody></table></div></div>
         </section>
     </section>
 
@@ -403,6 +674,7 @@
             <div class="workspace-card-body">
                 <form method="post" action="{% url 'record_expense' %}" class="workspace-form-grid">
                     {% csrf_token %}
+                    <div class="workspace-field"><label for="expense-batch">Production batch (optional)</label><select id="expense-batch" name="batch_id"><option value="">Not batch-specific</option>{% for batch in available_batches %}<option value="{{ batch.pk }}"{% if selected_batch and selected_batch.pk == batch.pk %} selected{% endif %}>{{ batch.reference }}</option>{% endfor %}</select></div>
                     <div class="workspace-field"><label for="expense-category">Category</label><input id="expense-category" name="category" required></div>
                     <div class="workspace-field"><label for="expense-amount">Amount (TZS)</label><input id="expense-amount" name="amount" type="number" min="0.01" step="0.01" required></div>
                     <div class="workspace-field wide"><label for="expense-description">Description</label><textarea id="expense-description" name="description"></textarea></div>
@@ -418,29 +690,38 @@
 
     <section class="branch-view" id="branch-view-calls" aria-labelledby="branch-heading-calls" hidden>
         <header class="workspace-hero branch-hero">
-            <div><div class="eyebrow"><i class="bi bi-telephone me-1"></i>Customer care</div><h1 id="branch-heading-calls">Customer calls &amp; follow-ups</h1><p>Keep guidance, compliance check-ins, and follow-up commitments organized by customer.</p></div>
-            <button class="branch-action" type="button" onclick="document.getElementById('call-customer').focus()"><i class="bi bi-telephone-plus"></i> Log a call</button>
+            <div><div class="eyebrow"><i class="bi bi-telephone me-1"></i>Huduma kwa wateja</div><h1 id="branch-heading-calls">Mawasiliano na ufuatiliaji wa wateja</h1><p>Rekodi aina ya mawasiliano, majibu ya mteja na hatua inayofuata.</p></div>
+            <button class="branch-action" type="button" onclick="document.getElementById('call-customer').focus()"><i class="bi bi-telephone-plus"></i> Rekodi mawasiliano</button>
         </header>
         <div class="workspace-grid-3 mb-3">
-            <article class="workflow-card"><span class="workflow-icon"><i class="bi bi-journal-text"></i></span><div><h3>Instruction call</h3><p>Record product-use or diet-plan guidance and what was explained to the customer.</p></div></article>
-            <article class="workflow-card"><span class="workflow-icon" style="background:#dbeafe;color:#1d4ed8"><i class="bi bi-shield-check"></i></span><div><h3>Compliance call</h3><p>Track adherence, progress, and concerns that may need attention.</p></div></article>
-            <article class="workflow-card"><span class="workflow-icon" style="background:#fef3c7;color:#92400e"><i class="bi bi-arrow-repeat"></i></span><div><h3>Follow-up call</h3><p>Capture the next contact date and outcome so customer commitments are not missed.</p></div></article>
+            <article class="workflow-card"><span class="workflow-icon"><i class="bi bi-journal-text"></i></span><div><h3>Simu ya maelekezo</h3><p>Eleza matumizi ya bidhaa au mpango wa lishe na mwongozo uliompa mteja.</p></div></article>
+            <article class="workflow-card"><span class="workflow-icon" style="background:#dbeafe;color:#1d4ed8"><i class="bi bi-shield-check"></i></span><div><h3>Simu ya kufuatilia utekelezaji</h3><p>Uliza kama maelekezo yanafuatwa, maendeleo na changamoto zilizojitokeza.</p></div></article>
+            <article class="workflow-card"><span class="workflow-icon" style="background:#fef3c7;color:#92400e"><i class="bi bi-arrow-repeat"></i></span><div><h3>Simu ya ufuatiliaji</h3><p>Panga tarehe ya mawasiliano yajayo na ufuatilie ahadi kwa mteja.</p></div></article>
         </div>
         <section class="workspace-card">
+            <header class="workspace-card-head call-entry-head">
+                <div class="call-entry-kicker"><i class="bi bi-telephone-plus"></i><div>Rekodi mawasiliano<small>Chagua mwelekeo wa simu na mwasiliani.</small></div></div>
+                <span class="call-entry-tag"><i class="bi bi-lock"></i> Taarifa za tawi hili</span>
+            </header>
             <div class="workspace-card-body">
-                <form method="post" action="{% url 'record_call' %}" class="workspace-form-grid">
+                <form method="post" action="{% url 'record_call' %}" class="workspace-form-grid call-entry-grid">
                     {% csrf_token %}
                     <input type="hidden" name="location_type" value="{{ branch_location_type }}">
-                    <div class="workspace-field"><label for="call-customer">Saved customer</label><select id="call-customer" name="customer_id" required><option value="">Select a saved customer</option>{% for customer in branch_customers %}{% if customer.active %}<option value="{{ customer.pk }}">{{ customer.name }}{% if customer.phone %} — {{ customer.phone }}{% endif %}</option>{% endif %}{% endfor %}</select></div>
-                    <div class="workspace-field"><label for="call-outcome">Outcome</label><input id="call-outcome" name="outcome" required></div>
-                    <div class="workspace-field"><label for="call-followup">Follow-up date</label><input id="call-followup" name="follow_up" type="date"></div>
-                    <div class="workspace-field wide"><label for="call-notes">Notes</label><textarea id="call-notes" name="notes"></textarea></div>
-                    <div class="wide"><button class="workspace-button" type="submit"><i class="bi bi-telephone-plus"></i>Log call</button></div>
+                    <div class="workspace-field"><label for="call-direction">Mwelekeo wa simu</label><select id="call-direction" name="direction" required><option value="">Chagua mwelekeo</option>{% for value, label in call_direction_choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select><span class="call-contact-hint"><i class="bi bi-info-circle"></i>Rekodi kama mteja ametupigia au sisi tumempigia kwa ufuatiliaji.</span></div>
+                    <div class="workspace-field"><label for="call-contact-mode">Mwasiliani ni nani?</label><select id="call-contact-mode" name="contact_mode" required><option value="customer">Mteja aliyesajiliwa</option><option value="caller">Mtu ambaye hajasajiliwa</option></select><span class="call-contact-hint"><i class="bi bi-info-circle"></i>Mtu ambaye bado hajafika ofisini hahitaji kusajiliwa kama mteja.</span></div>
+                    <div class="workspace-field" id="call-existing-customer-fields"><label for="call-customer">Mteja aliyesajiliwa</label><select id="call-customer" name="customer_id"><option value="">Chagua mteja</option>{% for customer in branch_customers %}{% if customer.active %}<option value="{{ customer.pk }}">{{ customer.name }}{% if customer.phone %} — {{ customer.phone }}{% endif %}</option>{% endif %}{% endfor %}</select></div>
+                    <div class="workspace-field" id="call-prospect-name-field" hidden><label for="call-prospect-name">Jina la mwasiliani</label><input id="call-prospect-name" name="caller_name" maxlength="150" placeholder="Andika jina la mtu"></div>
+                    <div class="workspace-field" id="call-prospect-phone-field" hidden><label for="call-prospect-phone">Namba ya simu ya mwasiliani</label><input id="call-prospect-phone" name="caller_phone" maxlength="30" type="tel" placeholder="Mfano: 07xx xxx xxx"></div>
+                    <div class="workspace-field"><label for="call-type">Aina ya mawasiliano</label><select id="call-type" name="call_type" required><option value="">Chagua aina ya mawasiliano</option>{% for value, label in call_type_choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></div>
+                    <div class="workspace-field"><label for="call-outcome">Matokeo ya mawasiliano</label><input id="call-outcome" name="outcome" maxlength="100" placeholder="Mfano: Mteja ameelewa maelekezo" required></div>
+                    <div class="workspace-field"><label for="call-followup">Tarehe ya kuwasiliana tena <span class="text-muted fw-normal">(hiari)</span></label><input id="call-followup" name="follow_up" type="date"></div>
+                    <div class="workspace-field wide"><label for="call-notes">Maelezo mafupi (hiari)</label><textarea id="call-notes" name="notes" placeholder="Andika maelezo ya ziada au changamoto alizotaja mteja"></textarea></div>
+                    <div class="wide call-submit"><button class="workspace-button" type="submit"><i class="bi bi-telephone-plus"></i>Hifadhi mawasiliano</button></div>
                 </form>
             </div>
-            <header class="workspace-card-head"><div><h2><i class="bi bi-list-ul text-success me-2"></i>Call history</h2><p>Customer contact activity for {{ branch_name }}</p></div><span class="workspace-status neutral">{{ recent_calls|length }} recent call{{ recent_calls|length|pluralize }}</span></header>
+            <header class="workspace-card-head call-history-head"><div><h2><i class="bi bi-list-ul text-success me-2"></i>Historia ya mawasiliano</h2><p>Rekodi za wateja na wawasiliani wapya wa {{ branch_name }}</p></div><span class="workspace-status neutral">{{ recent_calls|length }} ya hivi karibuni</span></header>
             <div class="workspace-card-body p-0">
-                <div class="workspace-table-wrap"><table class="workspace-table"><thead><tr><th>Customer</th><th>Call type</th><th>Notes / outcome</th><th>Staff member</th><th>Next follow-up</th></tr></thead><tbody>{% for call in recent_calls %}<tr><td>{{ call.customer.name }}</td><td>{{ call.outcome }}</td><td>{{ call.notes|default:"—" }}</td><td>{{ call.called_by.get_full_name|default:call.called_by.username }}</td><td>{% if call.follow_up_date %}{{ call.follow_up_date }}{% else %}—{% endif %}</td></tr>{% empty %}<tr><td class="branch-empty-row" colspan="5"><div class="branch-empty"><div><i class="bi bi-telephone-x"></i><strong>No customer calls recorded</strong><span>Call notes and follow-up scheduling will appear here.</span></div></div></td></tr>{% endfor %}</tbody></table></div>
+                <div class="workspace-table-wrap"><table class="workspace-table call-history-table"><thead><tr><th>Mteja / mwasiliani</th><th>Mwelekeo wa simu</th><th>Simu</th><th>Aina ya mawasiliano</th><th>Matokeo</th><th>Maelezo mafupi</th><th>Aliyerekodi</th><th>Tarehe ya kuwasiliana tena</th></tr></thead><tbody>{% for call in recent_calls %}<tr><td>{{ call.contact_name }}{% if not call.customer %}<span class="call-prospect-tag">Bado hajasajiliwa</span>{% endif %}</td><td>{{ call.get_direction_display }}</td><td>{% if call.caller_phone %}{{ call.caller_phone }}{% elif call.customer %}{{ call.customer.phone|default:"—" }}{% else %}—{% endif %}</td><td>{{ call.get_call_type_display|default:"Aina haijaainishwa" }}</td><td>{{ call.outcome }}</td><td>{{ call.notes|default:"—" }}</td><td>{{ call.called_by.get_full_name|default:call.called_by.username }}</td><td>{% if call.follow_up_date %}{{ call.follow_up_date }}{% else %}—{% endif %}</td></tr>{% empty %}<tr><td class="branch-empty-row" colspan="8"><div class="branch-empty"><div><i class="bi bi-telephone-x"></i><strong>Hakuna mawasiliano yaliyorekodiwa</strong><span>Mawasiliano na tarehe za ufuatiliaji zitaonekana hapa.</span></div></div></td>{% endfor %}</tbody></table></div>
             </div>
         </section>
     </section>
@@ -458,8 +739,23 @@
             <article class="workspace-kpi"><div class="kpi-label">Loss quantity</div><div class="kpi-value">0</div><div class="kpi-note">Enter report loss</div></article>
         </div>
         <section class="workspace-card">
-            <header class="workspace-card-head"><div><h2><i class="bi bi-journal-check text-success me-2"></i>End-of-day report preview</h2><p>{{ branch_name }} · {% now "d F Y" %}</p></div><span class="workspace-status neutral">Not submitted</span></header>
+            <header class="workspace-card-head"><div><h2><i class="bi bi-journal-check text-success me-2"></i>End-of-day report</h2><p>{{ branch_name }} · {% now "d F Y" %}</p></div>{% if current_daily_report %}<span class="workspace-status {% if current_daily_report.status == 'APPROVED' %}ready{% endif %}"><i class="bi bi-lock"></i> {{ current_daily_report.get_status_display }}</span>{% else %}<span class="workspace-status neutral">Draft</span>{% endif %}</header>
             <div class="workspace-card-body">
+                {% if current_daily_report %}
+                <div class="workspace-notice mb-3"><i class="bi bi-lock-fill"></i><span>This daily report is read-only after submission. {% if current_daily_report.status == 'APPROVED' %}It has been approved by the manager.{% else %}It is awaiting manager approval.{% endif %}</span></div>
+                <div class="workspace-grid-3 mb-3">
+                    <div class="branch-mini-stat"><span>Units sold</span><strong>{{ current_daily_report.units_sold|floatformat:"-3" }}</strong></div>
+                    <div class="branch-mini-stat"><span>Closing balance</span><strong>{{ current_daily_report.closing_balance|floatformat:"-3" }}</strong></div>
+                    <div class="branch-mini-stat"><span>Loss quantity</span><strong>{{ current_daily_report.loss_quantity|floatformat:"-3" }}</strong></div>
+                    <div class="branch-mini-stat"><span>Customers</span><strong>{{ current_daily_report.total_customers }}</strong></div>
+                    <div class="branch-mini-stat"><span>New / Returning</span><strong>{{ current_daily_report.new_customers }} / {{ current_daily_report.returning_customers }}</strong></div>
+                    <div class="branch-mini-stat"><span>Visitors / Deliveries</span><strong>{{ current_daily_report.visitors }} / {{ current_daily_report.deliveries }}</strong></div>
+                    <div class="branch-mini-stat"><span>Parcels</span><strong>{{ current_daily_report.parcels }}</strong></div>
+                    <div class="branch-mini-stat"><span>Instruction / Compliance</span><strong>{{ current_daily_report.instruction_calls }} / {{ current_daily_report.compliance_calls }}</strong></div>
+                    <div class="branch-mini-stat"><span>Follow-up calls</span><strong>{{ current_daily_report.followup_calls }}</strong></div>
+                </div>
+                <div class="workspace-field"><label>Customer addresses / areas</label><textarea readonly>{{ current_daily_report.customer_addresses|default:"—" }}</textarea></div>
+                {% else %}
                 <div class="workspace-grid-3 mb-3">
                     <div class="branch-mini-stat"><span>Sales &amp; closing balances</span><strong>—</strong></div>
                     <div class="branch-mini-stat"><span>Losses recorded</span><strong>—</strong></div>
@@ -470,16 +766,20 @@
                 </div>
                 <form method="post" action="{% url 'submit_daily_report' %}">
                     {% csrf_token %}
+                    <div class="workspace-field mb-3"><label for="report-batch">Production batch</label><select id="report-batch" name="batch_id" required><option value="">Select batch for this report</option>{% for batch in available_batches %}<option value="{{ batch.pk }}"{% if selected_batch and selected_batch.pk == batch.pk %} selected{% endif %}>{{ batch.reference }}</option>{% endfor %}</select></div>
                     <div class="branch-form-grid">
                         <div class="workspace-field"><label for="report-sales">Units sold</label><input id="report-sales" name="units_sold" type="number" min="0" step="0.001" value="0"></div>
                         <div class="workspace-field"><label for="report-balance">Closing balance</label><input id="report-balance" name="closing_balance" type="number" min="0" step="0.001" value="{{ stock|default:0 }}"></div>
                         <div class="workspace-field"><label for="report-loss">Loss quantity</label><input id="report-loss" name="loss_quantity" type="number" min="0" step="0.001" value="0"></div>
-                        <div class="workspace-field"><label for="report-customers">Total customers</label><input id="report-customers" name="total_customers" type="number" min="0" value="{{ branch_customers|length }}"></div>
-                        <div class="workspace-field"><label for="report-new-customers">New customers</label><input id="report-new-customers" name="new_customers" type="number" min="0" value="0"></div>
-                        <div class="workspace-field"><label for="report-returning-customers">Returning customers</label><input id="report-returning-customers" name="returning_customers" type="number" min="0" value="0"></div>
-                        <div class="workspace-field"><label for="report-visitors">Visitors</label><input id="report-visitors" name="visitors" type="number" min="0" value="0"></div>
-                        <div class="workspace-field"><label for="report-deliveries">Deliveries</label><input id="report-deliveries" name="deliveries" type="number" min="0" value="0"></div>
-                        <div class="workspace-field"><label for="report-parcels">Parcels</label><input id="report-parcels" name="parcels" type="number" min="0" value="0"></div>
+                        <div class="workspace-grid-3 wide branch-report-activity">
+                            <div class="branch-mini-stat"><span>Customer visits</span><strong>{{ today_new_customers|add:today_returning_customers }}</strong></div>
+                            <div class="branch-mini-stat"><span>New customers</span><strong>{{ today_new_customers }}</strong></div>
+                            <div class="branch-mini-stat"><span>Returning customers</span><strong>{{ today_returning_customers }}</strong></div>
+                            <div class="branch-mini-stat"><span>Visitors</span><strong>{{ today_visitors }}</strong></div>
+                            <div class="branch-mini-stat"><span>Deliveries</span><strong>{{ today_delivery_count }}</strong></div>
+                            <div class="branch-mini-stat"><span>Parcels</span><strong>{{ today_parcel_count }}</strong></div>
+                            <p class="branch-section-subtitle wide">These counts are calculated from today's saved visits and delivery records; they do not need to be entered again.</p>
+                        </div>
                         <div class="workspace-field"><label for="report-instruction-calls">Instruction calls</label><input id="report-instruction-calls" name="instruction_calls" type="number" min="0" value="0"></div>
                         <div class="workspace-field"><label for="report-compliance-calls">Compliance calls</label><input id="report-compliance-calls" name="compliance_calls" type="number" min="0" value="0"></div>
                         <div class="workspace-field"><label for="report-followup-calls">Follow-up calls</label><input id="report-followup-calls" name="followup_calls" type="number" min="0" value="0"></div>
@@ -487,10 +787,30 @@
                     </div>
                     <button class="branch-action mt-3" type="submit"><i class="bi bi-send"></i> Submit daily report</button>
                 </form>
+                {% endif %}
             </div>
         </section>
     </section>
 </div>
+<button class="branch-quick-customer" id="branchQuickCustomerButton" type="button" aria-label="Rekodi mteja mpya" aria-haspopup="dialog" aria-controls="branchQuickCustomerDialog" title="Rekodi mteja mpya">
+    <i class="bi bi-plus-lg" aria-hidden="true"></i>
+</button>
+<dialog class="branch-quick-customer-dialog" id="branchQuickCustomerDialog" aria-labelledby="branchQuickCustomerTitle">
+    <header class="branch-quick-customer-head">
+        <div><h2 id="branchQuickCustomerTitle">Rekodi mteja mpya</h2><p>Taarifa zitahifadhiwa kwenye {{ branch_name }}.</p></div>
+        <button class="branch-quick-customer-close" type="button" data-close-quick-customer aria-label="Funga"><i class="bi bi-x-lg"></i></button>
+    </header>
+    <form method="post" action="{% url 'record_customer' %}" class="branch-quick-customer-form">
+        {% csrf_token %}
+        <input type="hidden" name="location_type" value="{{ branch_location_type }}">
+        <div class="workspace-field"><label for="quick-customer-name">Name</label><input id="quick-customer-name" name="name" maxlength="150" autocomplete="name" required></div>
+        <div class="workspace-field"><label for="quick-customer-phone">Phone</label><input id="quick-customer-phone" name="phone" type="tel" autocomplete="tel" placeholder="Mfano: 07xx xxx xxx"></div>
+        <div class="workspace-field"><label for="quick-customer-diagnosis">Diagnosis / Ugonjwa</label><input id="quick-customer-diagnosis" name="diagnosis"></div>
+        <div class="workspace-field"><label for="quick-customer-description">Short description</label><textarea id="quick-customer-description" name="short_description"></textarea></div>
+        <div class="workspace-field"><label for="quick-customer-address">Address</label><textarea id="quick-customer-address" name="address"></textarea></div>
+        <button class="workspace-button" type="submit"><i class="bi bi-person-plus"></i>Hifadhi mteja</button>
+    </form>
+</dialog>
 {% endblock %}
 
 {% block extra_scripts %}
@@ -500,6 +820,18 @@
         const views = Array.from(document.querySelectorAll(".branch-view"));
         const breadcrumb = document.getElementById("branchBreadcrumb");
         const branchName = "{{ branch_name|escapejs }}";
+        const quickCustomerDialog = document.getElementById("branchQuickCustomerDialog");
+        const quickCustomerButton = document.getElementById("branchQuickCustomerButton");
+        const quickCustomerName = document.getElementById("quick-customer-name");
+
+        quickCustomerButton.addEventListener("click", () => {
+            quickCustomerDialog.showModal();
+            quickCustomerName.focus();
+        });
+        quickCustomerDialog.querySelector("[data-close-quick-customer]").addEventListener("click", () => quickCustomerDialog.close());
+        quickCustomerDialog.addEventListener("click", (event) => {
+            if (event.target === quickCustomerDialog) quickCustomerDialog.close();
+        });
 
         navButtons.forEach((button) => {
             button.addEventListener("click", () => {
@@ -519,6 +851,47 @@
                 document.body.classList.remove("workspace-nav-open");
             });
         });
+        document.querySelectorAll("[data-open-branch-view]").forEach((button) => {
+            button.addEventListener("click", () => {
+                navButtons.find((item) => item.dataset.branchView === button.dataset.openBranchView)?.click();
+            });
+        });
+        document.querySelectorAll("[data-open-quick-customer]").forEach((button) => {
+            button.addEventListener("click", () => {
+                quickCustomerDialog.showModal();
+                quickCustomerName.focus();
+            });
+        });
+        const requestedView = new URLSearchParams(window.location.search).get("view");
+        if (requestedView) {
+            navButtons.find((button) => button.dataset.branchView === requestedView)?.click();
+        }
+        const visitMode = document.getElementById("visit-mode");
+        const visitCustomerField = document.getElementById("visit-customer-field");
+        const visitCustomer = document.getElementById("visit-customer");
+        const visitorNameField = document.getElementById("visit-name-field");
+        const visitorPhoneField = document.getElementById("visit-phone-field");
+        const visitorTypeField = document.getElementById("visit-type-field");
+        const visitorName = document.getElementById("visit-name");
+        const visitorPhone = document.getElementById("visit-phone");
+        const visitorType = document.getElementById("visit-type");
+        const updateVisitFields = () => {
+            const isVisitor = visitMode.value === "visitor";
+            visitCustomerField.hidden = isVisitor;
+            visitorNameField.hidden = !isVisitor;
+            visitorPhoneField.hidden = !isVisitor;
+            visitorTypeField.hidden = !isVisitor;
+            visitCustomer.required = !isVisitor;
+            visitCustomer.disabled = isVisitor;
+            visitorName.required = isVisitor;
+            visitorName.disabled = !isVisitor;
+            visitorPhone.required = isVisitor;
+            visitorPhone.disabled = !isVisitor;
+            visitorType.required = isVisitor;
+            visitorType.disabled = !isVisitor;
+        };
+        visitMode.addEventListener("change", updateVisitFields);
+        updateVisitFields();
         const saleSku = document.getElementById("live-sale-sku");
         const salePrice = document.getElementById("live-sale-price");
         if (saleSku && salePrice) {
@@ -529,6 +902,29 @@
                     ? price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                     : "";
             });
+        }
+        const contactMode = document.getElementById("call-contact-mode");
+        const customerFields = document.getElementById("call-existing-customer-fields");
+        const customerSelect = document.getElementById("call-customer");
+        const prospectNameField = document.getElementById("call-prospect-name-field");
+        const prospectPhoneField = document.getElementById("call-prospect-phone-field");
+        const prospectName = document.getElementById("call-prospect-name");
+        const prospectPhone = document.getElementById("call-prospect-phone");
+        const updateCallContactFields = () => {
+            const isProspect = contactMode.value === "caller";
+            customerFields.hidden = isProspect;
+            prospectNameField.hidden = !isProspect;
+            prospectPhoneField.hidden = !isProspect;
+            customerSelect.required = !isProspect;
+            prospectName.required = isProspect;
+            prospectPhone.required = isProspect;
+            customerSelect.disabled = isProspect;
+            prospectName.disabled = !isProspect;
+            prospectPhone.disabled = !isProspect;
+        };
+        if (contactMode) {
+            contactMode.addEventListener("change", updateCallContactFields);
+            updateCallContactFields();
         }
     })();
 </script>

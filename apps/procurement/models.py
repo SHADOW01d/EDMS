@@ -27,6 +27,13 @@ class Purchase(models.Model):
     total_amount = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     actual_payment = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
     calculated_amount = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    batch = models.ForeignKey(
+        "production.ProductionBatch",
+        on_delete=models.PROTECT,
+        related_name="purchases",
+        null=True,
+        blank=True,
+    )
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     created_at = models.DateTimeField(auto_now_add=True)
 

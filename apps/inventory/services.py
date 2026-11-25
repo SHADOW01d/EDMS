@@ -15,6 +15,9 @@ def post_movement(
     notes="",
     production_batch=None,
 ):
+    from .models import StockLocation, Product
+    Product.objects.select_for_update().get(pk=product.pk)
+    StockLocation.objects.select_for_update().get(pk=location.pk)
     quantity = Decimal(str(quantity))
     from .models import Product
     batch_for_balance = (

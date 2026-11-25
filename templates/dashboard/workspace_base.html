@@ -287,6 +287,28 @@
             transition: opacity .2s, transform .2s;
         }
         .workspace-toast.show { opacity: 1; transform: translateY(0); }
+        .workspace-confirm-dialog {
+            width: min(460px, calc(100vw - 32px));
+            max-width: none;
+            padding: 0;
+            overflow: hidden;
+            border: 1px solid #dce8dd;
+            border-radius: 18px;
+            background: #fff;
+            box-shadow: 0 24px 70px rgba(4, 31, 17, .28);
+            color: var(--ink);
+        }
+        .workspace-confirm-dialog::backdrop { background: rgba(4, 31, 17, .58); backdrop-filter: blur(3px); }
+        .workspace-confirm-content { display: flex; align-items: flex-start; gap: 14px; padding: 24px 24px 22px; }
+        .workspace-confirm-icon { display: grid; width: 42px; height: 42px; flex: 0 0 auto; place-items: center; border-radius: 13px; background: #dcfce7; color: #15803d; font-size: 20px; }
+        .workspace-confirm-copy h2 { margin: 2px 0 7px; color: var(--green-dark); font-size: 16px; font-weight: 800; }
+        .workspace-confirm-copy p { margin: 0; color: #526357; font-size: 12px; line-height: 1.7; white-space: pre-line; }
+        .workspace-confirm-actions { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 20px; border-top: 1px solid #edf2ed; background: #f8fbf8; }
+        .workspace-confirm-actions button { min-width: 100px; min-height: 40px; padding: 9px 16px; border: 1px solid #dce8dd; border-radius: 10px; background: #fff; color: #405346; font: inherit; font-size: 12px; font-weight: 700; }
+        .workspace-confirm-actions button:hover { background: #eff6f0; }
+        .workspace-confirm-actions .workspace-confirm-accept { border-color: #0a3a22; background: linear-gradient(135deg, #0d5a31, #0a3a22); color: #fff; }
+        .workspace-confirm-actions .workspace-confirm-accept:hover { background: #062b18; }
+        .workspace-confirm-actions button:focus-visible { outline: 3px solid rgba(34, 197, 94, .3); outline-offset: 2px; }
 
         @media (max-width: 1050px) {
             .workspace-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -326,21 +348,13 @@
             <nav class="workspace-nav" aria-label="Workspace navigation">
                 {% block workspace_nav %}{% endblock %}
             </nav>
-            <div class="workspace-user">
-                <span class="workspace-avatar">{{ user_initial }}</span>
-                <span class="overflow-hidden"><span class="workspace-user-name d-block">{{ user_name }}</span><span class="workspace-user-role">{% block role_label %}{% endblock %}</span></span>
-            </div>
-            <form class="workspace-logout" method="post" action="{% url 'logout' %}">
-                {% csrf_token %}
-                <button type="submit" class="workspace-nav"><i class="bi bi-box-arrow-right"></i> Sign out</button>
-            </form>
         </aside>
 
         <main class="workspace-main">
             <header class="workspace-topbar">
                 <button class="workspace-mobile-toggle" id="workspaceMenuToggle" type="button" aria-label="Open navigation"><i class="bi bi-list"></i></button>
                 <span class="crumb"><i class="bi bi-house-door me-2"></i>EDMS <span class="mx-1">/</span> <strong>{% block breadcrumb %}{% endblock %}</strong></span>
-                {% block workspace_topbar_right %}<span class="ms-auto text-muted small">{% now "D, d M Y" %}</span>{% endblock %}
+                {% block workspace_topbar_right %}<div class="ms-auto d-flex align-items-center gap-3"><span class="text-muted small">{% now "D, d M Y" %}</span>{% include "components/account_menu.html" with account_menu_variant="workspace-topbar-account" account_menu_role=account_menu_role user_initial=user_initial user_name=user_name %}</div>{% endblock %}
             </header>
             <div class="workspace-main-content">
                 {% if messages %}
@@ -354,6 +368,19 @@
             </div>
         </main>
     </div>
+    <dialog class="workspace-confirm-dialog" id="workspaceConfirmDialog" aria-labelledby="workspaceConfirmTitle" aria-describedby="workspaceConfirmMessage">
+        <div class="workspace-confirm-content">
+            <span class="workspace-confirm-icon" aria-hidden="true"><i class="bi bi-box-arrow-in-down"></i></span>
+            <div class="workspace-confirm-copy">
+                <h2 id="workspaceConfirmTitle">Thibitisha hatua</h2>
+                <p id="workspaceConfirmMessage"></p>
+            </div>
+        </div>
+        <div class="workspace-confirm-actions">
+            <button type="button" data-confirm-cancel>Ghairi</button>
+            <button class="workspace-confirm-accept" type="button" data-confirm-accept><i class="bi bi-check2-circle me-1"></i>Thibitisha</button>
+        </div>
+    </dialog>
     <div class="workspace-toast" id="workspaceToast" role="status" aria-live="polite"></div>
     <script>
         const workspaceToast = document.getElementById("workspaceToast");
@@ -364,6 +391,48 @@
             window.clearTimeout(workspaceToastTimer);
             workspaceToastTimer = window.setTimeout(() => workspaceToast.classList.remove("show"), 3200);
         }
+
+        const workspaceConfirmDialog = document.getElementById("workspaceConfirmDialog");
+        const workspaceConfirmMessage = document.getElementById("workspaceConfirmMessage");
+        let pendingConfirmation = null;
+        let confirmedForm = null;
+
+        document.querySelectorAll("form[data-confirm-message]").forEach((form) => {
+            form.addEventListener("submit", (event) => {
+                if (confirmedForm === form) {
+                    confirmedForm = null;
+                    return;
+                }
+                event.preventDefault();
+                if (pendingConfirmation) return;
+                pendingConfirmation = { form, submitter: event.submitter };
+                workspaceConfirmMessage.textContent = form.dataset.confirmMessage;
+                workspaceConfirmDialog.showModal();
+            });
+        });
+
+        document.querySelector("[data-confirm-cancel]").addEventListener("click", () => {
+            pendingConfirmation = null;
+            workspaceConfirmDialog.close();
+        });
+        document.querySelector("[data-confirm-accept]").addEventListener("click", () => {
+            const confirmation = pendingConfirmation;
+            pendingConfirmation = null;
+            workspaceConfirmDialog.close();
+            if (!confirmation) return;
+            confirmedForm = confirmation.form;
+            if (confirmation.submitter) {
+                confirmation.form.requestSubmit(confirmation.submitter);
+            } else {
+                confirmation.form.requestSubmit();
+            }
+            window.setTimeout(() => {
+                if (confirmedForm === confirmation.form) confirmedForm = null;
+            }, 0);
+        });
+        workspaceConfirmDialog.addEventListener("cancel", () => {
+            pendingConfirmation = null;
+        });
 
         document.getElementById("workspaceMenuToggle")?.addEventListener("click", () => {
             document.body.classList.toggle("workspace-nav-open");

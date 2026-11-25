@@ -4,6 +4,8 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils.cache import patch_vary_headers
+from django.db import connection
+from django.db.utils import OperationalError
 
 
 def home(request):
@@ -31,3 +33,13 @@ def web_manifest(request):
 
 def offline(request):
     return render(request, "pwa/offline.html")
+
+
+def health(request):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+    except OperationalError:
+        return HttpResponse("database unavailable", status=503, content_type="text/plain")
+    return HttpResponse("ok", content_type="text/plain")

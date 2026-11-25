@@ -10,7 +10,7 @@ env = environ.Env(
 )
 environ.Env.read_env(BASE_DIR / ".env")
 
-SECRET_KEY = env("SECRET_KEY", default="unsafe-development-key-change-me")
+SECRET_KEY = env("SECRET_KEY")
 DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 
@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.humanize",
+    "axes",
     "widget_tweaks",
     "django_filters",
     "simple_history",
@@ -40,12 +41,15 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "apps.core.middleware.SecurityCacheMiddleware",
+    "axes.middleware.AxesMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
 ]
 
@@ -73,14 +77,29 @@ WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
 DATABASES = {
-    "default": env.db(
-        "DATABASE_URL",
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-    )
+    "default": env.db("DATABASE_URL")
 }
+if DATABASES["default"]["ENGINE"] != "django.db.backends.postgresql":
+    raise RuntimeError("EDMS requires PostgreSQL; DATABASE_URL must use a PostgreSQL backend.")
+DATABASES["default"].update(
+    CONN_MAX_AGE=env.int("DB_CONN_MAX_AGE", default=60),
+    CONN_HEALTH_CHECKS=True,
+    OPTIONS={
+        "connect_timeout": env.int("DB_CONNECT_TIMEOUT", default=10),
+        "options": "-c statement_timeout=30000",
+    },
+)
 
 AUTH_USER_MODEL = "accounts.User"
 LOGIN_REDIRECT_URL = "/admin/"
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesStandaloneBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = 15
+AXES_LOCKOUT_PARAMETERS = ["ip_address", "username"]
+AXES_RESET_ON_SUCCESS = True
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -97,6 +116,11 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
