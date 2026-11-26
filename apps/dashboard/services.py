@@ -316,6 +316,117 @@ def factory_dashboard_data(selected_batch=None):
     }
 
 
+def branch_batches_for_location(location):
+    return ProductionBatch.objects.filter(
+        status__in=(
+            ProductionBatch.Status.ACTIVE,
+            ProductionBatch.Status.COMPLETED,
+            ProductionBatch.Status.CLOSED,
+        ),
+    ).filter(
+        Q(
+            inventory_movements__location=location,
+            inventory_movements__quantity__gt=0,
+        )
+        | Q(
+            transfer_items__transfer__destination=location,
+            transfer_items__transfer__status__in=(
+                Transfer.Status.DISPATCHED,
+                Transfer.Status.PARTIAL,
+            ),
+        )
+    ).distinct()
+
+
+def branch_daily_report_snapshot(location, batch, report_date):
+    branch_role = (
+        "BRANCH_MWANZA"
+        if location.location_type == StockLocation.LocationType.BRANCH_MWANZA
+        else "BRANCH_DAR"
+    )
+    visits = CustomerVisit.objects.filter(
+        location=location,
+        visited_at__date=report_date,
+    )
+    visit_summary = visits.aggregate(
+        new_customers=Count(
+            "pk",
+            filter=Q(visit_type=CustomerVisit.VisitType.NEW_CUSTOMER),
+        ),
+        returning_customers=Count(
+            "pk",
+            filter=Q(visit_type=CustomerVisit.VisitType.RETURNING_CUSTOMER),
+        ),
+        visitors=Count(
+            "pk",
+            filter=Q(visit_type__in=(
+                CustomerVisit.VisitType.CUSTOMER_INQUIRY,
+                CustomerVisit.VisitType.MANAGEMENT_GUEST,
+                CustomerVisit.VisitType.GOVERNMENT_OFFICIAL,
+                CustomerVisit.VisitType.OTHER,
+            )),
+        ),
+    )
+    deliveries = BranchDelivery.objects.filter(
+        location=location,
+        delivery_date=report_date,
+    ).aggregate(deliveries=Count("pk"), parcels=Sum("parcel_count"))
+    calls = CustomerCall.objects.filter(
+        Q(location=location)
+        | Q(
+            location__isnull=True,
+            called_by__role=branch_role,
+            customer__location=location,
+        ),
+        called_at__date=report_date,
+    )
+    sales_items = SaleItem.objects.filter(
+        sale__location=location,
+        sale__sold_at__date=report_date,
+        batch=batch,
+    )
+    stock = InventoryLedger.objects.filter(
+        location=location,
+        production_batch=batch,
+        product__category=Product.Category.FINISHED_GOOD,
+    ).aggregate(total=Sum("quantity"))["total"] or Decimal("0")
+    loss = InventoryLedger.objects.filter(
+        location=location,
+        production_batch=batch,
+        movement=InventoryLedger.Movement.LOSS,
+        created_at__date=report_date,
+    ).aggregate(total=Sum("quantity"))["total"] or Decimal("0")
+    addresses = sorted({
+        address.strip()
+        for address in visits.exclude(customer__address="")
+        .values_list("customer__address", flat=True)
+        if address and address.strip()
+    })
+    return {
+        "units_sold": sales_items.aggregate(total=Sum("quantity"))["total"] or Decimal("0"),
+        "closing_balance": stock,
+        "loss_quantity": abs(loss),
+        "total_customers": (
+            visit_summary["new_customers"] + visit_summary["returning_customers"]
+        ),
+        "new_customers": visit_summary["new_customers"],
+        "returning_customers": visit_summary["returning_customers"],
+        "visitors": visit_summary["visitors"],
+        "deliveries": deliveries["deliveries"],
+        "parcels": deliveries["parcels"] or 0,
+        "instruction_calls": calls.filter(
+            call_type=CustomerCall.CallType.INSTRUCTION,
+        ).count(),
+        "compliance_calls": calls.filter(
+            call_type=CustomerCall.CallType.COMPLIANCE,
+        ).count(),
+        "followup_calls": calls.filter(
+            call_type=CustomerCall.CallType.FOLLOW_UP,
+        ).count(),
+        "customer_addresses": "\n".join(addresses),
+    }
+
+
 def branch_dashboard_data(location_type, selected_batch=None):
     today = timezone.localdate()
     location = StockLocation.objects.filter(location_type=location_type).first()
@@ -337,10 +448,14 @@ def branch_dashboard_data(location_type, selected_batch=None):
     )
     sales = Sale.objects.filter(location=location) if location else Sale.objects.none()
     incoming = (
-        Transfer.objects.filter(destination=location).exclude(status=Transfer.Status.RECEIVED)
+        Transfer.objects.filter(
+            destination=location,
+            status__in=(Transfer.Status.DISPATCHED, Transfer.Status.PARTIAL),
+        ).prefetch_related("items__product", "items__batch")
         if location
         else Transfer.objects.none()
     )
+    incoming_notification_count = incoming.count()
     if selected_batch:
         sales = sales.filter(items__batch=selected_batch).distinct()
         incoming = incoming.filter(items__batch=selected_batch).distinct()
@@ -354,18 +469,34 @@ def branch_dashboard_data(location_type, selected_batch=None):
             package_entries = package_entries.filter(production_batch=selected_batch)
         package_balance = package_entries.aggregate(total=Sum("quantity"))["total"] or Decimal("0")
 
+    finished_products = list(
+        Product.objects.filter(
+            active=True,
+            category=Product.Category.FINISHED_GOOD,
+        ).order_by("name")
+    )
+    product_ids = [product.pk for product in finished_products if product != package_product]
+    ledger_entries = InventoryLedger.objects.filter(
+        location=location,
+        product_id__in=product_ids,
+    ) if location else InventoryLedger.objects.none()
+    if selected_batch:
+        ledger_entries = ledger_entries.filter(production_batch=selected_batch)
+    stock_by_product = dict(
+        ledger_entries.values("product_id")
+        .annotate(balance=Sum("quantity"))
+        .values_list("product_id", "balance")
+    )
+
     component_labels = {
         "ED-SINGLE": "Effective Diet",
         "PRESHA-SINGLE": "Pressure Masala",
         "HONEY-SINGLE": "Wild Honey / Asali",
     }
-    for product in Product.objects.filter(active=True, category=Product.Category.FINISHED_GOOD).order_by("name"):
+    for product in finished_products:
         if product.sku == "ED-PK-FULL":
             continue
-        ledger_entries = InventoryLedger.objects.filter(location=location, product=product)
-        if selected_batch:
-            ledger_entries = ledger_entries.filter(production_batch=selected_batch)
-        balance = ledger_entries.aggregate(total=Sum("quantity"))["total"] or Decimal("0")
+        balance = stock_by_product.get(product.pk) or Decimal("0")
         if product.sku in component_labels:
             balance += package_balance
         finished_stock_rows.append({
@@ -491,37 +622,49 @@ def branch_dashboard_data(location_type, selected_batch=None):
             "view": "transfers",
         })
     activity_items.sort(key=lambda activity: activity["at"], reverse=True)
+    branch_batches = branch_batches_for_location(location)
+    available_batches = list(branch_batches.select_related("recipe__product"))
+    batch_balances = dict(
+        InventoryLedger.objects.filter(
+            location=location,
+            production_batch_id__in=[row.pk for row in available_batches],
+            product__category=Product.Category.FINISHED_GOOD,
+        )
+        .values("production_batch_id")
+        .annotate(balance=Sum("quantity"))
+        .values_list("production_batch_id", "balance")
+    )
     return {
         "batches": [
             {
                 "batch": row,
-                "balance": (
-                    InventoryLedger.objects.filter(
-                        location=location,
-                        production_batch=row,
-                        product__category=Product.Category.FINISHED_GOOD,
-                    ).aggregate(total=Sum("quantity"))["total"]
-                    or Decimal("0")
-                ),
+                "balance": batch_balances.get(row.pk, Decimal("0")),
             }
-            for row in ProductionBatch.objects.filter(
-                status__in=(ProductionBatch.Status.ACTIVE, ProductionBatch.Status.COMPLETED),
-                inventory_movements__location=location,
-                inventory_movements__quantity__gt=0,
-            ).select_related("recipe__product").distinct()
+            for row in available_batches
             if not selected_batch or row.pk == selected_batch.pk
         ],
         "selected_batch": selected_batch,
-        "available_batches": ProductionBatch.objects.filter(
-            status__in=(ProductionBatch.Status.ACTIVE, ProductionBatch.Status.COMPLETED),
-            inventory_movements__location=location,
-            inventory_movements__quantity__gt=0,
-        ).distinct(),
+        "available_batches": branch_batches,
+        "daily_report_snapshot": (
+            branch_daily_report_snapshot(location, selected_batch, today)
+            if location and selected_batch
+            else None
+        ),
+        "can_submit_daily_report": bool(
+            location
+            and selected_batch
+            and InventoryLedger.objects.filter(
+                location=location,
+                production_batch=selected_batch,
+                quantity__gt=0,
+            ).exists()
+        ),
         "location": location,
         "stock": stock or Decimal("0"),
         "finished_stock_rows": finished_stock_rows,
         "sales_today": sales_today,
         "incoming_transfers": incoming,
+        "incoming_transfer_notification_count": incoming_notification_count,
         "recent_sales": sales.select_related("customer").prefetch_related("items")[:10],
         "expenses": expenses.order_by("-expense_date")[:10],
         "open_followups": CustomerCall.objects.filter(
@@ -564,11 +707,7 @@ def branch_dashboard_data(location_type, selected_batch=None):
         "recent_reports": recent_reports[:10],
         "current_daily_report": current_daily_report,
         "finished_products": [
-            product
-            for product in Product.objects.filter(
-                active=True,
-                category=Product.Category.FINISHED_GOOD,
-            ).order_by("name")
+            product for product in finished_products
             if is_manufactured_product(product) or is_full_package_product(product)
         ],
         "raw_materials": Product.objects.filter(
@@ -585,6 +724,12 @@ def branch_dashboard_data(location_type, selected_batch=None):
 def manager_dashboard_data(selected_batch=None):
     today = timezone.localdate()
     month_start = today.replace(day=1)
+    finished_products = list(
+        Product.objects.filter(
+            active=True,
+            category=Product.Category.FINISHED_GOOD,
+        ).order_by("name")
+    )
 
     factory = StockLocation.objects.filter(
         location_type=StockLocation.LocationType.FACTORY
@@ -738,40 +883,54 @@ def manager_dashboard_data(selected_batch=None):
             total=Sum("total_amount")
         )["total"] or Decimal("0")
         incoming = (
-            Transfer.objects.filter(destination=location)
-            .exclude(status=Transfer.Status.RECEIVED)
+            Transfer.objects.filter(
+                destination=location,
+                status__in=(Transfer.Status.DISPATCHED, Transfer.Status.PARTIAL),
+            )
             if location
             else Transfer.objects.none()
         )
         if selected_batch:
             incoming = incoming.filter(items__batch=selected_batch).distinct()
-        product_rows = []
-        for product in Product.objects.filter(
-            active=True,
-            category=Product.Category.FINISHED_GOOD,
-        ):
-            ledger = InventoryLedger.objects.filter(location=location, product=product) if location else InventoryLedger.objects.none()
+        product_ids = [product.pk for product in finished_products]
+        branch_ledger = InventoryLedger.objects.filter(
+            location=location,
+            product_id__in=product_ids,
+        ) if location else InventoryLedger.objects.none()
+        if selected_batch:
+            branch_ledger = branch_ledger.filter(production_batch=selected_batch)
+        stock_by_product = {
+            row["product_id"]: row
+            for row in branch_ledger.values("product_id").annotate(
+                balance=Sum("quantity"),
+                loss=Sum(
+                    "quantity",
+                    filter=Q(movement=InventoryLedger.Movement.LOSS),
+                ),
+            )
+        }
+        sold_today_by_product = {}
+        if location:
+            branch_sale_items = SaleItem.objects.filter(
+                sale__location=location,
+                sale__sold_at__date=today,
+                product_id__in=product_ids,
+            )
             if selected_batch:
-                ledger = ledger.filter(production_batch=selected_batch)
-            balance = ledger.aggregate(total=Sum("quantity"))["total"] or Decimal("0")
-            sold = (
-                SaleItem.objects.filter(
-                    sale__location=location,
-                    sale__sold_at__date=today,
-                    product=product,
-                    **({"batch": selected_batch} if selected_batch else {}),
-                ).aggregate(total=Sum("quantity"))["total"]
-                if location
-                else None
-            ) or Decimal("0")
-            loss = ledger.filter(movement=InventoryLedger.Movement.LOSS).aggregate(
-                total=Sum("quantity")
-            )["total"] or Decimal("0")
+                branch_sale_items = branch_sale_items.filter(batch=selected_batch)
+            sold_today_by_product = dict(
+                branch_sale_items.values("product_id")
+                .annotate(total=Sum("quantity"))
+                .values_list("product_id", "total")
+            )
+        product_rows = []
+        for product in finished_products:
+            stock_row = stock_by_product.get(product.pk, {})
             product_rows.append({
                 "product": product,
-                "sold_today": sold,
-                "balance": balance,
-                "loss": abs(loss),
+                "sold_today": sold_today_by_product.get(product.pk) or Decimal("0"),
+                "balance": stock_row.get("balance") or Decimal("0"),
+                "loss": abs(stock_row.get("loss") or Decimal("0")),
             })
         expenses = (
             BranchExpense.objects.filter(location=location.location_type)
@@ -793,6 +952,14 @@ def manager_dashboard_data(selected_batch=None):
             "stock": location_stock(location),
             "loss_today": location_losses(location, today),
             "incoming_count": incoming.count(),
+            "incoming_notification_count": (
+                Transfer.objects.filter(
+                    destination=location,
+                    status__in=(Transfer.Status.DISPATCHED, Transfer.Status.PARTIAL),
+                ).count()
+                if location
+                else 0
+            ),
             "incoming_transfers": incoming.select_related("dispatched_by").prefetch_related("items__product")[:10],
             "product_rows": product_rows,
             "customer_count": customers.count(),
@@ -863,26 +1030,34 @@ def manager_dashboard_data(selected_batch=None):
         ).aggregate(total=Sum("quantity"))["total"] or Decimal("0")
         loss_month = abs(loss_month)
 
-    sales_trend_labels = []
-    sales_trend_mwanza = []
-    sales_trend_dar = []
     sales_trend_week_start = today - timedelta(days=today.weekday())
     sales_trend_week_end = sales_trend_week_start + timedelta(days=6)
     weekdays = ("Jumatatu", "Jumanne", "Jumatano", "Alhamisi", "Ijumaa", "Jumamosi", "Jumapili")
+    trend_location_ids = [location.pk for location in (mwanza, dar) if location]
+    trend_sales = Sale.objects.filter(
+        location_id__in=trend_location_ids,
+        sold_at__date__range=(sales_trend_week_start, sales_trend_week_end),
+    )
+    if selected_batch:
+        trend_sales = trend_sales.filter(
+            pk__in=SaleItem.objects.filter(batch=selected_batch).values("sale_id")
+        )
+    weekly_sales = {
+        (row["sold_at__date"], row["location_id"]): row["total"]
+        for row in trend_sales
+        .values("sold_at__date", "location_id")
+        .annotate(total=Sum("total_amount"))
+    }
+    sales_trend_labels = []
+    sales_trend_mwanza = []
+    sales_trend_dar = []
     for day_offset in range(7):
         sales_date = sales_trend_week_start + timedelta(days=day_offset)
         sales_trend_labels.append(
             f"{weekdays[day_offset]} {sales_date.strftime('%d/%m')}"
         )
         for location, values in ((mwanza, sales_trend_mwanza), (dar, sales_trend_dar)):
-            daily_total = (
-                batch_sales.filter(
-                    location=location,
-                    sold_at__date=sales_date,
-                ).aggregate(total=Sum("total_amount"))["total"]
-                if location
-                else None
-            ) or Decimal("0")
+            daily_total = weekly_sales.get((sales_date, location.pk), Decimal("0")) if location else Decimal("0")
             values.append(float(daily_total))
 
     recent_call_counts = {
@@ -900,67 +1075,92 @@ def manager_dashboard_data(selected_batch=None):
     production_by_product = []
     production_product_labels = []
     production_product_totals = []
-    production_products = [
-        product for product in Product.objects.filter(
-        active=True,
-        category=Product.Category.FINISHED_GOOD,
-        ).order_by("name")
+    manufactured_products = [
+        product for product in finished_products
         if is_manufactured_product(product)
-        and (
-            not selected_batch
-            or ProductionOutput.objects.filter(batch=selected_batch, product=product).exists()
-            or ProductionBatch.objects.filter(pk=selected_batch.pk, recipe__product=product).exists()
-        )
     ]
+    if selected_batch:
+        batch_product_ids = set(
+            ProductionOutput.objects.filter(batch=selected_batch)
+            .values_list("product_id", flat=True)
+        )
+        if selected_batch.recipe_id:
+            batch_product_ids.add(selected_batch.recipe.product_id)
+        production_products = [
+            product for product in manufactured_products
+            if product.pk in batch_product_ids
+        ]
+    else:
+        production_products = manufactured_products
+    production_product_ids = [product.pk for product in production_products]
+    output_month_query = ProductionOutput.objects.filter(
+        product_id__in=production_product_ids,
+        production_date__gte=month_start,
+    )
+    output_all_query = ProductionOutput.objects.filter(
+        product_id__in=production_product_ids,
+    )
+    legacy_month_query = ProductionBatch.objects.filter(
+        recipe__product_id__in=production_product_ids,
+        production_date__gte=month_start,
+        status=ProductionBatch.Status.COMPLETED,
+    )
+    legacy_all_query = ProductionBatch.objects.filter(
+        recipe__product_id__in=production_product_ids,
+        status=ProductionBatch.Status.COMPLETED,
+    )
+    if selected_batch:
+        output_month_query = output_month_query.filter(batch=selected_batch)
+        output_all_query = output_all_query.filter(batch=selected_batch)
+        legacy_month_query = legacy_month_query.filter(pk=selected_batch.pk)
+        legacy_all_query = legacy_all_query.filter(pk=selected_batch.pk)
+    monthly_output_totals = dict(
+        output_month_query.values("product_id")
+        .annotate(total=Sum("quantity"))
+        .values_list("product_id", "total")
+    )
+    all_output_totals = dict(
+        output_all_query.values("product_id")
+        .annotate(total=Sum("quantity"))
+        .values_list("product_id", "total")
+    )
+    monthly_legacy_totals = dict(
+        legacy_month_query.values("recipe__product_id")
+        .annotate(total=Sum("quantity"))
+        .values_list("recipe__product_id", "total")
+    )
+    all_legacy_totals = dict(
+        legacy_all_query.values("recipe__product_id")
+        .annotate(total=Sum("quantity"))
+        .values_list("recipe__product_id", "total")
+    )
+    production_stock_query = InventoryLedger.objects.filter(
+        product_id__in=production_product_ids,
+        location_id__in=[location.pk for location in (factory, mwanza, dar) if location],
+    )
+    if selected_batch:
+        production_stock_query = production_stock_query.filter(production_batch=selected_batch)
+    production_stock = {
+        (row["product_id"], row["location_id"]): row["total"]
+        for row in production_stock_query.values(
+            "product_id",
+            "location_id",
+        ).annotate(total=Sum("quantity"))
+    }
     for product in production_products:
-        outputs = ProductionOutput.objects.filter(
-            product=product,
-            production_date__gte=month_start,
-        )
-        all_outputs = ProductionOutput.objects.filter(product=product)
-        legacy_batches = ProductionBatch.objects.filter(
-            recipe__product=product,
-            production_date__gte=month_start,
-            status=ProductionBatch.Status.COMPLETED,
-        )
-        all_legacy_batches = ProductionBatch.objects.filter(
-            recipe__product=product,
-            status=ProductionBatch.Status.COMPLETED,
-        )
-        if selected_batch:
-            outputs = outputs.filter(batch=selected_batch)
-            all_outputs = all_outputs.filter(batch=selected_batch)
-            legacy_batches = legacy_batches.filter(pk=selected_batch.pk)
-            all_legacy_batches = all_legacy_batches.filter(pk=selected_batch.pk)
-        total = (outputs.aggregate(total=Sum("quantity"))["total"] or Decimal("0")) + (
-            legacy_batches.aggregate(total=Sum("quantity"))["total"] or Decimal("0")
+        total = (
+            monthly_output_totals.get(product.pk) or Decimal("0")
+        ) + (
+            monthly_legacy_totals.get(product.pk) or Decimal("0")
         )
         produced_total = (
-            all_outputs.aggregate(total=Sum("quantity"))["total"] or Decimal("0")
+            all_output_totals.get(product.pk) or Decimal("0")
         ) + (
-            all_legacy_batches.aggregate(total=Sum("quantity"))["total"] or Decimal("0")
+            all_legacy_totals.get(product.pk) or Decimal("0")
         )
-        def batch_stock_at(location):
-            entries = InventoryLedger.objects.filter(product=product, location=location) if location else InventoryLedger.objects.none()
-            if selected_batch:
-                entries = entries.filter(production_batch=selected_batch)
-            return entries.aggregate(total=Sum("quantity"))["total"] or Decimal("0")
-
-        factory_balance = (
-            batch_stock_at(factory)
-            if factory
-            else None
-        ) or Decimal("0")
-        mwanza_balance = (
-            batch_stock_at(mwanza)
-            if mwanza
-            else None
-        ) or Decimal("0")
-        dar_balance = (
-            batch_stock_at(dar)
-            if dar
-            else None
-        ) or Decimal("0")
+        factory_balance = production_stock.get((product.pk, factory.pk), Decimal("0")) if factory else Decimal("0")
+        mwanza_balance = production_stock.get((product.pk, mwanza.pk), Decimal("0")) if mwanza else Decimal("0")
+        dar_balance = production_stock.get((product.pk, dar.pk), Decimal("0")) if dar else Decimal("0")
         production_by_product.append({
             "product": product,
             "total": total,
@@ -973,9 +1173,10 @@ def manager_dashboard_data(selected_batch=None):
         production_product_labels.append(product.name)
         production_product_totals.append(float(total))
 
+    manufacturing_groups = _manufacturing_groups()
     production_cards = []
     product_totals = {row["product"].pk: row for row in production_by_product}
-    for group in _manufacturing_groups():
+    for group in manufacturing_groups:
         members = [product_totals[product.pk] for product in group["products"] if product.pk in product_totals]
         production_cards.append({
             "name": group["name"],
@@ -986,40 +1187,41 @@ def manager_dashboard_data(selected_batch=None):
             "dar_balance": sum((row["dar_balance"] for row in members), Decimal("0")),
         })
 
-    sales_product_labels = []
-    sales_product_totals = []
-    for product in production_products:
-        sale_items = SaleItem.objects.filter(
-            product=product,
-            sale__sold_at__date__gte=month_start,
-        )
-        if selected_batch:
-            sale_items = sale_items.filter(batch=selected_batch)
-        total = sale_items.aggregate(total=Sum("quantity"))["total"] or Decimal("0")
-        sales_product_labels.append(product.name)
-        sales_product_totals.append(float(total))
-
     sales_report_product_totals = []
-    report_products = production_products if selected_batch else Product.objects.filter(
-        active=True,
-        category=Product.Category.FINISHED_GOOD,
+    report_products = production_products if selected_batch else finished_products
+    report_product_ids = [product.pk for product in report_products]
+    sold_items = SaleItem.objects.filter(product_id__in=report_product_ids)
+    if selected_batch:
+        sold_items = sold_items.filter(batch=selected_batch)
+    sold_by_product = dict(
+        sold_items.values("product_id")
+        .annotate(total=Sum("quantity"))
+        .values_list("product_id", "total")
     )
+    report_stock_entries = InventoryLedger.objects.filter(
+        product_id__in=report_product_ids,
+        location_id__in=[location.pk for location in (factory, mwanza, dar) if location],
+    )
+    if selected_batch:
+        report_stock_entries = report_stock_entries.filter(production_batch=selected_batch)
+    report_stock_by_product_location = {
+        (row["product_id"], row["location_id"]): row["total"]
+        for row in report_stock_entries.values(
+            "product_id",
+            "location_id",
+        ).annotate(total=Sum("quantity"))
+    }
     for product in report_products:
-        sold_items = SaleItem.objects.filter(product=product)
-        if selected_batch:
-            sold_items = sold_items.filter(batch=selected_batch)
-        sold_total = sold_items.aggregate(
-            total=Sum("quantity")
-        )["total"] or Decimal("0")
-        def stock_for_report(location):
-            entries = InventoryLedger.objects.filter(product=product, location=location) if location else InventoryLedger.objects.none()
-            if selected_batch:
-                entries = entries.filter(production_batch=selected_batch)
-            return entries.aggregate(total=Sum("quantity"))["total"] or Decimal("0")
-
-        mwanza_balance = stock_for_report(mwanza)
-        dar_balance = stock_for_report(dar)
-        factory_balance = stock_for_report(factory)
+        sold_total = sold_by_product.get(product.pk) or Decimal("0")
+        factory_balance = report_stock_by_product_location.get(
+            (product.pk, factory.pk), Decimal("0")
+        ) if factory else Decimal("0")
+        mwanza_balance = report_stock_by_product_location.get(
+            (product.pk, mwanza.pk), Decimal("0")
+        ) if mwanza else Decimal("0")
+        dar_balance = report_stock_by_product_location.get(
+            (product.pk, dar.pk), Decimal("0")
+        ) if dar else Decimal("0")
         sales_report_product_totals.append({
             "product": product,
             "sold": sold_total,
@@ -1028,13 +1230,43 @@ def manager_dashboard_data(selected_batch=None):
             "dar_balance": dar_balance,
         })
 
-    branch_reports = BranchDailyReport.objects.select_related(
+    pending_branch_reports = BranchDailyReport.objects.filter(
+        status=BranchDailyReport.Status.SUBMITTED,
+    ).select_related(
         "submitted_by",
         "approved_by",
     ).order_by("-report_date", "-created_at")
-    if selected_batch:
-        branch_reports = branch_reports.filter(batch=selected_batch)
-    branch_reports = branch_reports[:20]
+    pending_branch_report_count = pending_branch_reports.count()
+    branch_reports = pending_branch_reports[:20]
+    office_report_status = {}
+    for office_key, location_type in (
+        ("mwanza", StockLocation.LocationType.BRANCH_MWANZA),
+        ("dar", StockLocation.LocationType.BRANCH_DAR),
+    ):
+        office_reports = BranchDailyReport.objects.filter(location=location_type)
+        office_report_status[office_key] = {
+            "pending_count": office_reports.filter(
+                status=BranchDailyReport.Status.SUBMITTED,
+            ).count(),
+            "latest_pending": office_reports.filter(
+                status=BranchDailyReport.Status.SUBMITTED,
+            ).select_related("submitted_by").order_by(
+                "-report_date",
+                "-created_at",
+            ).first(),
+            "latest": office_reports.select_related(
+                "submitted_by",
+                "approved_by",
+            ).order_by("-report_date", "-created_at").first(),
+        }
+
+    pending_transfer_count = Transfer.objects.filter(
+        destination__location_type__in=(
+            StockLocation.LocationType.BRANCH_MWANZA,
+            StockLocation.LocationType.BRANCH_DAR,
+        ),
+        status__in=(Transfer.Status.DISPATCHED, Transfer.Status.PARTIAL),
+    ).count()
 
     footer_product_values = []
     for row in sales_report_product_totals[:3]:
@@ -1045,8 +1277,12 @@ def manager_dashboard_data(selected_batch=None):
     while len(footer_product_values) < 3:
         footer_product_values.append({"sold": Decimal("0"), "balance": Decimal("0")})
 
+    mwanza_data = branch_data(mwanza)
+    dar_data = branch_data(dar)
+
+    factory_material_data = _factory_material_data(factory, selected_batch)
     return {
-        **_factory_material_data(factory, selected_batch),
+        **factory_material_data,
         "today": today,
         "month_start": month_start,
         "sales_total": batch_sales.aggregate(total=Sum("total_amount"))["total"] or Decimal("0"),
@@ -1115,8 +1351,18 @@ def manager_dashboard_data(selected_batch=None):
         "raw_honey_product": raw_honey_product,
         "raw_honey_stock": purchase_product_balances.get(raw_honey_product.pk, Decimal("0")) if raw_honey_product else Decimal("0"),
         "honey_jar_stock": purchase_product_balances.get(honey_jar_product.pk, Decimal("0")) if honey_jar_product else Decimal("0"),
-        "mwanza_data": branch_data(mwanza),
-        "dar_data": branch_data(dar),
+        "mwanza_data": mwanza_data,
+        "dar_data": dar_data,
+        "pending_branch_report_count": pending_branch_report_count,
+        "pending_transfer_notification_count": pending_transfer_count,
+        "office_notification_count": (
+            pending_branch_report_count + pending_transfer_count
+        ),
+        "office_report_status": office_report_status,
+        "incoming_transfer_notification_count": (
+            mwanza_data["incoming_notification_count"]
+            + dar_data["incoming_notification_count"]
+        ),
         "sales_trend_labels": sales_trend_labels,
         "sales_trend_mwanza": sales_trend_mwanza,
         "sales_trend_dar": sales_trend_dar,
@@ -1129,13 +1375,13 @@ def manager_dashboard_data(selected_batch=None):
         ],
         "production_product_labels": production_product_labels,
         "production_product_totals": production_product_totals,
-        "sales_product_labels": sales_product_labels,
-        "sales_product_totals": sales_product_totals,
         "recent_call_counts": recent_call_counts,
         "production_by_product": production_by_product,
         "production_cards": production_cards,
-        "manufacturing_products": [product for group in _manufacturing_groups() for product in group["products"]],
-        "manufacturing_groups": _manufacturing_groups(),
+        "manufacturing_products": [
+            product for group in manufacturing_groups for product in group["products"]
+        ],
+        "manufacturing_groups": manufacturing_groups,
         "manufacturing_stock_rows": [
             row for row in production_by_product
             if production_product_family(row["product"]) in (
@@ -1144,9 +1390,7 @@ def manager_dashboard_data(selected_batch=None):
                 "honey",
             )
         ],
-        "production_consumption_rows": _factory_material_data(factory, selected_batch)[
-            "production_consumption_rows"
-        ],
+        "production_consumption_rows": factory_material_data["production_consumption_rows"],
         "sales_report_product_totals": sales_report_product_totals,
         "sales_report_footer": footer_product_values,
         "distribution_product_labels": [

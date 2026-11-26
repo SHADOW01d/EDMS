@@ -1,11 +1,16 @@
 import csv
 from datetime import datetime, time, timedelta
 from decimal import Decimal
+import json
+from pathlib import Path
+import struct
 import uuid
 
 from django.contrib.messages import get_messages
+from django.db import connection
 from django.db.models import Sum
 from django.test import TestCase
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
 
@@ -42,6 +47,14 @@ class ManagerDashboardTests(TestCase):
         )
 
         self.assertRedirects(response, reverse("manager_dashboard"))
+
+    def test_login_page_has_pwa_install_support(self):
+        response = self.client.get(reverse("login"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'href="/manifest.json"')
+        self.assertContains(response, 'data-pwa-install')
+        self.assertContains(response, 'src="/static/js/pwa.js"')
 
     def test_admin_can_create_a_non_superuser_manager_who_logs_into_manager_dashboard(self):
         admin_user = User.objects.create_superuser(
@@ -117,10 +130,58 @@ class ManagerDashboardTests(TestCase):
         self.assertContains(response, "manager")
         self.assertContains(response, 'id="managerBatchConfirm"')
         self.assertContains(response, 'id="workspaceConfirmDialog"')
+        self.assertContains(response, 'id="actionFeedbackDialog"')
+        self.assertContains(response, 'id="sidebarToggle"')
+        self.assertContains(response, 'data-pwa-install')
+        self.assertContains(response, 'href="/manifest.json"')
         self.assertContains(response, "Rekodi za batch zilizopo hazitafutwa wala kuhamishwa.")
         self.assertNotContains(response, "figures in this prototype are illustrative")
         self.assertContains(response, "Stock by product across all locations")
         self.assertContains(response, "Produced all time")
+
+    def test_office_badge_counts_pending_branch_reports_and_incoming_transfers(self):
+        mwanza, _ = StockLocation.objects.get_or_create(
+            location_type=StockLocation.LocationType.BRANCH_MWANZA,
+            defaults={"name": "Mwanza"},
+        )
+        dar, _ = StockLocation.objects.get_or_create(
+            location_type=StockLocation.LocationType.BRANCH_DAR,
+            defaults={"name": "Dar es Salaam"},
+        )
+        branch_users = (
+            User.objects.create_user(
+                username="pending-mwanza-report",
+                role=User.Role.BRANCH_MWANZA,
+            ),
+            User.objects.create_user(
+                username="pending-dar-report",
+                role=User.Role.BRANCH_DAR,
+            ),
+        )
+        for location, branch_user in zip((mwanza, dar), branch_users):
+            BranchDailyReport.objects.create(
+                location=location.location_type,
+                report_date=timezone.localdate(),
+                submitted_by=branch_user,
+                status=BranchDailyReport.Status.SUBMITTED,
+            )
+            Transfer.objects.create(
+                reference=f"OFFICE-PENDING-{location.location_type}",
+                destination=location,
+                dispatched_by=self.manager,
+            )
+
+        self.client.force_login(self.manager)
+        response = self.client.get(reverse("manager_dashboard"))
+
+        self.assertEqual(response.context["pending_branch_report_count"], 2)
+        self.assertEqual(response.context["pending_transfer_notification_count"], 2)
+        self.assertEqual(response.context["office_notification_count"], 4)
+        self.assertEqual(response.context["office_report_status"]["mwanza"]["pending_count"], 1)
+        self.assertEqual(response.context["office_report_status"]["dar"]["pending_count"], 1)
+        self.assertContains(response, '<span class="nav-badge">4</span>')
+        self.assertContains(response, "Approve latest report")
+        self.assertContains(response, "Incoming transfers")
 
     def test_manager_dashboard_shows_production_and_current_stock_by_product_and_location(self):
         product = Product.objects.create(
@@ -391,6 +452,43 @@ class ManagerDashboardTests(TestCase):
             {len(labels)},
         )
 
+    def test_manager_dashboard_query_count_does_not_scale_with_product_count(self):
+        for location_type, name in (
+            (StockLocation.LocationType.FACTORY, "Factory"),
+            (StockLocation.LocationType.BRANCH_MWANZA, "Mwanza"),
+            (StockLocation.LocationType.BRANCH_DAR, "Dar es Salaam"),
+        ):
+            StockLocation.objects.create(name=name, location_type=location_type)
+        Product.objects.create(
+            name="Performance Product 0",
+            sku="PERFORMANCE-PRODUCT-0",
+            category=Product.Category.FINISHED_GOOD,
+        )
+        self.client.force_login(self.manager)
+
+        with CaptureQueriesContext(connection) as initial_queries:
+            initial_response = self.client.get(reverse("manager_dashboard"))
+        self.assertEqual(initial_response.status_code, 200)
+        initial_product_count = len(
+            initial_response.context["sales_report_product_totals"]
+        )
+
+        for index in range(1, 9):
+            Product.objects.create(
+                name=f"Performance Product {index}",
+                sku=f"PERFORMANCE-PRODUCT-{index}",
+                category=Product.Category.FINISHED_GOOD,
+            )
+
+        with CaptureQueriesContext(connection) as expanded_queries:
+            expanded_response = self.client.get(reverse("manager_dashboard"))
+        self.assertEqual(expanded_response.status_code, 200)
+        self.assertEqual(
+            len(expanded_response.context["sales_report_product_totals"]),
+            initial_product_count + 8,
+        )
+        self.assertLessEqual(len(expanded_queries), len(initial_queries) + 2)
+
     def test_distribution_new_transfer_button_opens_a_working_dispatch_form(self):
         self.client.force_login(self.manager)
 
@@ -592,6 +690,7 @@ class RoleWorkspaceTests(TestCase):
         self.assertContains(response, "No purchase records yet")
         self.assertContains(response, "No production batches yet")
         self.assertContains(response, "No dispatches recorded")
+        self.assertContains(response, 'id="actionFeedbackDialog"')
         for section in ("overview", "procurement", "production", "dispatch"):
             self.assertContains(response, f'data-factory-panel="{section}"')
         for section in ("overview", "procurement", "production"):
@@ -632,6 +731,9 @@ class RoleWorkspaceTests(TestCase):
                 )
                 self.assertContains(response, 'id="branchQuickCustomerButton"')
                 self.assertContains(response, 'id="branchQuickCustomerDialog"')
+                self.assertContains(response, 'id="workspaceMenuToggle"')
+                self.assertContains(response, 'id="actionFeedbackDialog"')
+                self.assertContains(response, 'data-pwa-install')
                 self.assertContains(response, 'name="name" maxlength="150" autocomplete="name" required')
                 self.assertContains(response, 'name="diagnosis"')
                 self.assertContains(response, 'name="short_description"')
@@ -642,8 +744,61 @@ class RoleWorkspaceTests(TestCase):
                 self.assertContains(response, "No sales recorded today")
                 self.assertNotContains(response, "450K")
                 self.assertContains(response, "/operations/reports/submit/")
-                self.assertContains(response, "Submit daily report")
+                self.assertContains(response, "Select a batch from the top bar")
+                self.assertContains(response, "Daily submission only")
+                self.assertNotContains(response, "Management PDF report")
+                self.assertNotContains(response, "Generate and download PDF")
+                self.assertNotContains(response, "name=\"units_sold\"")
+                self.assertNotContains(response, "name=\"closing_balance\"")
+                self.assertNotContains(response, "name=\"loss_quantity\"")
+                self.assertNotContains(response, "name=\"customer_addresses\"")
                 self.client.logout()
+
+    def test_branch_can_select_and_identify_a_batch_with_pending_incoming_stock(self):
+        branch_user = User.objects.create_user(
+            username="mwanza-incoming-batch",
+            role=User.Role.BRANCH_MWANZA,
+        )
+        factory_user = User.objects.create_user(
+            username="factory-incoming-batch",
+            role=User.Role.FACTORY,
+        )
+        location, _ = StockLocation.objects.get_or_create(
+            location_type=StockLocation.LocationType.BRANCH_MWANZA,
+            defaults={"name": "Mwanza"},
+        )
+        batch = ProductionBatch.objects.create(
+            reference="BATCH-INCOMING-001",
+            status=ProductionBatch.Status.ACTIVE,
+            production_date=timezone.localdate(),
+            created_by=factory_user,
+        )
+        transfer = Transfer.objects.create(
+            reference="TRANSFER-INCOMING-001",
+            destination=location,
+            dispatched_by=factory_user,
+        )
+        TransferItem.objects.create(
+            transfer=transfer,
+            product=Product.objects.get(sku="ED-SINGLE"),
+            batch=batch,
+            quantity_sent=12,
+        )
+
+        self.client.force_login(branch_user)
+        response = self.client.get(
+            reverse("mwanza_dashboard"),
+            {"batch": batch.pk},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["selected_batch"], batch)
+        self.assertIn(batch, response.context["available_batches"])
+        self.assertEqual(list(response.context["incoming_transfers"]), [transfer])
+        self.assertContains(response, "BATCH-INCOMING-001")
+        self.assertContains(response, "Production batch")
+        self.assertContains(response, "1 pending transfer")
+        self.assertContains(response, "branch-notification-count\">1")
 
     def test_branch_stock_cards_show_package_components_not_full_package_card(self):
         package = Product.objects.get(sku="ED-PK-FULL")
@@ -784,10 +939,13 @@ class OperationalFlowTests(TestCase):
                 "unit_cost": "15000",
                 "actual_payment": "135000",
             },
+            follow=True,
         )
 
         self.assertRedirects(response, reverse("manager_dashboard"))
         purchase = Purchase.objects.get()
+        self.assertContains(response, 'data-level="success"')
+        self.assertContains(response, f"Purchase {purchase.reference} received.")
         item = purchase.items.get()
         self.assertEqual(purchase.total_amount, Decimal("135000"))
         self.assertEqual(purchase.actual_payment, Decimal("135000"))
@@ -872,6 +1030,56 @@ class OperationalFlowTests(TestCase):
         ).aggregate(total=Sum("quantity"))["total"]
         self.assertEqual(batch_one_balance, Decimal("140"))
         self.assertEqual(batch_two_balance, Decimal("500"))
+
+    def test_insufficient_sale_stock_uses_centered_error_feedback(self):
+        product = Product.objects.create(
+            name="Feedback sale product",
+            sku="FEEDBACK-SALE-PRODUCT",
+            category=Product.Category.FINISHED_GOOD,
+            unit="packs",
+        )
+        batch = ProductionBatch.objects.create(
+            reference="FEEDBACK-SALE-BATCH",
+            quantity=1,
+            status=ProductionBatch.Status.ACTIVE,
+            production_date=timezone.localdate(),
+            created_by=self.manager,
+        )
+        ProductionOutput.objects.create(
+            batch=batch,
+            product=product,
+            quantity=1,
+            production_date=timezone.localdate(),
+            reference="FEEDBACK-SALE-OUTPUT",
+            created_by=self.manager,
+        )
+        branch_location = StockLocation.objects.get(
+            location_type=StockLocation.LocationType.BRANCH_MWANZA,
+        )
+        customer = Customer.objects.create(
+            name="Feedback sale customer",
+            location=branch_location,
+        )
+        self.client.force_login(self.branch)
+
+        response = self.client.post(
+            reverse("record_sale"),
+            {
+                "customer_id": customer.pk,
+                "sku": product.sku,
+                "batch_id": batch.pk,
+                "quantity": "1",
+                "location_type": branch_location.location_type,
+            },
+            follow=True,
+        )
+
+        self.assertContains(response, 'id="actionFeedbackDialog"')
+        self.assertContains(response, 'data-level="error"')
+        self.assertContains(
+            response,
+            "Stock haitoshi ya Feedback sale product kwenye batch hii: 0 packs.",
+        )
 
     def test_factory_batch_requires_manager_approval_and_manager_can_start_directly(self):
         factory_user = User.objects.create_user(
@@ -2312,6 +2520,7 @@ class OperationalFlowTests(TestCase):
         report_customer = Customer.objects.create(
             name="Report Customer",
             location=mwanza_location,
+            address="Mwanza CBD",
         )
         for visit_type in (
             CustomerVisit.VisitType.NEW_CUSTOMER,
@@ -2332,24 +2541,68 @@ class OperationalFlowTests(TestCase):
             parcel_count=3,
             recorded_by=self.branch,
         )
+        sale = Sale.objects.create(
+            reference="REPORT-SALE",
+            location=mwanza_location,
+            customer=report_customer,
+            sold_by=self.branch,
+            total_amount=1200,
+        )
+        SaleItem.objects.create(
+            sale=sale,
+            product=product,
+            batch=batch,
+            quantity=12,
+            unit_price=100,
+        )
+        post_movement(
+            product=product,
+            location=mwanza_location,
+            movement=InventoryLedger.Movement.SALE,
+            quantity=-12,
+            reference="REPORT-SALE-MOVEMENT",
+            production_batch=batch,
+        )
+        post_movement(
+            product=product,
+            location=mwanza_location,
+            movement=InventoryLedger.Movement.LOSS,
+            quantity=-2,
+            reference="REPORT-LOSS-MOVEMENT",
+            production_batch=batch,
+        )
+        for call_type, count in (
+            (CustomerCall.CallType.INSTRUCTION, 4),
+            (CustomerCall.CallType.COMPLIANCE, 3),
+            (CustomerCall.CallType.FOLLOW_UP, 2),
+        ):
+            for index in range(count):
+                CustomerCall.objects.create(
+                    customer=report_customer,
+                    location=mwanza_location,
+                    called_by=self.branch,
+                    call_type=call_type,
+                    outcome=f"Report test call {call_type} {index}",
+                )
         self.client.force_login(self.branch)
+        dashboard_response = self.client.get(
+            reverse("mwanza_dashboard"),
+            {"batch": batch.pk},
+        )
+        self.assertContains(dashboard_response, "Submit daily report")
+        self.assertContains(dashboard_response, "Units sold today</span><strong>12")
+        self.assertNotContains(dashboard_response, 'name="units_sold"')
+        self.assertNotContains(dashboard_response, 'name="closing_balance"')
+        self.assertNotContains(dashboard_response, 'name="loss_quantity"')
         response = self.client.post(
             reverse("submit_daily_report"),
             {
                 "batch_id": batch.pk,
-                "units_sold": "12",
-                "closing_balance": "40",
-                "loss_quantity": "2",
-                "total_customers": "15",
-                "new_customers": "5",
-                "returning_customers": "10",
-                "visitors": "8",
-                "deliveries": "3",
-                "parcels": "2",
-                "instruction_calls": "4",
-                "compliance_calls": "3",
-                "followup_calls": "2",
-                "customer_addresses": "Mwanza CBD",
+                "units_sold": "999",
+                "closing_balance": "999",
+                "loss_quantity": "999",
+                "instruction_calls": "999",
+                "customer_addresses": "User edited address",
             },
         )
         self.assertRedirects(response, f"{reverse('mwanza_dashboard')}?batch={batch.pk}")
@@ -2357,6 +2610,8 @@ class OperationalFlowTests(TestCase):
             location=StockLocation.LocationType.BRANCH_MWANZA,
         )
         self.assertEqual(report.units_sold, 12)
+        self.assertEqual(report.closing_balance, 36)
+        self.assertEqual(report.loss_quantity, 2)
         self.assertEqual(report.status, BranchDailyReport.Status.SUBMITTED)
         self.assertEqual(report.total_customers, 2)
         self.assertEqual(report.new_customers, 1)
@@ -2364,6 +2619,10 @@ class OperationalFlowTests(TestCase):
         self.assertEqual(report.visitors, 1)
         self.assertEqual(report.deliveries, 1)
         self.assertEqual(report.parcels, 3)
+        self.assertEqual(report.instruction_calls, 4)
+        self.assertEqual(report.compliance_calls, 3)
+        self.assertEqual(report.followup_calls, 2)
+        self.assertEqual(report.customer_addresses, "Mwanza CBD")
 
         response = self.client.post(
             reverse("submit_daily_report"),
@@ -2426,12 +2685,22 @@ class OperationalFlowTests(TestCase):
             report_date="2026-11-21",
             submitted_by=self.branch,
         )
+        self.client.force_login(self.branch)
+        self.assertEqual(
+            self.client.post(reverse("approve_daily_report", args=[report.pk])).status_code,
+            403,
+        )
+
         self.client.force_login(self.manager)
         response = self.client.post(reverse("approve_daily_report", args=[report.pk]))
         self.assertRedirects(response, reverse("manager_dashboard"))
         report.refresh_from_db()
         self.assertEqual(report.status, BranchDailyReport.Status.APPROVED)
         self.assertEqual(report.approved_by, self.manager)
+        dashboard_response = self.client.get(reverse("manager_dashboard"))
+        self.assertEqual(dashboard_response.context["pending_branch_report_count"], 0)
+        self.assertContains(dashboard_response, "Last approved")
+        self.assertContains(dashboard_response, self.manager.get_full_name() or self.manager.username)
 
     def test_manager_sales_export_is_csv(self):
         self.client.force_login(self.manager)
@@ -2462,6 +2731,21 @@ class OperationalFlowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotIn("PAGE_CACHE", script)
         self.assertNotIn("cache.put", navigation_handler)
+        self.assertIn("/static/img/icon-192x192.png", script)
+        self.assertIn("/static/img/icon-512x512.png", script)
+
+    def test_pwa_manifest_icons_exist_at_required_dimensions(self):
+        response = self.client.get(reverse("web-manifest"))
+        manifest = json.loads(response.content)
+        icons = {icon["sizes"]: icon for icon in manifest["icons"]}
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(manifest["display"], "standalone")
+        for size in ("192x192", "512x512"):
+            icon_path = Path(__file__).resolve().parents[2] / "static" / icons[size]["src"].removeprefix("/static/")
+            image_header = icon_path.read_bytes()
+            self.assertEqual(image_header[:8], b"\x89PNG\r\n\x1a\n")
+            self.assertEqual(struct.unpack(">II", image_header[16:24]), tuple(map(int, size.split("x"))))
 
     def test_catalog_contains_all_categories_and_prices(self):
         self.assertTrue(

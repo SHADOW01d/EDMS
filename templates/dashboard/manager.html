@@ -4,11 +4,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a3a22">
+<meta name="description" content="Effective Diet Management System for business operations and reporting.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="EDMS">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/static/img/icon-192x192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/static/img/icon-192x192.png">
+<link rel="icon" href="{% static 'img/logo.svg' %}" type="image/svg+xml">
 <title>Effective Diet — Mfumo wa Usimamizi (EDMS)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="/static/css/action_feedback.css" rel="stylesheet">
 <style>
 /* ============================================================
    VARIABLES & RESET
@@ -106,36 +115,27 @@ a{text-decoration:none}
 .sidebar-user .u-role{font-size:10px;color:#7e9b88}
 
 /* ---------- MAIN ---------- */
-.main{flex:1;margin-left:262px;min-width:0;display:flex;flex-direction:column}
+.main{flex:1;margin-left:262px;min-width:0;display:flex;flex-direction:column;transition:margin-left .28s cubic-bezier(.4,0,.2,1)}
+body.sidebar-collapsed .sidebar{transform:translateX(-100%)}
+body.sidebar-collapsed .main{margin-left:0}
 .topbar{
   height:66px;background:rgba(255,255,255,.85);backdrop-filter:blur(14px);
   border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;
   padding:0 26px;position:sticky;top:0;z-index:1030;
 }
 .topbar-toggle{
-  display:none;border:none;background:#fff;width:38px;height:38px;border-radius:10px;
-  font-size:19px;color:var(--ink-soft);box-shadow:var(--shadow-sm);
+  display:grid;place-items:center;border:1px solid var(--line);background:#fff;width:38px;height:38px;border-radius:10px;
+  font-size:19px;color:var(--ink-soft);box-shadow:var(--shadow-sm);cursor:pointer;flex:0 0 auto;
 }
+.topbar-toggle:hover{background:var(--g-50);border-color:var(--g-300);color:var(--g-700)}
+.pwa-install-wrap{position:relative}
+.pwa-install-button{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:7px 11px;border:1px solid #d5e7d8;border-radius:9px;background:#f3fbf4;color:#0d5a31;font:inherit;font-size:10px;font-weight:700;white-space:nowrap;cursor:pointer}
+.pwa-install-button:hover{border-color:#9bcba5;background:#e8f7eb}
+.pwa-install-button[hidden],[data-pwa-install-help][hidden]{display:none}
+[data-pwa-install-help]{position:absolute;z-index:30;top:calc(100% + 6px);right:0;width:min(290px,calc(100vw - 24px));margin:0;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:#fff;box-shadow:var(--shadow-md);color:var(--ink);font-size:11px}
 .page-crumb{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px}
 .page-crumb b{color:var(--ink);font-weight:700;font-size:14px}
 .topbar-spacer{flex:1}
-.search-global{
-  display:flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--line);
-  border-radius:11px;padding:9px 14px;width:280px;font-size:12.5px;color:var(--faint);
-  transition:all .18s;
-}
-.search-global:focus-within{border-color:var(--g-400);box-shadow:0 0 0 4px rgba(34,197,94,.13);width:320px}
-.search-global input{border:none;outline:none;background:transparent;width:100%;font-size:12.5px;color:var(--ink)}
-.icon-btn{
-  width:40px;height:40px;border-radius:11px;border:1px solid var(--line);background:#fff;
-  display:grid;place-items:center;color:var(--ink-soft);cursor:pointer;position:relative;
-  transition:all .15s;font-size:17px;
-}
-.icon-btn:hover{background:var(--g-50);border-color:var(--g-300);color:var(--g-600)}
-.icon-btn .dot-alert{
-  position:absolute;top:8px;right:9px;width:8px;height:8px;border-radius:50%;
-  background:var(--red);border:2px solid #fff;
-}
 .topbar-avatar{
   display:flex;align-items:center;gap:10px;padding:4px 12px 4px 4px;border-radius:99px;
   background:#fff;border:1px solid var(--line);cursor:pointer;transition:all .15s;
@@ -525,6 +525,11 @@ a{text-decoration:none}
   color:var(--ink);background:#fff;outline:none;
 }
 .filter-bar select:focus, .filter-bar input:focus{border-color:var(--g-400)}
+.filter-bar .btn-soft,.filter-bar .btn-brand{
+  flex:0 0 auto;justify-content:center;white-space:nowrap;line-height:1.2;
+}
+.filter-bar .btn-soft{color:var(--ink-soft)}
+.filter-bar .btn-brand{color:#fff}
 
 /* ============================================================
    MISC
@@ -554,8 +559,6 @@ a{text-decoration:none}
   .sidebar{width:min(86vw,300px);transform:translateX(-100%);padding:calc(18px + env(safe-area-inset-top)) 14px calc(18px + env(safe-area-inset-bottom))}
   body.sidebar-open .sidebar{transform:translateX(0);box-shadow:0 0 60px rgba(0,0,0,.4)}
   .main{margin-left:0}
-  .topbar-toggle{display:grid;place-items:center}
-  .search-global{display:none}
   .topbar{height:auto;min-height:62px;flex-wrap:wrap;gap:8px;padding:10px 16px}
   .topbar-spacer{display:none}
   .topbar-batch-form{order:5;flex:1 1 56%;min-width:0}
@@ -563,7 +566,6 @@ a{text-decoration:none}
   .topbar-batch-form .form-select{width:100%;min-width:0;min-height:40px}
   .topbar-new-batch-form{order:6;flex:1 1 39%;min-width:0}
   .topbar-new-batch-form .btn-brand{width:100%;justify-content:center;min-height:40px;padding:9px 10px}
-  .topbar .icon-btn{width:38px;height:38px}
   .content{padding:18px 16px 32px}
   .section-hero{padding:22px;border-radius:18px}
   .hero-title{font-size:22px}
@@ -595,7 +597,6 @@ a{text-decoration:none}
   .topbar-new-batch-form .btn-brand{display:grid;width:68px;height:68px;place-items:center;padding:0;border-radius:50%;font-size:0;box-shadow:0 10px 24px rgba(22,163,74,.38)}
   .topbar-new-batch-form .btn-brand i{font-size:26px}
   .topbar-new-batch-form .btn-brand span{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-  .topbar>.icon-btn{display:none}
   .content{padding:14px 12px calc(104px + env(safe-area-inset-bottom))}
   .section-hero{padding:18px 16px;margin-bottom:18px}
   .hero-inner{align-items:stretch;gap:14px}
@@ -695,7 +696,7 @@ a{text-decoration:none}
       </button>
       <button class="nav-item" data-view="office">
         <i class="bi bi-patch-check"></i><span>Uthibitisho wa Ofisi</span>
-        <span class="nav-badge">2</span>
+        {% if office_notification_count %}<span class="nav-badge">{{ office_notification_count }}</span>{% endif %}
       </button>
 
       <div class="nav-label" style="margin-top:18px">Matawi</div>
@@ -747,26 +748,15 @@ a{text-decoration:none}
         {% csrf_token %}
         <button class="btn-brand" type="submit" aria-label="Anzisha batch mpya" title="Anzisha batch mpya"><i class="bi bi-plus-lg" aria-hidden="true"></i><span>Start new batch</span></button>
       </form>
-      <div class="search-global">
-        <i class="bi bi-search"></i>
-        <input type="text" placeholder="Tafuta bidhaa, ofisi, n.k...">
+      <div class="pwa-install-wrap">
+        <button class="pwa-install-button" type="button" data-pwa-install hidden><i class="bi bi-download" aria-hidden="true"></i>Install app</button>
+        <span data-pwa-install-help hidden>On iPhone or iPad, tap Share, then choose “Add to Home Screen”.</span>
       </div>
-      <button class="icon-btn" title="Arifa">
-        <i class="bi bi-bell"></i><span class="dot-alert"></span>
-      </button>
-      <button class="icon-btn" title="Mipangilio"><i class="bi bi-sliders"></i></button>
       {% include "components/account_menu.html" with account_menu_variant="manager-account" account_menu_role="CEO / Manager" user_initial=manager_initial user_name=manager_name %}
     </header>
 
     <!-- CONTENT -->
     <div class="content">
-      {% if messages %}
-      <div class="mb-3" role="status" aria-live="polite">
-        {% for message in messages %}
-        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}success{% endif %} py-2 mb-2">{{ message }}</div>
-        {% endfor %}
-      </div>
-      {% endif %}
       {% if request.GET.welcome == "1" and selected_batch %}
       <div class="alert alert-success d-flex align-items-center gap-2" role="status" id="batchWelcome">
         <i class="bi bi-stars fs-4"></i>
@@ -1446,16 +1436,28 @@ a{text-decoration:none}
                 <h4>Mwanza Office</h4>
                 <div class="oh-sub">Ofisi ya Mauzo · Mkoa wa Mwanza</div>
               </div>
+              {% if office_report_status.mwanza.pending_count %}
+              <span class="badge-soft amber ms-auto"><i class="bi bi-hourglass-split"></i> {{ office_report_status.mwanza.pending_count }} report(s) pending</span>
+              {% elif office_report_status.mwanza.latest.status == "APPROVED" %}
               <span class="badge-soft green ms-auto"><i class="bi bi-check-circle"></i> Imethibitishwa</span>
+              {% else %}
+              <span class="badge-soft gray ms-auto"><i class="bi bi-dash-circle"></i> No approved report</span>
+              {% endif %}
             </div>
             <div class="office-body">
               <div class="office-stat-row">
                 <div class="office-stat in"><div class="os-val">{{ mwanza_stock|floatformat:"0" }}</div><div class="os-lab">Stock ya Mwanza</div></div>
                 <div class="office-stat out"><div class="os-val">{{ mwanza_data.sales_today|floatformat:"0" }}</div><div class="os-lab">Mauzo ya Leo</div></div>
-                <div class="office-stat bal"><div class="os-val">{{ mwanza_data.incoming_count }}</div><div class="os-lab">Transfers</div></div>
+                <div class="office-stat bal"><div class="os-val">{{ mwanza_data.incoming_notification_count }}</div><div class="os-lab">Incoming transfers</div></div>
               </div>
-              <div class="small text-muted mb-2"><i class="bi bi-clock-history me-1"></i> Tarehe ya mfumo: {{ today|date:"d/m/Y" }}</div>
-              <button class="btn-soft w-100 justify-content-center"><i class="bi bi-eye"></i> Tazama Maelezo Kamili</button>
+              {% if office_report_status.mwanza.pending_count %}
+              <div class="small text-muted mb-2"><i class="bi bi-clock-history me-1"></i>{{ office_report_status.mwanza.pending_count }} submitted report(s) await your approval.</div>
+              <form method="post" action="{% url 'approve_daily_report' office_report_status.mwanza.latest_pending.pk %}" data-confirm-message="Approve the Mwanza daily report submitted on {{ office_report_status.mwanza.latest_pending.report_date|date:'d/m/Y' }}?">{% csrf_token %}<button class="btn-brand w-100 justify-content-center" type="submit"><i class="bi bi-check2-circle"></i> Approve latest report</button></form>
+              {% elif office_report_status.mwanza.latest.status == "APPROVED" %}
+              <div class="small text-muted mb-2"><i class="bi bi-check-circle me-1"></i>Last approved {{ office_report_status.mwanza.latest.report_date|date:"d/m/Y" }} by {{ office_report_status.mwanza.latest.approved_by.get_full_name|default:office_report_status.mwanza.latest.approved_by.username }}.</div>
+              {% else %}
+              <div class="small text-muted mb-2"><i class="bi bi-info-circle me-1"></i>No submitted daily report to review.</div>
+              {% endif %}
             </div>
           </div>
 
@@ -1466,16 +1468,28 @@ a{text-decoration:none}
                 <h4>Dar es Salaam Office</h4>
                 <div class="oh-sub">Ofisi ya Mauzo · Dar es Salaam</div>
               </div>
-              <span class="badge-soft amber ms-auto"><i class="bi bi-clock"></i> Inasubiri</span>
+              {% if office_report_status.dar.pending_count %}
+              <span class="badge-soft amber ms-auto"><i class="bi bi-hourglass-split"></i> {{ office_report_status.dar.pending_count }} report(s) pending</span>
+              {% elif office_report_status.dar.latest.status == "APPROVED" %}
+              <span class="badge-soft green ms-auto"><i class="bi bi-check-circle"></i> Imethibitishwa</span>
+              {% else %}
+              <span class="badge-soft gray ms-auto"><i class="bi bi-dash-circle"></i> No approved report</span>
+              {% endif %}
             </div>
             <div class="office-body">
               <div class="office-stat-row">
                 <div class="office-stat in"><div class="os-val">{{ dar_stock|floatformat:"0" }}</div><div class="os-lab">Stock ya Dar</div></div>
                 <div class="office-stat out"><div class="os-val">{{ dar_data.sales_today|floatformat:"0" }}</div><div class="os-lab">Mauzo ya Leo</div></div>
-                <div class="office-stat bal"><div class="os-val">{{ dar_data.incoming_count }}</div><div class="os-lab">Transfers</div></div>
+                <div class="office-stat bal"><div class="os-val">{{ dar_data.incoming_notification_count }}</div><div class="os-lab">Incoming transfers</div></div>
               </div>
-              <div class="small text-muted mb-2"><i class="bi bi-clock-history me-1"></i> Inasubiri uthibitisho wa meneja</div>
-              <button class="btn-brand w-100 justify-content-center"><i class="bi bi-check2-circle"></i> Thibitisha Sasa</button>
+              {% if office_report_status.dar.pending_count %}
+              <div class="small text-muted mb-2"><i class="bi bi-clock-history me-1"></i>{{ office_report_status.dar.pending_count }} submitted report(s) await your approval.</div>
+              <form method="post" action="{% url 'approve_daily_report' office_report_status.dar.latest_pending.pk %}" data-confirm-message="Approve the Dar es Salaam daily report submitted on {{ office_report_status.dar.latest_pending.report_date|date:'d/m/Y' }}?">{% csrf_token %}<button class="btn-brand w-100 justify-content-center" type="submit"><i class="bi bi-check2-circle"></i> Approve latest report</button></form>
+              {% elif office_report_status.dar.latest.status == "APPROVED" %}
+              <div class="small text-muted mb-2"><i class="bi bi-check-circle me-1"></i>Last approved {{ office_report_status.dar.latest.report_date|date:"d/m/Y" }} by {{ office_report_status.dar.latest.approved_by.get_full_name|default:office_report_status.dar.latest.approved_by.username }}.</div>
+              {% else %}
+              <div class="small text-muted mb-2"><i class="bi bi-info-circle me-1"></i>No submitted daily report to review.</div>
+              {% endif %}
             </div>
           </div>
         </div>
@@ -1736,150 +1750,99 @@ a{text-decoration:none}
           <div class="hero-inner">
             <div>
               <div class="hero-eyebrow"><i class="bi bi-graph-up-arrow"></i> Module D — Ripoti</div>
-              <h1 class="hero-title">Ripoti ya Mauzo — <span>Ofisi Zote</span></h1>
-              <p class="hero-sub">Muhtasari kamili wa mauzo, hasara, wateja, shughuli na simu kwa Mwanza na Dar es Salaam kwa siku.</p>
+              <h1 class="hero-title">Ripoti ya Mauzo — <span>{{ report_data.office_label }}</span></h1>
+              <p class="hero-sub">Ripoti ya usimamizi inayotumia chanzo kimoja cha data kwa mauzo, stock, wateja na shughuli.</p>
             </div>
-            <a class="btn-soft" href="{% url 'export_manager_report' %}?type=branch_pdf" style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2);color:#fff">
-              <i class="bi bi-file-earmark-pdf"></i> Pakua Ripoti ya PDF
-            </a>
           </div>
         </div>
 
         <!-- FILTER BAR -->
-        <form class="filter-bar" method="get" action="{% url 'export_manager_report' %}">
-          <input type="hidden" name="type" value="branch_pdf">
-          <div class="fb-group"><i class="bi bi-calendar3"></i> <strong>Kuanzia:</strong></div>
-          <input type="date" name="start_date" value="{{ report_start_date|date:'Y-m-d' }}" required>
-          <div class="fb-group"><i class="bi bi-calendar3"></i> <strong>Mpaka:</strong></div>
-          <input type="date" name="end_date" value="{{ today|date:'Y-m-d' }}" required>
-          <div class="fb-group"><i class="bi bi-shop"></i> <strong>Ofisi:</strong></div>
-          <select name="branch">
-            <option value="all">Zote (Mwanza + Dar)</option>
-            <option value="mwanza">Mwanza</option>
-            <option value="dar">Dar es Salaam</option>
+        <form class="filter-bar" method="get" action="{% url 'generate_report' %}" data-report-date-range>
+          <div class="fb-group"><i class="bi bi-file-earmark-bar-graph"></i> <strong>Aina:</strong></div>
+          <select name="report_type" data-report-type>
+            {% for value, label in report_types %}<option value="{{ value }}" {% if value == 'custom' %}selected{% endif %}>{{ label }}</option>{% endfor %}
           </select>
-          <button class="btn-brand ms-auto" type="submit"><i class="bi bi-file-earmark-pdf"></i> Pakua PDF</button>
+          <div class="fb-group"><i class="bi bi-calendar3"></i> <strong>Kuanzia:</strong></div>
+          <input id="manager-report-start-date" type="date" name="start_date" value="{{ report_start_date|date:'Y-m-d' }}" data-report-start required>
+          <div class="fb-group"><i class="bi bi-calendar3"></i> <strong>Mpaka:</strong></div>
+          <input id="manager-report-end-date" type="date" name="end_date" value="{{ report_end_date|date:'Y-m-d' }}" data-report-end required>
+          <div class="fb-group"><i class="bi bi-shop"></i> <strong>Ofisi:</strong></div>
+          <select name="office">
+            {% for value, label in report_offices %}<option value="{{ value }}" {% if value == report_office %}selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select>
+          <button class="btn-soft" type="submit" formaction="{% url 'manager_dashboard' %}" formmethod="get"><i class="bi bi-funnel"></i> Onyesha</button>
+          <button class="btn-brand" type="submit"><i class="bi bi-file-earmark-pdf"></i> Pakua PDF</button>
         </form>
 
-        <!-- SUMMARY MINI STATS -->
         <div class="mini-stats">
           <div class="mini-stat">
             <div class="ms-ic"><i class="bi bi-cart-check"></i></div>
-            <div><div class="ms-val">TZS {{ sales_today|floatformat:"0"|intcomma:False }}</div><div class="ms-lab">Jumla ya Mauzo (Leo)</div></div>
+            <div><div class="ms-val">TZS {{ report_data.sales_total|floatformat:"0"|intcomma:False }}</div><div class="ms-lab">Mauzo ya kipindi chote</div></div>
           </div>
           <div class="mini-stat blue">
             <div class="ms-ic"><i class="bi bi-people"></i></div>
-            <div><div class="ms-val">{{ customer_count }}</div><div class="ms-lab">Wateja (Jumla)</div></div>
+            <div><div class="ms-val">{{ report_data.customers_served }}</div><div class="ms-lab">Wateja waliohudumiwa</div></div>
           </div>
           <div class="mini-stat amber">
             <div class="ms-ic"><i class="bi bi-exclamation-triangle"></i></div>
-            <div><div class="ms-val">{{ loss_month|floatformat:"0" }}</div><div class="ms-lab">Hasara (Mwezi)</div></div>
+            <div><div class="ms-val">{{ report_data.loss_total|floatformat:"0" }}</div><div class="ms-lab">Hasara kwa kipindi</div></div>
           </div>
           <div class="mini-stat purple">
-            <div class="ms-ic"><i class="bi bi-telephone"></i></div>
-            <div><div class="ms-val">{{ recent_calls|length }}</div><div class="ms-lab">Simu Zilizorekodiwa</div></div>
+            <div class="ms-ic"><i class="bi bi-box-seam"></i></div>
+            <div><div class="ms-val">{{ report_data.current_stock|floatformat:"0" }}</div><div class="ms-lab">Stock iliyopo sasa</div></div>
           </div>
         </div>
 
-        <!-- MASTER REPORT TABLE -->
         <div class="panel">
           <div class="panel-head">
             <div>
-              <div class="panel-title"><i class="bi bi-table"></i> Ripoti Kamili ya Mauzo</div>
-              <div class="panel-sub">Safu 1 = Ofisi 1 kwa siku 1 · Safu wima zote muhimu zimejumuishwa</div>
+              <div class="panel-title"><i class="bi bi-diagram-3"></i> Muhtasari kwa tawi</div>
+              <div class="panel-sub">{{ report_start_date|date:"d/m/Y" }} — {{ report_end_date|date:"d/m/Y" }}</div>
             </div>
-            <span class="badge-soft green"><i class="bi bi-check-circle"></i> Data Imethibitishwa</span>
           </div>
           <div class="panel-body tight">
             <div class="table-wrap">
-              <table class="data-table sales-table">
-                <thead>
-                  <tr>
-                    <th rowspan="2">Tarehe</th>
-                    <th rowspan="2">Ofisi</th>
-                    <th colspan="6" class="grp grp-green">Mauzo &amp; Balance kwa Bidhaa</th>
-                    <th rowspan="2" class="grp grp-amber">Loss</th>
-                    <th colspan="3" class="grp grp-blue">Wateja</th>
-                    <th colspan="3" class="grp grp-purple">Shughuli za Ofisi</th>
-                    <th rowspan="2">Anuani ya Wateja</th>
-                    <th colspan="3" class="grp grp-green">Simu za Huduma</th>
-                  </tr>
-                  <tr>
-                    <th>ED Mauzo</th><th>ED Balance</th>
-                    <th>PM Mauzo</th><th>PM Balance</th>
-                    <th>WH Mauzo</th><th>WH Balance</th>
-                    <th>Jumla</th><th>Wapya</th><th>Wamarudio</th>
-                    <th>Visitors</th><th>Deliveries</th><th>Parcels</th>
-                    <th>Instruction</th><th>Compliance</th><th>Follow-up</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for sale in recent_sales %}
-                  <tr>
-                    <td class="cell-strong">{{ sale.sold_at|date:"d/m/Y" }}</td>
-                    <td><span class="badge-soft green">{{ sale.location.name }}</span></td>
-                    <td colspan="6" class="mono">—</td>
-                    <td><span class="badge-soft red">—</span></td>
-                    <td class="mono">{% if sale.customer %}1{% else %}—{% endif %}</td>
-                    <td class="mono">—</td><td class="mono">—</td>
-                    <td class="mono">—</td><td class="mono">—</td><td class="mono">—</td>
-                    <td class="text-start">{% if sale.customer %}{{ sale.customer.address|default:"—" }}{% else %}—{% endif %}</td>
-                    <td class="mono">—</td><td class="mono">—</td><td class="mono">—</td>
-                  </tr>
-                  {% empty %}
-                  <tr><td colspan="19" class="text-center text-muted">Hakuna mauzo yaliyorekodiwa.</td></tr>
-                  {% endfor %}
-                </tbody>
-                <tfoot>
-                  <tr>
-                    <td colspan="2" class="text-end">JUMLA:</td>
-                    <td>{{ sales_report_footer.0.sold|floatformat:"0" }}</td><td>{{ sales_report_footer.0.balance|floatformat:"0" }}</td>
-                    <td>{{ sales_report_footer.1.sold|floatformat:"0" }}</td><td>{{ sales_report_footer.1.balance|floatformat:"0" }}</td>
-                    <td>{{ sales_report_footer.2.sold|floatformat:"0" }}</td><td>{{ sales_report_footer.2.balance|floatformat:"0" }}</td>
-                    <td>{{ loss_month|floatformat:"0" }}</td>
-                    <td>{{ customer_count }}</td><td>{{ recent_calls|length }}</td><td>{{ open_followups|length }}</td>
-                    <td>{{ transfer_count }}</td><td>{{ purchase_count }}</td><td>{{ batch_count }}</td>
-                    <td>—</td>
-                    <td>{{ recent_call_counts.instruction }}</td><td>{{ recent_call_counts.compliance }}</td><td>{{ recent_call_counts.followup }}</td>
-                  </tr>
-                </tfoot>
-              </table>
+              <table class="data-table"><thead><tr><th>Tawi</th><th>Mauzo (TZS)</th><th>Sehemu ya mauzo</th><th>Units</th><th>Wateja</th><th>Hasara</th><th>Stock</th></tr></thead><tbody>
+                {% for branch in report_data.branches %}<tr><td>{{ branch.name }}</td><td class="mono">{{ branch.sales|floatformat:"0"|intcomma:False }}</td><td>{{ branch.share_percent|floatformat:"1" }}%</td><td>{{ branch.units_sold|floatformat:"0" }}</td><td>{{ branch.customers }}</td><td>{{ branch.loss|floatformat:"0" }}</td><td>{{ branch.stock|floatformat:"0" }}</td></tr>
+                {% empty %}<tr><td colspan="7" class="text-center text-muted">No data for this period.</td></tr>{% endfor %}
+              </tbody></table>
             </div>
           </div>
         </div>
 
-        <div class="panel mb-4">
-          <div class="panel-head"><div><div class="panel-title"><i class="bi bi-clipboard2-check"></i> Daily branch reports</div><div class="panel-sub">Submitted reports requiring manager approval</div></div></div>
-          <div class="panel-body tight"><div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Branch</th><th>Submitted by</th><th>Sales</th><th>Loss</th><th>Status</th><th>Action</th></tr></thead><tbody>
-            {% for report in branch_reports %}
-            <tr><td>{{ report.report_date|date:"d/m/Y" }}</td><td>{{ report.location }}</td><td>{{ report.submitted_by.get_full_name|default:report.submitted_by.username }}</td><td class="mono">{{ report.units_sold|floatformat:"0" }}</td><td class="mono">{{ report.loss_quantity|floatformat:"0" }}</td><td>{{ report.status }}</td><td>{% if report.status != "APPROVED" %}<form method="post" action="{% url 'approve_daily_report' report.pk %}">{% csrf_token %}<button class="btn-brand" type="submit">Approve</button></form>{% else %}{{ report.approved_by|default:"Approved" }}{% endif %}</td></tr>
-            {% empty %}<tr><td colspan="7" class="text-center text-muted">No branch reports submitted.</td></tr>{% endfor %}
+        <div class="panel">
+          <div class="panel-head"><div><div class="panel-title"><i class="bi bi-boxes"></i> Mauzo kwa bidhaa</div><div class="panel-sub">Thamani za line zinatumia bei iliyohifadhiwa wakati wa mauzo.</div></div></div>
+          <div class="panel-body tight"><div class="table-wrap"><table class="data-table"><thead><tr><th>Bidhaa</th><th>Units sold</th><th>Revenue (TZS)</th><th>Average price (TZS)</th>{% for branch in report_data.branches %}<th>{{ branch.name }}</th>{% endfor %}</tr></thead><tbody>
+            {% for product in report_data.products %}<tr><td>{{ product.name }}</td><td>{{ product.quantity_sold|floatformat:"2" }}</td><td>{{ product.revenue|floatformat:"0"|intcomma:False }}</td><td>{% if product.average_price %}{{ product.average_price|floatformat:"0"|intcomma:False }}{% else %}—{% endif %}</td>{% for office_row in product.sold_by_office_rows %}<td>{{ office_row.quantity|floatformat:"2" }}</td>{% endfor %}</tr>
+            {% empty %}<tr><td colspan="7" class="text-center text-muted">No data for this period.</td></tr>{% endfor %}
           </tbody></table></div></div>
         </div>
 
-        <!-- SECONDARY CHARTS -->
-        <div class="row g-4">
-          <div class="col-lg-6">
-            <div class="panel">
-              <div class="panel-head">
-                <div class="panel-title"><i class="bi bi-bar-chart"></i> Mauzo kwa Bidhaa (Ofisi Zote)</div>
-              </div>
-              <div class="panel-body">
-                <div class="chart-box"><canvas id="chartSalesProducts"></canvas></div>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-6">
-            <div class="panel">
-              <div class="panel-head">
-                <div class="panel-title"><i class="bi bi-telephone-outbound"></i> Simu za Huduma kwa Wateja</div>
-              </div>
-              <div class="panel-body">
-                <div class="chart-box"><canvas id="chartCalls"></canvas></div>
-              </div>
-            </div>
-          </div>
+        <div class="panel">
+          <div class="panel-head"><div><div class="panel-title"><i class="bi bi-clock-history"></i> Report history</div><div class="panel-sub">Pakua ripoti zilizotengenezwa awali.</div></div></div>
+          <div class="panel-body tight"><div class="table-wrap"><table class="data-table"><thead><tr><th>Aina</th><th>Tarehe</th><th>Ofisi</th><th>Aliyetengeneza</th><th>Imetengenezwa</th><th></th></tr></thead><tbody>
+            {% for report in report_history %}<tr><td>{{ report.get_report_type_display }}</td><td>{{ report.from_date|date:"d/m/Y" }} — {{ report.to_date|date:"d/m/Y" }}</td><td>{{ report.get_office_display }}</td><td>{{ report.generated_by.get_full_name|default:report.generated_by.username }}</td><td>{{ report.created_at|date:"d/m/Y H:i" }}</td><td><a class="btn-soft" href="{% url 'download_report' report.pk %}">Pakua tena</a></td></tr>
+            {% empty %}<tr><td colspan="6" class="text-center text-muted">Bado hakuna ripoti zilizohifadhiwa.</td></tr>{% endfor %}
+          </tbody></table></div></div>
         </div>
+
+        <div class="panel mb-4">
+          <div class="panel-head" id="dailyBranchReports"><div><div class="panel-title"><i class="bi bi-clipboard2-check"></i> Daily branch reports</div><div class="panel-sub">{{ pending_branch_report_count }} submitted report(s) waiting for CEO / Manager approval</div></div></div>
+          <div class="panel-body tight"><div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Branch</th><th>Submitted by</th><th>Batch</th><th>Units sold</th><th>Loss</th><th>Action</th></tr></thead><tbody>
+            {% for report in branch_reports %}
+            <tr><td>{{ report.report_date|date:"d/m/Y" }}</td><td>{{ report.location }}</td><td>{{ report.submitted_by.get_full_name|default:report.submitted_by.username }}</td><td>{% if report.batch %}{{ report.batch.reference }}{% else %}—{% endif %}</td><td class="mono">{{ report.units_sold|floatformat:"0" }}</td><td class="mono">{{ report.loss_quantity|floatformat:"0" }}</td><td><form method="post" action="{% url 'approve_daily_report' report.pk %}" data-confirm-message="Approve this branch's daily report?">{% csrf_token %}<button class="btn-brand" type="submit">Approve</button></form></td></tr>
+            {% empty %}<tr><td colspan="7" class="text-center text-muted">No branch reports waiting for approval.</td></tr>{% endfor %}
+          </tbody></table></div></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><div><div class="panel-title"><i class="bi bi-calendar-week"></i> Mauzo ya kila siku</div><div class="panel-sub">Kila mstari ni tarehe na ofisi moja, kuanzia tarehe ya sasa kuelekea tarehe za zamani.</div></div></div>
+          <div class="panel-body tight"><div class="table-wrap"><table class="data-table"><thead><tr><th>Tarehe</th><th>Ofisi</th><th>Mauzo (TZS)</th><th>Units sold</th><th>Wateja</th></tr></thead><tbody>
+            {% for row in report_data.sales_table_rows %}<tr><td>{{ row.date|date:"d/m/Y" }}</td><td>{{ row.office }}</td><td class="mono">{{ row.sales|floatformat:"0"|intcomma:False }}</td><td>{{ row.units|floatformat:"2" }}</td><td>{{ row.customers }}</td></tr>
+            {% empty %}<tr><td colspan="5" class="text-center text-muted">No data for this period.</td></tr>{% endfor %}
+          </tbody></table></div></div>
+        </div>
+
       </section>
 
       <!-- ============================================================
@@ -2011,7 +1974,8 @@ a{text-decoration:none}
   </div><!-- /main -->
 </div><!-- /app-shell -->
 
-<dialog class="batch-confirm-dialog" id="managerBatchConfirm" aria-labelledby="managerBatchConfirmTitle" aria-describedby="managerBatchConfirmDescription">
+  {% include "components/action_feedback.html" %}
+  <dialog class="batch-confirm-dialog" id="managerBatchConfirm" aria-labelledby="managerBatchConfirmTitle" aria-describedby="managerBatchConfirmDescription">
   <div class="batch-confirm-head">
     <h2 id="managerBatchConfirmTitle">⚠️ Hakiki kabla ya kuanzisha batch</h2>
     <p id="managerBatchConfirmDescription">Batch mpya itafunguliwa mara moja.</p>
@@ -2257,12 +2221,11 @@ a{text-decoration:none}
 {{ stock_split|json_script:"stock-split-data" }}
 {{ production_product_labels|json_script:"production-product-labels-data" }}
 {{ production_product_totals|json_script:"production-product-totals-data" }}
-{{ sales_product_labels|json_script:"sales-product-labels-data" }}
-{{ sales_product_totals|json_script:"sales-product-totals-data" }}
 {{ distribution_product_labels|json_script:"distribution-product-labels-data" }}
 {{ distribution_factory_stock|json_script:"distribution-factory-stock-data" }}
 {{ distribution_mwanza_stock|json_script:"distribution-mwanza-stock-data" }}
 {{ distribution_dar_stock|json_script:"distribution-dar-stock-data" }}
+<script defer src="/static/js/pwa.js"></script>
 <script>
 const confirmDialog = document.getElementById("workspaceConfirmDialog");
 const confirmMessage = document.getElementById("workspaceConfirmMessage");
@@ -2378,18 +2341,45 @@ if (requestedView) {
 
 /* Mobile sidebar toggle */
 const sidebarToggle = document.getElementById('sidebarToggle');
-function closeMobileSidebar() {
-  document.body.classList.remove('sidebar-open');
-  sidebarToggle.setAttribute('aria-expanded', 'false');
-  sidebarToggle.setAttribute('aria-label', 'Fungua menyu');
-}
-sidebarToggle.addEventListener('click', () => {
-  const isOpen = document.body.classList.toggle('sidebar-open');
+const desktopSidebarQuery = window.matchMedia('(min-width: 992px)');
+const sidebarPreferenceKey = 'edmsManagerSidebarCollapsed';
+function syncSidebarToggle() {
+  const isCollapsed = desktopSidebarQuery.matches && document.body.classList.contains('sidebar-collapsed');
+  const isOpen = desktopSidebarQuery.matches
+    ? !isCollapsed
+    : document.body.classList.contains('sidebar-open');
   sidebarToggle.setAttribute('aria-expanded', String(isOpen));
   sidebarToggle.setAttribute('aria-label', isOpen ? 'Funga menyu' : 'Fungua menyu');
+  sidebarToggle.title = isOpen ? 'Funga menyu' : 'Fungua menyu';
+}
+if (desktopSidebarQuery.matches && localStorage.getItem(sidebarPreferenceKey) === 'true') {
+  document.body.classList.add('sidebar-collapsed');
+}
+function closeMobileSidebar() {
+  document.body.classList.remove('sidebar-open');
+  syncSidebarToggle();
+}
+sidebarToggle.addEventListener('click', () => {
+  if (desktopSidebarQuery.matches) {
+    const isCollapsed = document.body.classList.toggle('sidebar-collapsed');
+    localStorage.setItem(sidebarPreferenceKey, String(isCollapsed));
+  } else {
+    document.body.classList.toggle('sidebar-open');
+  }
+  syncSidebarToggle();
 });
+desktopSidebarQuery.addEventListener('change', () => {
+  document.body.classList.remove('sidebar-open');
+  document.body.classList.toggle(
+    'sidebar-collapsed',
+    desktopSidebarQuery.matches && localStorage.getItem(sidebarPreferenceKey) === 'true'
+  );
+  syncSidebarToggle();
+});
+syncSidebarToggle();
 document.addEventListener('click', (e) => {
-  if (document.body.classList.contains('sidebar-open') &&
+  if (!desktopSidebarQuery.matches &&
+      document.body.classList.contains('sidebar-open') &&
       !e.target.closest('.sidebar') &&
       !e.target.closest('#sidebarToggle')) {
     closeMobileSidebar();
@@ -2406,17 +2396,7 @@ document.addEventListener('keydown', (e) => {
    TOAST
 ============================================================ */
 function showToast(msg) {
-  const container = document.getElementById('toastContainer');
-  const toast = document.createElement('div');
-  toast.className = 'app-toast';
-  toast.innerHTML = '<i class="bi bi-check-circle-fill"></i> ' + msg;
-  container.appendChild(toast);
-  setTimeout(() => {
-    toast.style.transition = 'opacity .3s, transform .3s';
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateX(40px)';
-    setTimeout(() => toast.remove(), 320);
-  }, 2800);
+  window.showActionFeedback(msg, 'info');
 }
 
 const managerBatchForm = document.querySelector("form[data-batch-confirm]");
@@ -2743,56 +2723,6 @@ function makeGradient(ctx, area, c1, c2) {
   }
 }
 
-/* ---------- SALES: Products bar ---------- */
-{
-  const el = document.getElementById('chartSalesProducts');
-  if (el) {
-    charts.salesProducts = new Chart(el, {
-      type: 'bar',
-      data: {
-        labels: chartData('sales-product-labels-data'),
-        datasets: [
-          { label: 'Units sold', data: chartData('sales-product-totals-data'), backgroundColor: '#16a34a', borderRadius: 6, maxBarThickness: 26 }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle', padding: 14, boxWidth: 9, boxHeight: 9 } } },
-        scales: {
-          y: { beginAtZero: true, grid: { color: '#eef4ee', drawBorder: false } },
-          x: { grid: { display: false } }
-        }
-      }
-    });
-  }
-}
-
-/* ---------- SALES: Calls bar ---------- */
-{
-  const el = document.getElementById('chartCalls');
-  if (el) {
-    charts.calls = new Chart(el, {
-      type: 'bar',
-      data: {
-        labels: ['Instruction', 'Compliance', 'Follow-up'],
-        datasets: [
-          { label: 'Total calls', data: [{{ recent_call_counts.instruction }}, {{ recent_call_counts.compliance }}, {{ recent_call_counts.followup }}], backgroundColor: '#16a34a', borderRadius: 6, maxBarThickness: 30 }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle', padding: 16, boxWidth: 9, boxHeight: 9 } } },
-        scales: {
-          y: { beginAtZero: true, grid: { color: '#eef4ee', drawBorder: false } },
-          x: { grid: { display: false } }
-        }
-      }
-    });
-  }
-}
-
 /* ---------- CUSTOMER CARE: Call categories by branch ---------- */
 {
   const el = document.getElementById('chartCallOutcomes');
@@ -2834,6 +2764,43 @@ window.addEventListener('load', () => {
   setTimeout(() => {
     Object.values(charts).forEach(c => { try { c.resize(); } catch(e){} });
   }, 200);
+});
+
+document.querySelectorAll('form[data-report-date-range]').forEach(form => {
+  const type = form.querySelector('[data-report-type]');
+  const start = form.querySelector('[data-report-start]');
+  const end = form.querySelector('[data-report-end]');
+  if (!type || !start || !end) return;
+
+  const formatDate = date => [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0')
+  ].join('-');
+  const parseDate = value => {
+    const [year, month, day] = value.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+  const syncRange = () => {
+    const selectedType = type.value;
+    const endDate = end.value ? parseDate(end.value) : new Date();
+    if (selectedType === 'daily') {
+      start.value = formatDate(endDate);
+    } else if (selectedType === 'weekly') {
+      const startDate = new Date(endDate);
+      startDate.setDate(startDate.getDate() - 6);
+      start.value = formatDate(startDate);
+    } else if (selectedType === 'monthly') {
+      const startDate = new Date(endDate);
+      startDate.setDate(startDate.getDate() - 29);
+      start.value = formatDate(startDate);
+    }
+  };
+  type.addEventListener('change', syncRange);
+  end.addEventListener('change', () => {
+    if (type.value !== 'custom') syncRange();
+  });
+  if (type.value !== 'custom') syncRange();
 });
 </script>
 </body>

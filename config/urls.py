@@ -14,6 +14,7 @@ from django.views.generic import RedirectView
 from apps.accounts import views as accounts_views
 from apps.core import views as core_views
 from apps.dashboard import views as dashboard_views
+from apps.reports import views as report_views
 
 urlpatterns = [
     path("", accounts_views.CustomLoginView.as_view(), name="login"),
@@ -76,6 +77,8 @@ urlpatterns = [
     path("operations/batches/<int:batch_id>/cancel/", dashboard_views.cancel_production, name="cancel_production"),
     path("catalog/products/<int:product_id>/update/", dashboard_views.update_catalog_product, name="update_catalog_product"),
     path("catalog/products/create/", dashboard_views.create_catalog_product, name="create_catalog_product"),
+    path("reports/generate/", report_views.generate_report, name="generate_report"),
+    path("reports/<int:report_id>/download/", report_views.download_report, name="download_report"),
     path("reports/manager/export/", dashboard_views.export_manager_report, name="export_manager_report"),
 ]
 
