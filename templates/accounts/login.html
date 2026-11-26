@@ -6,7 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#02140b">
     <meta name="description" content="Secure sign in to the Effective Diet Management System">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="EDMS">
     <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/static/img/icon-192x192.png" type="image/png" sizes="192x192">
+    <link rel="apple-touch-icon" href="/static/img/icon-192x192.png">
+    <link rel="icon" href="{% static 'img/logo.svg' %}" type="image/svg+xml">
     <title>EDMS — Secure Login</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -279,6 +284,24 @@
             color: #fecaca;
             font-size: 12px;
         }
+        .pwa-install-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 16px;
+            padding: 9px 13px;
+            border: 1px solid rgba(187, 247, 208, .35);
+            border-radius: 10px;
+            background: rgba(22, 163, 74, .15);
+            color: #dcfce7;
+            font: inherit;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .pwa-install-button:hover { background: rgba(22, 163, 74, .28); }
+        .pwa-install-button[hidden], [data-pwa-install-help][hidden] { display: none; }
+        [data-pwa-install-help] { margin: 8px 0 0; color: #dcfce7; font-size: 11px; line-height: 1.5; }
 
         .login-errors ul {
             margin: 0;
@@ -410,6 +433,10 @@
                     Sign in <i class="bi bi-arrow-right-short fs-5" aria-hidden="true"></i>
                 </button>
             </form>
+            <button class="pwa-install-button" type="button" data-pwa-install hidden>
+                <i class="bi bi-download" aria-hidden="true"></i>Install EDMS app
+            </button>
+            <p data-pwa-install-help hidden>On iPhone or iPad, tap Share, then choose “Add to Home Screen”.</p>
         </section>
 
         <footer class="login-footer">
@@ -448,12 +475,7 @@
             window.setTimeout(clearLoginFields, 500);
         });
 
-        if ("serviceWorker" in navigator) {
-            window.addEventListener("load", () => {
-                navigator.serviceWorker.register("/sw.js")
-                    .catch((error) => console.error("Service Worker registration failed:", error));
-            });
-        }
     </script>
+    <script defer src="/static/js/pwa.js"></script>
 </body>
 </html>

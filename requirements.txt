@@ -10,5 +10,6 @@ redis>=5.0
 pywebpush>=2.0
 Pillow>=10.0
 reportlab>=4.2
+pypdf>=5.0,<7.0
 gunicorn>=23.0,<24.0
 whitenoise>=6.8,<7.0

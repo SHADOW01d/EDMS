@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.db import models, transaction
-from django.http import FileResponse
+from django.http import FileResponse, HttpResponseBadRequest
 from django.shortcuts import render
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -46,8 +46,16 @@ from apps.customers.models import (
 )
 from apps.core.models import AuditEvent
 from apps.core.services import record_audit_event
-from .services import factory_dashboard_data, branch_dashboard_data, manager_dashboard_data
-from apps.reports.exports import csv_response, branch_daily_report_pdf
+from .services import (
+    branch_batches_for_location,
+    branch_daily_report_snapshot,
+    branch_dashboard_data,
+    factory_dashboard_data,
+    manager_dashboard_data,
+)
+from apps.reports.exports import csv_response
+from apps.reports.services import build_report_data
+from apps.reports.views import generate_report, report_choices, report_page_context
 
 
 def _location(location_type):
@@ -192,6 +200,74 @@ def manager_dashboard(request):
         except ProductionBatch.DoesNotExist:
             selected_batch = None
     manager_name = request.user.get_full_name() or request.user.username
+    today = timezone.localdate()
+    report_to_date = parse_date(request.GET.get("end_date", "")) or today
+    report_from_date = parse_date(request.GET.get("start_date", "")) or report_to_date - timedelta(days=30)
+    if report_from_date > report_to_date:
+        report_from_date = report_to_date - timedelta(days=30)
+    report_office = request.GET.get("office", "all")
+    if report_office not in ("all", "mwanza", "dar"):
+        report_office = "all"
+    report_data = build_report_data(report_from_date, report_to_date, report_office)
+    dashboard_stock_data = (
+        report_data
+        if report_office == "all"
+        else build_report_data(report_from_date, report_to_date, "all")
+    )
+    dashboard_data = manager_dashboard_data(selected_batch)
+    if not selected_batch:
+        report_products_by_id = {
+            row["product"].pk: row
+            for row in dashboard_stock_data["tangible_products"]
+        }
+        branch_stock_by_key = {
+            branch["key"]: branch["stock"]
+            for branch in dashboard_stock_data["branches"]
+        }
+        dashboard_data.update({
+            "factory_stock": dashboard_stock_data["store_stock"],
+            "mwanza_stock": branch_stock_by_key.get("mwanza", Decimal("0")),
+            "dar_stock": branch_stock_by_key.get("dar", Decimal("0")),
+            "factory_product_rows": [
+                {
+                    "product": row["product"],
+                    "balance": row["store_stock"] or Decimal("0"),
+                }
+                for row in dashboard_stock_data["tangible_products"]
+            ],
+            "stock_split": [
+                float(dashboard_stock_data["store_stock"] or 0),
+                float(branch_stock_by_key.get("mwanza", 0)),
+                float(branch_stock_by_key.get("dar", 0)),
+            ],
+        })
+        for row in dashboard_data.get("production_by_product", []):
+            report_product = report_products_by_id.get(row["product"].pk)
+            if report_product:
+                row["factory_balance"] = report_product["store_stock"] or Decimal("0")
+                row["mwanza_balance"] = report_product["mwanza_stock"] or Decimal("0")
+                row["dar_balance"] = report_product["dar_stock"] or Decimal("0")
+                row["current_stock"] = (
+                    row["factory_balance"] + row["mwanza_balance"] + row["dar_balance"]
+                )
+        for row in dashboard_data.get("production_cards", []):
+            members = [
+                report_products_by_id[product.pk]
+                for product in row["products"]
+                if product.pk in report_products_by_id
+            ]
+            row["factory_balance"] = sum(
+                (member["store_stock"] or Decimal("0") for member in members),
+                Decimal("0"),
+            )
+            row["mwanza_balance"] = sum(
+                (member["mwanza_stock"] or Decimal("0") for member in members),
+                Decimal("0"),
+            )
+            row["dar_balance"] = sum(
+                (member["dar_stock"] or Decimal("0") for member in members),
+                Decimal("0"),
+            )
     return render(
         request,
         "dashboard/manager.html",
@@ -202,8 +278,13 @@ def manager_dashboard(request):
             "selected_batch": selected_batch,
             "production_request_key": uuid.uuid4(),
             "honey_bottling_request_key": uuid.uuid4(),
-            "report_start_date": timezone.localdate() - timedelta(days=30),
-            **manager_dashboard_data(selected_batch),
+            **report_page_context(request.user, None),
+            **report_choices(),
+            "report_start_date": report_from_date,
+            "report_end_date": report_to_date,
+            "report_office": report_office,
+            "report_data": report_data,
+            **dashboard_data,
         },
     )
 
@@ -214,14 +295,14 @@ def export_manager_report(request):
         raise PermissionDenied("Only managers can export reports.")
     report_type = request.GET.get("type", "sales")
     if report_type == "branch_pdf":
-        end_date = parse_date(request.GET.get("end_date", "")) or timezone.localdate()
-        start_date = parse_date(request.GET.get("start_date", "")) or end_date - timedelta(days=30)
-        branch = request.GET.get("branch", "all")
-        if start_date > end_date:
-            start_date, end_date = end_date, start_date
-        if (end_date - start_date).days > 30:
-            start_date = end_date - timedelta(days=30)
-        return branch_daily_report_pdf(start_date, end_date, branch)
+        params = request.GET.copy()
+        end_date = parse_date(params.get("end_date", "")) or timezone.localdate()
+        params.setdefault("start_date", (end_date - timedelta(days=30)).isoformat())
+        params.setdefault("end_date", end_date.isoformat())
+        params["report_type"] = "custom"
+        params["office"] = params.get("branch", "all")
+        request.GET = params
+        return generate_report(request)
     if report_type == "purchases":
         rows = [
             [
@@ -239,9 +320,19 @@ def export_manager_report(request):
             rows,
         )
     if report_type == "calls":
+        today = timezone.localdate()
+        end_date = parse_date(request.GET.get("end_date", "")) or today
+        start_date = parse_date(request.GET.get("start_date", "")) or end_date - timedelta(days=30)
+        if start_date > end_date:
+            return HttpResponseBadRequest("The report date range is invalid.")
+        office = request.GET.get("office", "all")
+        try:
+            report_data = build_report_data(start_date, end_date, office)
+        except ValueError as exc:
+            return HttpResponseBadRequest(str(exc))
         rows = [
             [
-                call.called_at,
+                timezone.localtime(call.called_at),
                 call.contact_name,
                 call.caller_phone or (call.customer.phone if call.customer else ""),
                 call.branch_location.name if call.branch_location else "",
@@ -252,26 +343,41 @@ def export_manager_report(request):
                 call.follow_up_date or "",
                 call.called_by.username,
             ]
-            for call in CustomerCall.objects.select_related("customer", "called_by").order_by("-called_at")
+            for call in report_data["calls"]
         ]
         return csv_response(
             "customer-calls.csv",
             ["Date", "Contact", "Phone", "Branch", "Direction", "Call type", "Outcome", "Notes", "Follow-up", "Recorded by"],
             rows,
         )
-    rows = [
-        [
-            sale.reference,
-            sale.location.name,
-            sale.sold_at,
-            sale.customer.name if sale.customer else "Walk-in",
-            sale.total_amount,
+    today = timezone.localdate()
+    end_date = parse_date(request.GET.get("end_date", "")) or today
+    start_date = parse_date(request.GET.get("start_date", "")) or end_date - timedelta(days=30)
+    if start_date > end_date:
+        return HttpResponseBadRequest("The report date range is invalid.")
+    office = request.GET.get("office", "all")
+    try:
+        report_data = build_report_data(start_date, end_date, office)
+    except ValueError as exc:
+        return HttpResponseBadRequest(str(exc))
+    headers = ["Date", "Office", "Total sales (TZS)", "Units sold", "Customers"]
+    for product in report_data["products"]:
+        headers.extend([f"{product['name']} units", f"{product['name']} revenue (TZS)"])
+    rows = []
+    for sale_row in report_data["sales_table_rows"]:
+        values = [
+            sale_row["date"],
+            sale_row["office"],
+            sale_row["sales"],
+            sale_row["units"],
+            sale_row["customers"],
         ]
-        for sale in Sale.objects.select_related("location", "customer").order_by("-sold_at")
-    ]
+        for product_line in sale_row["products"]:
+            values.extend([product_line["quantity"], product_line["revenue"]])
+        rows.append(values)
     return csv_response(
         "sales.csv",
-        ["Reference", "Location", "Date", "Customer", "Total"],
+        headers,
         rows,
     )
 
@@ -389,10 +495,13 @@ def mwanza_dashboard(request):
     selected_batch = None
     requested_batch_id = request.GET.get("batch", "").strip()
     if requested_batch_id:
-        selected_batch = ProductionBatch.objects.filter(
-            pk=requested_batch_id,
-            inventory_movements__location__location_type=StockLocation.LocationType.BRANCH_MWANZA,
-        ).distinct().first()
+        location = StockLocation.objects.filter(
+            location_type=StockLocation.LocationType.BRANCH_MWANZA,
+        ).first()
+        if location:
+            selected_batch = branch_batches_for_location(location).filter(
+                pk=requested_batch_id,
+            ).first()
     return _render_workspace(
         request,
         "branch",
@@ -400,6 +509,7 @@ def mwanza_dashboard(request):
         branch_name="Mwanza",
         branch_location="Mwanza",
         branch_location_type=StockLocation.LocationType.BRANCH_MWANZA,
+        **_branch_report_context("mwanza"),
         **branch_dashboard_data(StockLocation.LocationType.BRANCH_MWANZA, selected_batch),
     )
 
@@ -412,10 +522,13 @@ def dar_dashboard(request):
     selected_batch = None
     requested_batch_id = request.GET.get("batch", "").strip()
     if requested_batch_id:
-        selected_batch = ProductionBatch.objects.filter(
-            pk=requested_batch_id,
-            inventory_movements__location__location_type=StockLocation.LocationType.BRANCH_DAR,
-        ).distinct().first()
+        location = StockLocation.objects.filter(
+            location_type=StockLocation.LocationType.BRANCH_DAR,
+        ).first()
+        if location:
+            selected_batch = branch_batches_for_location(location).filter(
+                pk=requested_batch_id,
+            ).first()
     return _render_workspace(
         request,
         "branch",
@@ -423,8 +536,17 @@ def dar_dashboard(request):
         branch_name="Dar es Salaam",
         branch_location="Dar es Salaam",
         branch_location_type=StockLocation.LocationType.BRANCH_DAR,
+        **_branch_report_context("dar"),
         **branch_dashboard_data(StockLocation.LocationType.BRANCH_DAR, selected_batch),
     )
+
+
+def _branch_report_context(office):
+    report_date = timezone.localdate()
+    return {
+        "report_date": report_date,
+        "daily_report_data": build_report_data(report_date, report_date, office),
+    }
 
 
 def _render_workspace(request, workspace, dashboard_url_name, **extra_context):
@@ -1390,45 +1512,7 @@ def submit_daily_report(request):
         if batch is None:
             raise ValueError("Select a batch with stock at this branch.")
         report_date = timezone.localdate()
-        decimal_fields = ("units_sold", "closing_balance", "loss_quantity")
-        report_values = {}
-        for field in decimal_fields:
-            report_values[field] = _decimal(request.POST.get(field))
-        integer_fields = ("instruction_calls", "compliance_calls", "followup_calls")
-        for field in integer_fields:
-            value = int(request.POST.get(field, "0") or "0")
-            if value < 0:
-                raise ValueError("Report counts cannot be negative.")
-            report_values[field] = value
-        visit_summary = CustomerVisit.objects.filter(
-            location=location,
-            visited_at__date=report_date,
-        ).aggregate(
-            new_customers=models.Count(
-                "pk",
-                filter=models.Q(visit_type=CustomerVisit.VisitType.NEW_CUSTOMER),
-            ),
-            returning_customers=models.Count(
-                "pk",
-                filter=models.Q(visit_type=CustomerVisit.VisitType.RETURNING_CUSTOMER),
-            ),
-            visitors=models.Count(
-                "pk",
-                filter=models.Q(visit_type__in=_VISITOR_VISIT_TYPES),
-            ),
-        )
-        delivery_summary = BranchDelivery.objects.filter(
-            location=location,
-            delivery_date=report_date,
-        ).aggregate(deliveries=models.Count("pk"), parcels=models.Sum("parcel_count"))
-        report_values.update(
-            new_customers=visit_summary["new_customers"],
-            returning_customers=visit_summary["returning_customers"],
-            total_customers=visit_summary["new_customers"] + visit_summary["returning_customers"],
-            visitors=visit_summary["visitors"],
-            deliveries=delivery_summary["deliveries"],
-            parcels=delivery_summary["parcels"] or 0,
-        )
+        report_values = branch_daily_report_snapshot(location, batch, report_date)
         existing_report = BranchDailyReport.objects.filter(
             location=location.location_type,
             report_date=report_date,
@@ -1445,7 +1529,6 @@ def submit_daily_report(request):
             batch=batch,
             defaults={
                 **report_values,
-                "customer_addresses": request.POST.get("customer_addresses", "").strip(),
                 "status": BranchDailyReport.Status.SUBMITTED,
                 "submitted_by": request.user,
             },
@@ -1466,6 +1549,8 @@ def approve_daily_report(request, report_id):
         raise PermissionDenied("Only managers can approve daily reports.")
     try:
         report = BranchDailyReport.objects.select_for_update().get(pk=report_id)
+        if report.status != BranchDailyReport.Status.SUBMITTED:
+            raise ValueError("Only submitted branch reports can be approved.")
         report.status = BranchDailyReport.Status.APPROVED
         report.approved_by = request.user
         report.approved_at = timezone.now()
@@ -1473,6 +1558,8 @@ def approve_daily_report(request, report_id):
         messages.success(request, f"Report for {report.report_date} approved.")
     except BranchDailyReport.DoesNotExist:
         messages.error(request, "Report not found.")
+    except ValueError as exc:
+        messages.error(request, str(exc))
     return redirect("manager_dashboard")
 
 
